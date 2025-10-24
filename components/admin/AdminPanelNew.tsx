@@ -41,7 +41,7 @@ export const AdminPanelNew = () => {
     { id: 'parser' as AdminTab, label: t('wordpressParser'), icon: Upload },
     { id: 'chat' as AdminTab, label: t('chatSettings'), icon: MessageCircle },
     { id: 'email' as AdminTab, label: t('emailNotifications'), icon: Mail },
-    { id: 'seo' as AdminTab, label: 'SEO настройки', icon: Globe },
+    { id: 'seo' as AdminTab, label: t('seoSettings'), icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
   ];
 

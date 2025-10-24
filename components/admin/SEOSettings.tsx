@@ -11,8 +11,9 @@ interface SEOSettings {
   siteAuthor: string;
   siteUrl: string;
   ogImage: string;
-  twitterHandle: string;
   facebookAppId: string;
+  instagramHandle: string;
+  vkHandle: string;
   productTitleTemplate: string;
   productDescriptionTemplate: string;
   enableSitemap: boolean;
@@ -36,8 +37,9 @@ export const SEOSettings = () => {
     siteAuthor: 'Asia Pharm',
     siteUrl: 'https://asia-pharm.ru',
     ogImage: '',
-    twitterHandle: '@asiapharm',
     facebookAppId: '',
+    instagramHandle: '@asiapharm',
+    vkHandle: 'asiapharm',
     productTitleTemplate: '{product_name} - {store} | {site_name}',
     productDescriptionTemplate: '{product_name}. {description}. Доставка по России.',
     enableSitemap: true,
@@ -88,13 +90,13 @@ export const SEOSettings = () => {
       });
 
       if (response.ok) {
-        setMessage('SEO настройки успешно сохранены');
+        setMessage(t('seoSaved'));
         setTimeout(() => setMessage(''), 3000);
       } else {
         throw new Error('Failed to save');
       }
     } catch (error) {
-      setMessage('Ошибка при сохранении');
+      setMessage(t('seoSaveError'));
     } finally {
       setIsSaving(false);
     }
@@ -114,9 +116,9 @@ export const SEOSettings = () => {
         <div className="flex items-center gap-3">
           <Globe className="text-red-600" size={28} />
           <div>
-            <h2 className="text-gray-800">SEO Настройки</h2>
+            <h2 className="text-gray-800">{t('seoSettings')}</h2>
             <p className="text-sm text-gray-600">
-              Настройте параметры для поисковой оптимизации
+              {t('seoSettingsDescription')}
             </p>
           </div>
         </div>
@@ -126,7 +128,7 @@ export const SEOSettings = () => {
           className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:bg-gray-400"
         >
           <Save size={16} />
-          {isSaving ? 'Сохранение...' : 'Сохранить'}
+          {isSaving ? t('saving') : t('save')}
         </button>
       </div>
 
@@ -139,13 +141,13 @@ export const SEOSettings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <FileText className="text-blue-600" size={20} />
-          <h3 className="text-gray-800">Основные настройки</h3>
+          <h3 className="text-gray-800">{t('basicSettings')}</h3>
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Название сайта
+              {t('siteName')}
             </label>
             <input
               type="text"
@@ -154,13 +156,13 @@ export const SEOSettings = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Используется в заголовке страницы и мета-тегах
+              {t('siteNameHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Описание сайта
+              {t('siteDescription')}
             </label>
             <textarea
               value={settings.siteDescription}
@@ -169,13 +171,13 @@ export const SEOSettings = () => {
               rows={3}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Идеальная длина: 150-160 символов
+              {t('siteDescriptionHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Ключевые слова
+              {t('siteKeywords')}
             </label>
             <input
               type="text"
@@ -184,14 +186,14 @@ export const SEOSettings = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Через запятую
+              {t('siteKeywordsHint')}
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                URL сайта
+                {t('siteUrl')}
               </label>
               <input
                 type="url"
@@ -203,7 +205,7 @@ export const SEOSettings = () => {
 
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                Автор
+                {t('siteAuthor')}
               </label>
               <input
                 type="text"
@@ -219,13 +221,13 @@ export const SEOSettings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <Image className="text-purple-600" size={20} />
-          <h3 className="text-gray-800">Социальные сети</h3>
+          <h3 className="text-gray-800">{t('socialNetworks')}</h3>
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              OG Image
+              {t('ogImage')}
             </label>
             <input
               type="url"
@@ -234,32 +236,46 @@ export const SEOSettings = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Размер: 1200x630px
+              {t('ogImageHint')}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm text-gray-700 mb-2">
-                Twitter Handle
-              </label>
-              <input
-                type="text"
-                value={settings.twitterHandle}
-                onChange={(e) => setSettings({ ...settings, twitterHandle: e.target.value })}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-gray-700 mb-2">
-                Facebook App ID
+                {t('facebookAppId')}
               </label>
               <input
                 type="text"
                 value={settings.facebookAppId}
                 onChange={(e) => setSettings({ ...settings, facebookAppId: e.target.value })}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-700 mb-2">
+                {t('instagramHandle')}
+              </label>
+              <input
+                type="text"
+                value={settings.instagramHandle}
+                onChange={(e) => setSettings({ ...settings, instagramHandle: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                placeholder="@asiapharm"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm text-gray-700 mb-2">
+                {t('vkHandle')}
+              </label>
+              <input
+                type="text"
+                value={settings.vkHandle}
+                onChange={(e) => setSettings({ ...settings, vkHandle: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                placeholder="asiapharm"
               />
             </div>
           </div>
@@ -269,13 +285,13 @@ export const SEOSettings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <Link className="text-green-600" size={20} />
-          <h3 className="text-gray-800">Шаблоны товаров</h3>
+          <h3 className="text-gray-800">{t('productTemplates')}</h3>
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Шаблон заголовка
+              {t('titleTemplate')}
             </label>
             <input
               type="text"
@@ -284,13 +300,13 @@ export const SEOSettings = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             />
             <p className="text-xs text-gray-500 mt-1">
-              Переменные: product_name, store, category, site_name
+              {t('titleTemplateHint')}
             </p>
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Шаблон описания
+              {t('descriptionTemplate')}
             </label>
             <textarea
               value={settings.productDescriptionTemplate}
@@ -299,7 +315,7 @@ export const SEOSettings = () => {
               rows={2}
             />
             <p className="text-xs text-gray-500 mt-1">
-              Переменные: product_name, category, description, price
+              {t('descriptionTemplateHint')}
             </p>
           </div>
         </div>
@@ -308,46 +324,46 @@ export const SEOSettings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <Globe className="text-orange-600" size={20} />
-          <h3 className="text-gray-800">Аналитика</h3>
+          <h3 className="text-gray-800">{t('analyticsSection')}</h3>
         </div>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Google Analytics ID
+              {t('googleAnalyticsId')}
             </label>
             <input
               type="text"
               value={settings.googleAnalyticsId}
               onChange={(e) => setSettings({ ...settings, googleAnalyticsId: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-              placeholder="G-XXXXXXXXXX"
+              placeholder={t('googleAnalyticsPlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Google Search Console
+              {t('googleSearchConsole')}
             </label>
             <input
               type="text"
               value={settings.googleSearchConsoleId}
               onChange={(e) => setSettings({ ...settings, googleSearchConsoleId: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-              placeholder="google-site-verification=xxxxx"
+              placeholder={t('googleSearchConsolePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm text-gray-700 mb-2">
-              Яндекс.Метрика ID
+              {t('yandexMetrikaId')}
             </label>
             <input
               type="text"
               value={settings.yandexMetrikaId}
               onChange={(e) => setSettings({ ...settings, yandexMetrikaId: e.target.value })}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-              placeholder="12345678"
+              placeholder={t('yandexMetrikaPlaceholder')}
             />
           </div>
         </div>
@@ -356,14 +372,14 @@ export const SEOSettings = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex items-center gap-2 mb-4">
           <FileText className="text-gray-600" size={20} />
-          <h3 className="text-gray-800">Технические настройки</h3>
+          <h3 className="text-gray-800">{t('technicalSettings')}</h3>
         </div>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div>
-              <p className="text-gray-800">Включить Sitemap.xml</p>
-              <p className="text-xs text-gray-600">Карта сайта для поисковых систем</p>
+              <p className="text-gray-800">{t('enableSitemap')}</p>
+              <p className="text-xs text-gray-600">{t('sitemapDescription')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -378,8 +394,8 @@ export const SEOSettings = () => {
 
           <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
             <div>
-              <p className="text-gray-800">Включить Robots.txt</p>
-              <p className="text-xs text-gray-600">Правила для поисковых роботов</p>
+              <p className="text-gray-800">{t('enableRobotsTxt')}</p>
+              <p className="text-xs text-gray-600">{t('robotsTxtDescription')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input
@@ -397,15 +413,15 @@ export const SEOSettings = () => {
       <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
         <h3 className="text-gray-800 mb-4 flex items-center gap-2">
           <Info className="text-blue-600" size={20} />
-          Рекомендации по SEO
+          {t('seoRecommendations')}
         </h3>
         
         <div className="space-y-2 text-sm text-gray-700">
-          <p>✓ Заголовок: 50-60 символов, ключевые слова в начале</p>
-          <p>✓ Описание: 150-160 символов, призыв к действию</p>
-          <p>✓ Ключевые слова: 5-10 релевантных фраз</p>
-          <p>✓ OG изображение: яркое, 1200x630px</p>
-          <p>✓ Настройте Google Analytics для отслеживания трафика</p>
+          <p>✓ {t('seoRec1')}</p>
+          <p>✓ {t('seoRec2')}</p>
+          <p>✓ {t('seoRec3')}</p>
+          <p>✓ {t('seoRec4')}</p>
+          <p>✓ {t('seoRec5')}</p>
         </div>
       </div>
     </div>

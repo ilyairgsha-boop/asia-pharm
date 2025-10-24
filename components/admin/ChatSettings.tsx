@@ -3,6 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getServerUrl } from '../../utils/supabase/client';
 import { Save, MessageCircle, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export const ChatSettings = () => {
   const { t } = useLanguage();
@@ -50,6 +51,8 @@ export const ChatSettings = () => {
     
     setSaving(true);
     try {
+      console.log('💾 Saving chat settings:', settings);
+      
       const response = await fetch(getServerUrl('/admin/settings/chat'), {
         method: 'PUT',
         headers: {
@@ -60,16 +63,17 @@ export const ChatSettings = () => {
       });
 
       if (response.ok) {
-        alert(t('saveSuccess'));
-        console.log('✅ Chat settings saved:', settings);
+        toast.success(t('saveSuccess'));
+        console.log('✅ Chat settings saved successfully:', settings);
+        console.log('ℹ️ LiveChat will reload settings within 30 seconds');
       } else {
         const error = await response.json();
         console.error('❌ Failed to save settings:', error);
-        alert(t('saveFailed') || 'Failed to save settings');
+        toast.error(t('saveError') || 'Failed to save settings');
       }
     } catch (error) {
       console.error('❌ Error saving chat settings:', error);
-      alert(t('saveFailed') || 'Failed to save settings');
+      toast.error(t('saveError') || 'Failed to save settings');
     } finally {
       setSaving(false);
     }

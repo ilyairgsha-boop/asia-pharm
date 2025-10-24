@@ -68,14 +68,14 @@ export const UserManagement = () => {
 
       if (response.ok) {
         await loadUsers();
-        toast.success('Роль пользователя обновлена');
+        toast.success(t('userRoleUpdated'));
       } else {
         const error = await response.json();
-        toast.error(error.error || 'Ошибка обновления роли');
+        toast.error(error.error || t('userRoleUpdateError'));
       }
     } catch (error) {
       console.error('❌ Error updating user role:', error);
-      toast.error('Ошибка обновления роли');
+      toast.error(t('userRoleUpdateError'));
     }
   };
 
@@ -84,7 +84,7 @@ export const UserManagement = () => {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-800 rounded text-sm">
           <Crown size={14} />
-          Админ
+          {t('roleAdmin')}
         </span>
       );
     }
@@ -92,26 +92,26 @@ export const UserManagement = () => {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
           <ShoppingBag size={14} />
-          Оптовик
+          {t('roleWholesaler')}
         </span>
       );
     }
     return (
       <span className="text-gray-500 text-sm">
-        Покупатель
+        {t('roleCustomer')}
       </span>
     );
   };
 
   const getLoyaltyBadge = (tier?: string) => {
     if (!tier || tier === 'basic') {
-      return <span className="text-gray-600 text-sm">Базовый (5%)</span>;
+      return <span className="text-gray-600 text-sm">{t('tierBasic')} (5%)</span>;
     }
     if (tier === 'premium') {
       return (
         <span className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 rounded text-sm">
           <Award size={14} />
-          Премиум (10%)
+          {t('tierPremium')} (10%)
         </span>
       );
     }
@@ -137,7 +137,7 @@ export const UserManagement = () => {
       ) : users.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <p className="text-gray-500">
-            Пользователи не найдены. Зарегистрируйте первого пользователя на сайте.
+            {t('noUsersFound')}
           </p>
         </div>
       ) : (
@@ -148,10 +148,10 @@ export const UserManagement = () => {
                 <tr>
                   <th className="px-6 py-3 text-left text-gray-700">Email</th>
                   <th className="px-6 py-3 text-left text-gray-700">{t('fullName')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">Роль</th>
-                  <th className="px-6 py-3 text-left text-gray-700">Баллы лояльности</th>
-                  <th className="px-6 py-3 text-left text-gray-700">Статус</th>
-                  <th className="px-6 py-3 text-left text-gray-700">Сумма за месяц</th>
+                  <th className="px-6 py-3 text-left text-gray-700">{t('userRole')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700">{t('loyaltyPoints')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700">{t('loyaltyStatus')}</th>
+                  <th className="px-6 py-3 text-left text-gray-700">{t('monthlyAmount')}</th>
                   <th className="px-6 py-3 text-left text-gray-700">{t('actions')}</th>
                 </tr>
               </thead>
@@ -183,9 +183,9 @@ export const UserManagement = () => {
                         onChange={(e) => updateUserRole(user.id, e.target.value as 'customer' | 'wholesaler' | 'admin')}
                         className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
-                        <option value="customer">Покупатель</option>
-                        <option value="wholesaler">Оптовик</option>
-                        <option value="admin">Админ</option>
+                        <option value="customer">{t('roleCustomer')}</option>
+                        <option value="wholesaler">{t('roleWholesaler')}</option>
+                        <option value="admin">{t('roleAdmin')}</option>
                       </select>
                     </td>
                   </tr>

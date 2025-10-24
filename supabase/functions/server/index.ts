@@ -1524,7 +1524,7 @@ app.post('/make-server-a75b5353/create-admin', async (c) => {
   }
 });
 
-// Auto-translate text using multiple translation services with fallback
+// Auto-translate text using Google Translate (unofficial API)
 app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
   try {
     const { text, targetLang } = await c.req.json();
@@ -1545,11 +1545,51 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
     
     const targetLangCode = langMap[targetLang] || targetLang;
 
-    // Try multiple translation services with fallback
-    
-    // Method 1: Try MyMemory (free, no API key, reliable)
+    // Method 1: Try Google Translate (free unofficial API)
     try {
-      console.log(`🔄 Trying MyMemory API...`);
+      console.log(`🔄 Trying Google Translate API...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      // Using unofficial Google Translate API
+      const googleTranslateUrl = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=${targetLangCode}&dt=t&q=${encodeURIComponent(text)}`;
+      
+      const response = await fetch(googleTranslateUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'Mozilla/5.0',
+        },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Google Translate unofficial API returns array format: [[[translated_text, original_text, null, null, relevance]]]
+        if (data && data[0] && Array.isArray(data[0])) {
+          let translated = '';
+          for (const segment of data[0]) {
+            if (segment && segment[0]) {
+              translated += segment[0];
+            }
+          }
+          
+          if (translated) {
+            console.log(`✅ Google Translate successful: "${translated.substring(0, 50)}..."`);
+            return c.json({ translatedText: translated });
+          }
+        }
+      }
+    } catch (googleError) {
+      console.warn('⚠️ Google Translate API failed:', googleError);
+    }
+
+    // Method 2: Try MyMemory as fallback
+    try {
+      console.log(`🔄 Trying MyMemory API as fallback...`);
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000);
       
@@ -1576,43 +1616,6 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
       }
     } catch (myMemoryError) {
       console.warn('⚠️ MyMemory API failed:', myMemoryError);
-    }
-
-    // Method 2: Try LibreTranslate (backup)
-    try {
-      console.log(`🔄 Trying LibreTranslate API...`);
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
-      // Use a more reliable LibreTranslate instance
-      const translateUrl = 'https://translate.terraprint.co/translate';
-      
-      const response = await fetch(translateUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          q: text,
-          source: 'ru',
-          target: targetLang,
-          format: 'text',
-        }),
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (data.translatedText) {
-          console.log(`✅ LibreTranslate successful: "${data.translatedText.substring(0, 50)}..."`);
-          return c.json({ translatedText: data.translatedText });
-        }
-      }
-    } catch (libreError) {
-      console.warn('⚠️ LibreTranslate API failed:', libreError);
     }
 
     // Fallback: Return original text
@@ -1680,15 +1683,18 @@ app.post('/make-server-a75b5353/pages/:pageName', requireAdmin, async (c) => {
 // Public Settings Endpoints (for frontend)
 // ============================================
 
+// IMPORTANT: Public endpoints must be defined BEFORE middleware that requires auth
+
 // Get chat settings (public - no auth required)
 app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
   try {
-    console.log('📋 Fetching public chat settings');
+    console.log('📋 [PUBLIC] Fetching chat settings - NO AUTH REQUIRED');
     
     const value = await kv.get('setting:chat');
     
     if (!value) {
       // Return default settings if not configured
+      console.log('📋 Returning default chat settings');
       return c.json({ 
         value: {
           enabled: true,
@@ -1698,7 +1704,7 @@ app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
       });
     }
     
-    console.log('✅ Chat settings found');
+    console.log('✅ Chat settings found and returned');
     return c.json({ value });
   } catch (error) {
     console.error('❌ Error fetching chat settings:', error);

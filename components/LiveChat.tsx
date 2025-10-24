@@ -14,6 +14,13 @@ export const LiveChat = () => {
 
   useEffect(() => {
     loadChatSettings();
+    
+    // Reload settings every 30 seconds to catch admin updates
+    const interval = setInterval(() => {
+      loadChatSettings();
+    }, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadChatSettings = async () => {
@@ -22,24 +29,30 @@ export const LiveChat = () => {
       const projectId = 'hohhzspiylssmgdivajk';
       const publicUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353/public/settings/chat`;
       
+      console.log('🔄 Loading chat settings from:', publicUrl);
+      
       const response = await fetch(publicUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
+        cache: 'no-cache', // Prevent caching
       });
       
       if (response.ok) {
         const data = await response.json();
         if (data.value) {
           setChatSettings(data.value);
-          console.log('✅ Chat settings loaded:', data.value);
+          console.log('✅ Chat settings loaded and updated:', data.value);
+        } else {
+          console.log('⚠️ No chat settings in response, using defaults');
         }
       } else {
-        console.log('⚠️ Failed to load chat settings, using defaults');
+        const errorText = await response.text();
+        console.log('⚠️ Failed to load chat settings. Status:', response.status, 'Response:', errorText);
       }
     } catch (error) {
-      console.log('⚠️ Using default chat settings');
+      console.log('⚠️ Error loading chat settings:', error);
       // Keep default settings if server is not available
     }
   };
@@ -59,12 +72,18 @@ export const LiveChat = () => {
   const whatsappNumber = chatSettings.whatsapp.replace(/[\s()-]/g, '');
   const whatsappLink = `https://wa.me/${whatsappNumber}`;
 
+  // Reload settings when chat is opened
+  const handleOpenChat = () => {
+    loadChatSettings(); // Refresh settings when user opens chat
+    setIsOpen(true);
+  };
+
   return (
     <>
       {/* Chat Button */}
       {!isOpen && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={handleOpenChat}
           className="fixed bottom-6 right-6 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition-all hover:scale-110 z-50"
           aria-label="Open chat"
         >
