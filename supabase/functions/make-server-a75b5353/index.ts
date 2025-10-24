@@ -1537,4 +1537,53 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
   }
 });
 
+// ============================================
+// Page Content Endpoints
+// ============================================
+
+// Get page content (public)
+app.get('/make-server-a75b5353/pages/:pageName', async (c) => {
+  try {
+    const pageName = c.req.param('pageName');
+    const lang = c.req.query('lang') || 'ru';
+    
+    console.log(`📄 Fetching page content: ${pageName} (${lang})`);
+    
+    // Try to get content from KV store
+    const contentKey = `page:${pageName}:${lang}`;
+    const content = await kv.get(contentKey);
+    
+    if (content) {
+      console.log(`✅ Found content for ${pageName} in ${lang}`);
+      return c.json({ content });
+    }
+    
+    // Return empty if not found - frontend will use defaults
+    console.log(`⚠️ No content found for ${pageName} in ${lang}, frontend will use defaults`);
+    return c.json({ content: null });
+  } catch (error) {
+    console.error('❌ Error fetching page content:', error);
+    return c.json({ error: 'Failed to fetch page content', details: String(error) }, 500);
+  }
+});
+
+// Update page content (admin only)
+app.post('/make-server-a75b5353/pages/:pageName', requireAdmin, async (c) => {
+  try {
+    const pageName = c.req.param('pageName');
+    const { content, language } = await c.req.json();
+    
+    console.log(`📝 Updating page content: ${pageName} (${language})`);
+    
+    const contentKey = `page:${pageName}:${language}`;
+    await kv.set(contentKey, content);
+    
+    console.log(`✅ Updated content for ${pageName} in ${language}`);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating page content:', error);
+    return c.json({ error: 'Failed to update page content', details: String(error) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);
