@@ -241,6 +241,28 @@ async function getUserMonthlyTotal(userId: string): Promise<number> {
 // Helper function to send order emails
 async function sendOrderEmail(email: string, order: any, type: 'new' | 'status_update' | 'tracking') {
   try {
+    // Get email settings from KV store
+    const emailSettings = await kv.get('setting:email');
+    
+    // Check if email notifications are enabled
+    if (!emailSettings) {
+      console.log('⚠️ Email settings not configured, skipping email notification');
+      return { success: false, reason: 'Email settings not configured' };
+    }
+
+    // Check if this type of notification is enabled
+    const notificationTypeMap = {
+      'new': 'sendOrderConfirmation',
+      'status_update': 'sendShippingNotification',
+      'tracking': 'sendShippingNotification',
+    };
+    
+    const notificationType = notificationTypeMap[type];
+    if (notificationType && !emailSettings[notificationType]) {
+      console.log(`⚠️ ${type} email notifications are disabled`);
+      return { success: false, reason: 'Notification type disabled' };
+    }
+
     let subject = '';
     let message = '';
     const orderNum = order.orderNumber || order.id.slice(0, 6);
@@ -275,22 +297,38 @@ async function sendOrderEmail(email: string, order: any, type: 'new' | 'status_u
         break;
     }
 
-    // Simple email sending using Supabase (if configured)
-    // Note: In production, you would use a proper email service like SendGrid, AWS SES, etc.
-    console.log(`📧 Email notification: ${type} for ${email} (order ${orderNum})`);
-    console.log(`Subject: ${subject}`);
-    
-    // For demonstration purposes only - in production, integrate with an email service
-    // Example with a hypothetical email API:
-    // await fetch('https://api.emailservice.com/send', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer API_KEY' },
-    //   body: JSON.stringify({ to: email, from: 'info@asia-pharm.ru', subject, html: message })
-    // });
+    console.log(`📧 Sending ${type} email to ${email} (order ${orderNum})`);
 
-    return { success: true };
+    // Send email using SMTP via Resend or similar service
+    // Using a simple HTTP API approach that works with most email services
+    try {
+      // Note: This is a simplified example using nodemailer-like approach
+      // In production, you should use a service like Resend, SendGrid, AWS SES, etc.
+      
+      // For now, we'll just log the email details
+      // Real implementation would connect to SMTP server using the saved settings
+      console.log(`📨 Email Details:`);
+      console.log(`   To: ${email}`);
+      console.log(`   From: ${emailSettings.smtpUser || 'info@asia-pharm.ru'}`);
+      console.log(`   Subject: ${subject}`);
+      console.log(`   SMTP Host: ${emailSettings.smtpHost}`);
+      console.log(`   SMTP Port: ${emailSettings.smtpPort}`);
+      
+      // TODO: Implement actual SMTP sending
+      // This would require a library like nodemailer or an email service API
+      // For production, integrate with services like:
+      // - Resend: https://resend.com/
+      // - SendGrid: https://sendgrid.com/
+      // - AWS SES: https://aws.amazon.com/ses/
+      
+      console.log('✅ Email logged (actual sending requires SMTP integration)');
+      return { success: true };
+    } catch (sendError) {
+      console.error('❌ Failed to send email:', sendError);
+      return { success: false, error: sendError };
+    }
   } catch (error) {
-    console.error('Email error:', error);
+    console.error('❌ Email error:', error);
     return { success: false, error };
   }
 }
@@ -1670,6 +1708,204 @@ app.post('/make-server-a75b5353/admin/settings', requireAdmin, async (c) => {
   } catch (error) {
     console.error('❌ Error updating settings:', error);
     return c.json({ error: 'Failed to update settings', details: String(error) }, 500);
+  }
+});
+
+// ============================================
+// Analytics Endpoint
+// ============================================
+
+// Get analytics data (admin only)
+app.get('/make-server-a75b5353/admin/analytics', requireAdmin, async (c) => {
+  try {
+    console.log('📊 Fetching analytics data');
+    
+    // Get all orders
+    const allOrders = await kv.getByPrefix('order:');
+    const orders = allOrders.map(o => o.value);
+    
+    // Get all users
+    const allUsers = await kv.getByPrefix('user:');
+    const users = allUsers.map(u => u.value);
+    
+    // Today's date boundaries
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    // Yesterday's date boundaries
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    // Filter orders by date
+    const todayOrders = orders.filter(o => {
+      const orderDate = new Date(o.createdAt || o.orderDate);
+      return orderDate >= today && orderDate < tomorrow;
+    });
+    
+    const yesterdayOrders = orders.filter(o => {
+      const orderDate = new Date(o.createdAt || o.orderDate);
+      return orderDate >= yesterday && orderDate < today;
+    });
+    
+    // Calculate revenue
+    const revenueToday = todayOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+    const revenueYesterday = yesterdayOrders.reduce((sum, o) => sum + (o.totalPrice || 0), 0);
+    
+    // New customers today
+    const newCustomersToday = users.filter(u => {
+      const createdDate = new Date(u.createdAt || u.created_at);
+      return createdDate >= today && createdDate < tomorrow;
+    }).length;
+    
+    // Loyalty points issued today
+    const loyaltyPointsToday = todayOrders.reduce((sum, o) => {
+      // Rough estimate: 5% of order value as points
+      return sum + Math.floor((o.totalPrice || 0) * 0.05);
+    }, 0);
+    
+    // Store statistics
+    const storeStats = {
+      china: { orders: 0, revenue: 0 },
+      thailand: { orders: 0, revenue: 0 },
+      vietnam: { orders: 0, revenue: 0 },
+    };
+    
+    todayOrders.forEach(order => {
+      const store = order.store || 'china';
+      if (storeStats[store as keyof typeof storeStats]) {
+        storeStats[store as keyof typeof storeStats].orders += 1;
+        storeStats[store as keyof typeof storeStats].revenue += order.totalPrice || 0;
+      }
+    });
+    
+    const analyticsData = {
+      ordersToday: todayOrders.length,
+      revenueToday,
+      newCustomers: newCustomersToday,
+      loyaltyPointsIssued: loyaltyPointsToday,
+      ordersYesterday: yesterdayOrders.length,
+      revenueYesterday,
+      storeStats,
+    };
+    
+    console.log(`✅ Analytics calculated: ${todayOrders.length} orders today, ${revenueToday} ₽ revenue`);
+    return c.json(analyticsData);
+  } catch (error) {
+    console.error('❌ Error fetching analytics:', error);
+    return c.json({ error: 'Failed to fetch analytics', details: String(error) }, 500);
+  }
+});
+
+// ============================================
+// WordPress Parser Endpoint
+// ============================================
+
+// Parse WordPress products (admin only)
+app.post('/make-server-a75b5353/admin/parse-wordpress', requireAdmin, async (c) => {
+  try {
+    const { url } = await c.req.json();
+    
+    if (!url) {
+      return c.json({ error: 'URL is required' }, 400);
+    }
+    
+    console.log(`🔍 Parsing WordPress site: ${url}`);
+    
+    // Validate URL
+    let siteUrl: URL;
+    try {
+      siteUrl = new URL(url);
+    } catch (e) {
+      return c.json({ error: 'Invalid URL format' }, 400);
+    }
+    
+    // Try to fetch WooCommerce REST API
+    const apiUrl = `${siteUrl.origin}/wp-json/wc/v3/products`;
+    console.log(`📡 Attempting to fetch from: ${apiUrl}`);
+    
+    try {
+      // First, try without authentication (if public API is enabled)
+      const response = await fetch(apiUrl, {
+        headers: {
+          'User-Agent': 'Asia-Pharm-Parser/1.0',
+        },
+      });
+      
+      if (!response.ok) {
+        console.warn(`⚠️ WooCommerce API returned ${response.status}`);
+        return c.json({ 
+          error: 'WooCommerce API access denied', 
+          message: 'Для доступа к WooCommerce REST API требуются ключи API. Создайте Consumer Key и Consumer Secret в настройках WooCommerce.',
+          status: response.status
+        }, 400);
+      }
+      
+      const products = await response.json();
+      
+      console.log(`✅ Found ${products.length} products`);
+      
+      // Parse and save products
+      let savedCount = 0;
+      for (const wpProduct of products) {
+        try {
+          // Convert WooCommerce product to our format
+          const product = {
+            id: crypto.randomUUID(),
+            name: wpProduct.name || 'Unnamed Product',
+            nameRu: wpProduct.name || '',
+            nameEn: wpProduct.name || '',
+            nameZh: wpProduct.name || '',
+            nameVi: wpProduct.name || '',
+            price: parseFloat(wpProduct.price) || 0,
+            oldPrice: parseFloat(wpProduct.regular_price) || null,
+            wholesalePrice: null,
+            wholesalePriceYuan: null,
+            image: wpProduct.images?.[0]?.src || '',
+            images: wpProduct.images?.map((img: any) => img.src) || [],
+            category: wpProduct.categories?.[0]?.name || 'Uncategorized',
+            disease: '',
+            description: wpProduct.description || '',
+            descriptionRu: wpProduct.description || '',
+            descriptionEn: wpProduct.description || '',
+            descriptionZh: wpProduct.description || '',
+            descriptionVi: wpProduct.description || '',
+            stock: wpProduct.stock_quantity || 0,
+            store: 'china', // Default store
+            isSample: false,
+            createdAt: new Date().toISOString(),
+            wpId: wpProduct.id,
+            wpPermalink: wpProduct.permalink,
+          };
+          
+          await kv.set(`product:${product.id}`, product);
+          savedCount++;
+        } catch (productError) {
+          console.error(`❌ Error saving product ${wpProduct.id}:`, productError);
+        }
+      }
+      
+      console.log(`✅ Parsing complete: ${savedCount} products saved`);
+      
+      return c.json({ 
+        success: true, 
+        message: `Успешно импортировано ${savedCount} товаров из ${products.length}`,
+        productsFound: products.length,
+        productsSaved: savedCount,
+      });
+      
+    } catch (fetchError) {
+      console.error('❌ Error fetching from WordPress:', fetchError);
+      return c.json({ 
+        error: 'Failed to fetch products from WordPress',
+        message: 'Не удалось получить данные. Проверьте, что сайт доступен и WooCommerce REST API включен.',
+        details: String(fetchError)
+      }, 500);
+    }
+  } catch (error) {
+    console.error('❌ Error parsing WordPress:', error);
+    return c.json({ error: 'Failed to parse WordPress site', details: String(error) }, 500);
   }
 });
 
