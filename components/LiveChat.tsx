@@ -18,8 +18,16 @@ export const LiveChat = () => {
 
   const loadChatSettings = async () => {
     try {
-      // Try to load chat settings from server (public endpoint)
-      const response = await fetch(getServerUrl('/public/settings/chat'));
+      // Try to load chat settings from server (public endpoint - no auth)
+      const projectId = 'hohhzspiylssmgdivajk';
+      const publicUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353/public/settings/chat`;
+      
+      const response = await fetch(publicUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       
       if (response.ok) {
         const data = await response.json();
@@ -27,6 +35,8 @@ export const LiveChat = () => {
           setChatSettings(data.value);
           console.log('✅ Chat settings loaded:', data.value);
         }
+      } else {
+        console.log('⚠️ Failed to load chat settings, using defaults');
       }
     } catch (error) {
       console.log('⚠️ Using default chat settings');

@@ -10,6 +10,7 @@ import { PaymentSettings } from './PaymentSettings';
 import { ChatSettings } from './ChatSettings';
 import { EmailSettings } from './EmailSettings';
 import { Analytics } from './Analytics';
+import { SEOSettings } from './SEOSettings';
 import { 
   Package, 
   ShoppingBag, 
@@ -20,10 +21,11 @@ import {
   Mail,
   BarChart3,
   Users,
-  CreditCard
+  CreditCard,
+  Globe
 } from 'lucide-react';
 
-type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'analytics';
+type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'analytics' | 'seo';
 
 export const AdminPanelNew = () => {
   const { t } = useLanguage();
@@ -39,6 +41,7 @@ export const AdminPanelNew = () => {
     { id: 'parser' as AdminTab, label: t('wordpressParser'), icon: Upload },
     { id: 'chat' as AdminTab, label: t('chatSettings'), icon: MessageCircle },
     { id: 'email' as AdminTab, label: t('emailNotifications'), icon: Mail },
+    { id: 'seo' as AdminTab, label: 'SEO настройки', icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
   ];
 
@@ -62,6 +65,8 @@ export const AdminPanelNew = () => {
         return <ChatSettings />;
       case 'email':
         return <EmailSettings />;
+      case 'seo':
+        return <SEOSettings />;
       case 'analytics':
         return <Analytics />;
       default:

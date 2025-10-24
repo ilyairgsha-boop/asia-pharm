@@ -1524,7 +1524,7 @@ app.post('/make-server-a75b5353/create-admin', async (c) => {
   }
 });
 
-// Auto-translate text using LibreTranslate (free, open-source)
+// Auto-translate text using multiple translation services with fallback
 app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
   try {
     const { text, targetLang } = await c.req.json();
@@ -1536,14 +1536,56 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
 
     console.log(`🌐 Translating to ${targetLang}: "${text.substring(0, 50)}..."`);
 
-    // Using LibreTranslate (free API)
-    // For production, you can use Google Translate API with your own key
-    const translateUrl = 'https://libretranslate.com/translate';
+    // Map our language codes to standard ISO codes
+    const langMap: Record<string, string> = {
+      'en': 'en',
+      'zh': 'zh-CN',
+      'vi': 'vi',
+    };
     
+    const targetLangCode = langMap[targetLang] || targetLang;
+
+    // Try multiple translation services with fallback
+    
+    // Method 1: Try MyMemory (free, no API key, reliable)
     try {
-      // Create abort controller with timeout
+      console.log(`🔄 Trying MyMemory API...`);
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      
+      const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ru|${targetLangCode}`;
+      
+      const response = await fetch(myMemoryUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.responseData && data.responseData.translatedText) {
+          const translated = data.responseData.translatedText;
+          console.log(`✅ MyMemory translation successful: "${translated.substring(0, 50)}..."`);
+          return c.json({ translatedText: translated });
+        }
+      }
+    } catch (myMemoryError) {
+      console.warn('⚠️ MyMemory API failed:', myMemoryError);
+    }
+
+    // Method 2: Try LibreTranslate (backup)
+    try {
+      console.log(`🔄 Trying LibreTranslate API...`);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      // Use a more reliable LibreTranslate instance
+      const translateUrl = 'https://translate.terraprint.co/translate';
       
       const response = await fetch(translateUrl, {
         method: 'POST',
@@ -1552,8 +1594,8 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
         },
         body: JSON.stringify({
           q: text,
-          source: 'ru', // Source language is Russian
-          target: targetLang, // en, zh, vi
+          source: 'ru',
+          target: targetLang,
           format: 'text',
         }),
         signal: controller.signal,
@@ -1561,36 +1603,24 @@ app.post('/make-server-a75b5353/translate', requireAdmin, async (c) => {
       
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Translation API error:', errorText);
-        // Return a fallback translation
-        return c.json({ 
-          translatedText: `[AUTO] ${text}`,
-          warning: 'Translation service unavailable, using fallback'
-        });
+      if (response.ok) {
+        const data = await response.json();
+        
+        if (data.translatedText) {
+          console.log(`✅ LibreTranslate successful: "${data.translatedText.substring(0, 50)}..."`);
+          return c.json({ translatedText: data.translatedText });
+        }
       }
-
-      const data = await response.json();
-      
-      if (data.translatedText) {
-        console.log(`✅ Translation successful: "${data.translatedText.substring(0, 50)}..."`);
-        return c.json({ translatedText: data.translatedText });
-      } else {
-        console.error('❌ No translatedText in response:', data);
-        return c.json({ 
-          translatedText: `[AUTO] ${text}`,
-          warning: 'Translation failed, using fallback'
-        });
-      }
-    } catch (fetchError) {
-      console.error('❌ Translation fetch error:', fetchError);
-      // Return original text with prefix as fallback
-      return c.json({ 
-        translatedText: `[AUTO] ${text}`,
-        warning: 'Translation service timeout or error'
-      });
+    } catch (libreError) {
+      console.warn('⚠️ LibreTranslate API failed:', libreError);
     }
+
+    // Fallback: Return original text
+    console.warn('⚠️ All translation services failed, returning original text');
+    return c.json({ 
+      translatedText: text,
+      warning: 'Translation service timeout or error'
+    });
   } catch (error) {
     console.error('❌ Translation error:', error);
     return c.json({ error: 'Translation failed', details: String(error) }, 500);
@@ -1686,6 +1716,43 @@ app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
 // ============================================
 // Settings Endpoints
 // ============================================
+
+// Get SEO settings (admin only)
+app.get('/make-server-a75b5353/admin/settings/seo', requireAdmin, async (c) => {
+  try {
+    console.log('📋 Fetching SEO settings');
+    
+    const value = await kv.get('setting:seo');
+    
+    if (!value) {
+      console.log('⚠️ SEO settings not found, returning defaults');
+      return c.json({ value: null });
+    }
+    
+    console.log('✅ SEO settings found');
+    return c.json({ value });
+  } catch (error) {
+    console.error('❌ Error fetching SEO settings:', error);
+    return c.json({ error: 'Failed to fetch SEO settings', details: String(error) }, 500);
+  }
+});
+
+// Update SEO settings (admin only)
+app.put('/make-server-a75b5353/admin/settings/seo', requireAdmin, async (c) => {
+  try {
+    const { value } = await c.req.json();
+    
+    console.log('📝 Updating SEO settings');
+    
+    await kv.set('setting:seo', value);
+    
+    console.log('✅ SEO settings updated successfully');
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating SEO settings:', error);
+    return c.json({ error: 'Failed to update SEO settings', details: String(error) }, 500);
+  }
+});
 
 // Get all settings (admin only)
 app.get('/make-server-a75b5353/admin/settings', requireAdmin, async (c) => {
