@@ -25,6 +25,9 @@ export const LiveChat = () => {
 
   const loadChatSettings = async () => {
     try {
+      // Load public anon key
+      const { publicAnonKey } = await import('../utils/supabase/info');
+      
       // Try to load chat settings from server (public endpoint - no auth)
       const projectId = 'hohhzspiylssmgdivajk';
       const publicUrl = `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353/public/settings/chat`;
@@ -35,6 +38,7 @@ export const LiveChat = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'apikey': publicAnonKey, // Required for Supabase Edge Functions
         },
         cache: 'no-cache', // Prevent caching
       });

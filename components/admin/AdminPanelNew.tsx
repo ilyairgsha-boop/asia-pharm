@@ -11,6 +11,7 @@ import { ChatSettings } from './ChatSettings';
 import { EmailSettings } from './EmailSettings';
 import { Analytics } from './Analytics';
 import { SEOSettings } from './SEOSettings';
+import { CategoryManagement } from './CategoryManagement';
 import { 
   Package, 
   ShoppingBag, 
@@ -22,10 +23,11 @@ import {
   BarChart3,
   Users,
   CreditCard,
-  Globe
+  Globe,
+  Layers
 } from 'lucide-react';
 
-type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'analytics' | 'seo';
+type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'analytics' | 'seo' | 'categories';
 
 export const AdminPanelNew = () => {
   const { t } = useLanguage();
@@ -36,6 +38,7 @@ export const AdminPanelNew = () => {
     { id: 'orders' as AdminTab, label: t('orderManagement'), icon: ShoppingBag },
     { id: 'promos' as AdminTab, label: t('promoCodes'), icon: Tag },
     { id: 'users' as AdminTab, label: t('userManagement'), icon: Users },
+    { id: 'categories' as AdminTab, label: t('categoryManagement'), icon: Layers },
     { id: 'payment' as AdminTab, label: t('paymentSettings'), icon: CreditCard },
     { id: 'pages' as AdminTab, label: t('pageEditor'), icon: FileEdit },
     { id: 'parser' as AdminTab, label: t('wordpressParser'), icon: Upload },
@@ -67,6 +70,8 @@ export const AdminPanelNew = () => {
         return <EmailSettings />;
       case 'seo':
         return <SEOSettings />;
+      case 'categories':
+        return <CategoryManagement />;
       case 'analytics':
         return <Analytics />;
       default:

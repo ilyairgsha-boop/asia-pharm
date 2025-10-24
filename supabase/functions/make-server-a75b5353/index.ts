@@ -362,6 +362,49 @@ app.get('/make-server-a75b5353/', (c) => {
   return c.json({ status: 'OK', message: 'Asia-Pharm Store API' });
 });
 
+// ============================================
+// PUBLIC ENDPOINTS (NO AUTH REQUIRED)
+// MUST BE DEFINED BEFORE ALL OTHER ROUTES
+// ============================================
+
+// Get chat settings (public - no auth required)
+app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
+  try {
+    console.log('📋 [PUBLIC] Fetching chat settings - NO AUTH REQUIRED');
+    
+    const value = await kv.get('setting:chat');
+    
+    if (!value) {
+      // Return default settings if not configured
+      console.log('📋 Returning default chat settings');
+      return c.json({ 
+        value: {
+          enabled: true,
+          telegram: '@asiapharm',
+          whatsapp: '+79001234567',
+        }
+      });
+    }
+    
+    console.log('✅ Chat settings found and returned');
+    return c.json({ value });
+  } catch (error) {
+    console.error('❌ Error fetching chat settings:', error);
+    // Return defaults on error
+    return c.json({ 
+      value: {
+        enabled: true,
+        telegram: '@asiapharm',
+        whatsapp: '+79001234567',
+      }
+    });
+  }
+});
+
+// ============================================
+// AUTHENTICATED ENDPOINTS
+// ============================================
+
 // Sign up
 app.post('/make-server-a75b5353/signup', async (c) => {
   try {
@@ -1680,47 +1723,7 @@ app.post('/make-server-a75b5353/pages/:pageName', requireAdmin, async (c) => {
 });
 
 // ============================================
-// Public Settings Endpoints (for frontend)
-// ============================================
-
-// IMPORTANT: Public endpoints must be defined BEFORE middleware that requires auth
-
-// Get chat settings (public - no auth required)
-app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
-  try {
-    console.log('📋 [PUBLIC] Fetching chat settings - NO AUTH REQUIRED');
-    
-    const value = await kv.get('setting:chat');
-    
-    if (!value) {
-      // Return default settings if not configured
-      console.log('📋 Returning default chat settings');
-      return c.json({ 
-        value: {
-          enabled: true,
-          telegram: '@asiapharm',
-          whatsapp: '+79001234567',
-        }
-      });
-    }
-    
-    console.log('✅ Chat settings found and returned');
-    return c.json({ value });
-  } catch (error) {
-    console.error('❌ Error fetching chat settings:', error);
-    // Return defaults on error
-    return c.json({ 
-      value: {
-        enabled: true,
-        telegram: '@asiapharm',
-        whatsapp: '+79001234567',
-      }
-    });
-  }
-});
-
-// ============================================
-// Settings Endpoints
+// Settings Endpoints (Admin Only)
 // ============================================
 
 // Get SEO settings (admin only)
@@ -1821,6 +1824,56 @@ app.put('/make-server-a75b5353/admin/settings/:name', requireAdmin, async (c) =>
     return c.json({ error: 'Failed to update setting', details: String(error) }, 500);
   }
 });
+
+// ============================================
+// Category Management Endpoints
+// ============================================
+
+// Get categories (admin only)
+app.get('/make-server-a75b5353/admin/categories', requireAdmin, async (c) => {
+  try {
+    console.log('📋 Fetching categories');
+    
+    const categories = await kv.get('categories');
+    
+    if (!categories) {
+      console.log('ℹ️ No categories found, returning default structure');
+      return c.json({ 
+        categories: {
+          topMenu: [],
+          sidebar: []
+        }
+      });
+    }
+    
+    console.log('✅ Categories loaded');
+    return c.json({ categories });
+  } catch (error) {
+    console.error('❌ Error fetching categories:', error);
+    return c.json({ error: 'Failed to fetch categories', details: String(error) }, 500);
+  }
+});
+
+// Update categories (admin only)
+app.put('/make-server-a75b5353/admin/categories', requireAdmin, async (c) => {
+  try {
+    const { categories } = await c.req.json();
+    
+    console.log('📝 Updating categories');
+    
+    await kv.set('categories', categories);
+    
+    console.log('✅ Categories updated successfully');
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating categories:', error);
+    return c.json({ error: 'Failed to update categories', details: String(error) }, 500);
+  }
+});
+
+// ============================================
+// Settings Endpoints (continued)
+// ============================================
 
 // Update multiple settings at once (admin only)
 app.post('/make-server-a75b5353/admin/settings', requireAdmin, async (c) => {
