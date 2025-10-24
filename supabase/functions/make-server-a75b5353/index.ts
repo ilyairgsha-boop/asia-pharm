@@ -299,30 +299,52 @@ async function sendOrderEmail(email: string, order: any, type: 'new' | 'status_u
 
     console.log(`📧 Sending ${type} email to ${email} (order ${orderNum})`);
 
-    // Send email using SMTP via Resend or similar service
-    // Using a simple HTTP API approach that works with most email services
+    // Send email using Resend API
     try {
-      // Note: This is a simplified example using nodemailer-like approach
-      // In production, you should use a service like Resend, SendGrid, AWS SES, etc.
+      const resendApiKey = Deno.env.get('RESEND_API_KEY');
       
-      // For now, we'll just log the email details
-      // Real implementation would connect to SMTP server using the saved settings
-      console.log(`📨 Email Details:`);
+      if (!resendApiKey) {
+        console.error('❌ RESEND_API_KEY not configured in environment variables');
+        console.log('📨 Email Details (not sent):');
+        console.log(`   To: ${email}`);
+        console.log(`   From: ${emailSettings.smtpUser || 'onboarding@resend.dev'}`);
+        console.log(`   Subject: ${subject}`);
+        return { success: false, reason: 'RESEND_API_KEY not configured' };
+      }
+
+      // Prepare from email - Resend requires a verified domain or use onboarding@resend.dev
+      const fromEmail = emailSettings.smtpUser || 'onboarding@resend.dev';
+      
+      console.log(`📨 Sending via Resend API:`);
       console.log(`   To: ${email}`);
-      console.log(`   From: ${emailSettings.smtpUser || 'info@asia-pharm.ru'}`);
+      console.log(`   From: ${fromEmail}`);
       console.log(`   Subject: ${subject}`);
-      console.log(`   SMTP Host: ${emailSettings.smtpHost}`);
-      console.log(`   SMTP Port: ${emailSettings.smtpPort}`);
       
-      // TODO: Implement actual SMTP sending
-      // This would require a library like nodemailer or an email service API
-      // For production, integrate with services like:
-      // - Resend: https://resend.com/
-      // - SendGrid: https://sendgrid.com/
-      // - AWS SES: https://aws.amazon.com/ses/
+      // Send email via Resend REST API
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: fromEmail,
+          to: [email],
+          subject: subject,
+          html: message,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error(`❌ Resend API error (${response.status}):`, errorData);
+        return { success: false, error: `Resend API returned ${response.status}` };
+      }
+
+      const result = await response.json();
+      console.log('✅ Email sent successfully via Resend:', result.id);
+      return { success: true, emailId: result.id };
       
-      console.log('✅ Email logged (actual sending requires SMTP integration)');
-      return { success: true };
     } catch (sendError) {
       console.error('❌ Failed to send email:', sendError);
       return { success: false, error: sendError };
@@ -1625,6 +1647,43 @@ app.post('/make-server-a75b5353/pages/:pageName', requireAdmin, async (c) => {
 });
 
 // ============================================
+// Public Settings Endpoints (for frontend)
+// ============================================
+
+// Get chat settings (public - no auth required)
+app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
+  try {
+    console.log('📋 Fetching public chat settings');
+    
+    const value = await kv.get('setting:chat');
+    
+    if (!value) {
+      // Return default settings if not configured
+      return c.json({ 
+        value: {
+          enabled: true,
+          telegram: '@asiapharm',
+          whatsapp: '+79001234567',
+        }
+      });
+    }
+    
+    console.log('✅ Chat settings found');
+    return c.json({ value });
+  } catch (error) {
+    console.error('❌ Error fetching chat settings:', error);
+    // Return defaults on error
+    return c.json({ 
+      value: {
+        enabled: true,
+        telegram: '@asiapharm',
+        whatsapp: '+79001234567',
+      }
+    });
+  }
+});
+
+// ============================================
 // Settings Endpoints
 // ============================================
 
@@ -1814,35 +1873,78 @@ app.post('/make-server-a75b5353/admin/parse-wordpress', requireAdmin, async (c) 
     console.log(`🔍 Parsing WordPress site: ${url}`);
     
     // Validate URL
-    let siteUrl: URL;
+    let inputUrl: URL;
     try {
-      siteUrl = new URL(url);
+      inputUrl = new URL(url);
     } catch (e) {
-      return c.json({ error: 'Invalid URL format' }, 400);
+      return c.json({ 
+        error: 'Invalid URL format',
+        message: 'Введите корректный URL. Например: https://example.com'
+      }, 400);
     }
     
-    // Try to fetch WooCommerce REST API
-    const apiUrl = `${siteUrl.origin}/wp-json/wc/v3/products`;
-    console.log(`📡 Attempting to fetch from: ${apiUrl}`);
+    // Check if URL already contains WooCommerce API path with auth params
+    let apiUrl: string;
+    
+    if (url.includes('/wp-json/wc/v3/products')) {
+      // User provided full API URL with auth params
+      apiUrl = url;
+      console.log(`📡 Using provided API URL with authentication`);
+    } else {
+      // User provided just the site URL, construct API URL
+      apiUrl = `${inputUrl.origin}/wp-json/wc/v3/products`;
+      console.log(`📡 Constructed API URL: ${apiUrl}`);
+    }
+    
+    console.log(`🔗 Fetching from: ${apiUrl.replace(/consumer_key=[^&]+/, 'consumer_key=***').replace(/consumer_secret=[^&]+/, 'consumer_secret=***')}`);
     
     try {
-      // First, try without authentication (if public API is enabled)
       const response = await fetch(apiUrl, {
         headers: {
           'User-Agent': 'Asia-Pharm-Parser/1.0',
+          'Accept': 'application/json',
         },
       });
       
+      console.log(`📊 API Response Status: ${response.status}`);
+      
       if (!response.ok) {
-        console.warn(`⚠️ WooCommerce API returned ${response.status}`);
+        const errorText = await response.text();
+        console.warn(`⚠️ WooCommerce API Error (${response.status}):`, errorText);
+        
+        let errorMessage = 'Не удалось получить доступ к WooCommerce REST API.';
+        
+        if (response.status === 401) {
+          errorMessage = 'Требуется авторизация. Добавьте API ключи в URL:\n' +
+                        'https://ваш-сайт.com/wp-json/wc/v3/products?consumer_key=ck_xxx&consumer_secret=cs_xxx\n\n' +
+                        'Создайте ключи в: WooCommerce → Настройки → REST API';
+        } else if (response.status === 404) {
+          errorMessage = 'WooCommerce REST API не найден. Убедитесь что:\n' +
+                        '1. WooCommerce установлен и активен\n' +
+                        '2. URL корректный\n' +
+                        '3. Сайт доступен';
+        } else if (response.status === 403) {
+          errorMessage = 'Доступ запрещен. Проверьте права API ключей (должно быть минимум "Read")';
+        }
+        
         return c.json({ 
           error: 'WooCommerce API access denied', 
-          message: 'Для доступа к WooCommerce REST API требуются ключи API. Создайте Consumer Key и Consumer Secret в настройках WooCommerce.',
-          status: response.status
+          message: errorMessage,
+          status: response.status,
+          details: errorText.substring(0, 200)
         }, 400);
       }
       
       const products = await response.json();
+      
+      // Check if response is actually an array of products
+      if (!Array.isArray(products)) {
+        console.error('❌ Response is not an array:', products);
+        return c.json({
+          error: 'Invalid API response',
+          message: 'API не вернул список товаров. Проверьте URL и права доступа.',
+        }, 400);
+      }
       
       console.log(`✅ Found ${products.length} products`);
       
