@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { getServerUrl } from '../utils/supabase/client';
+import { publicAnonKey } from '../utils/supabase/info';
 
 interface PrivacyPolicyProps {
   onNavigate: (page: string) => void;
@@ -17,7 +18,11 @@ export const PrivacyPolicy = ({ onNavigate }: PrivacyPolicyProps) => {
 
   const fetchContent = async () => {
     try {
-      const response = await fetch(getServerUrl(`/pages/privacy-policy?lang=${language}`));
+      const response = await fetch(getServerUrl(`/pages/privacy-policy?lang=${language}`), {
+        headers: {
+          'Authorization': `Bearer ${publicAnonKey}`,
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         setContent(data.content || getDefaultContent());

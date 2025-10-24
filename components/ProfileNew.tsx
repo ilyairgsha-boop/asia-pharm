@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { getServerUrl } from '../utils/supabase/client';
+import { publicAnonKey } from '../utils/supabase/info';
 import { Package, Loader2, Gift, TrendingUp, Calendar, Heart } from 'lucide-react';
 import { OrderDetails } from './OrderDetails';
 import { ProductCard } from './ProductCard';
@@ -138,7 +139,11 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
       // Fetch all products
       let allProducts: Product[] = [];
       try {
-        const response = await fetch(getServerUrl('/products'));
+        const response = await fetch(getServerUrl('/products'), {
+          headers: {
+            'Authorization': `Bearer ${publicAnonKey}`,
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           allProducts = data.products || [];
