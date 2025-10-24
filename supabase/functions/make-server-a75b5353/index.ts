@@ -753,7 +753,41 @@ app.put('/make-server-a75b5353/admin/orders/:id/tracking', requireAdmin, async (
   }
 });
 
-// Get user loyalty info
+// Get user loyalty info (both /loyalty and /loyalty/info for compatibility)
+app.get('/make-server-a75b5353/loyalty', requireAuth, async (c) => {
+  try {
+    const user = c.get('user');
+    const userLoyaltyKey = `user_loyalty:${user.id}`;
+    let loyaltyData = await kv.get(userLoyaltyKey);
+    
+    if (!loyaltyData) {
+      loyaltyData = {
+        userId: user.id,
+        points: 0,
+        totalEarned: 0,
+        totalSpent: 0,
+        history: []
+      };
+    }
+    
+    // Calculate monthly total
+    const monthlyTotal = await getUserMonthlyTotal(user.id);
+    const tier = monthlyTotal >= 10000 ? 'premium' : 'basic';
+    
+    return c.json({
+      points: loyaltyData.points,
+      totalEarned: loyaltyData.totalEarned,
+      totalSpent: loyaltyData.totalSpent,
+      monthlyTotal,
+      tier,
+      history: loyaltyData.history || []
+    });
+  } catch (error) {
+    console.error('Error fetching loyalty info:', error);
+    return c.json({ error: 'Failed to fetch loyalty info' }, 500);
+  }
+});
+
 app.get('/make-server-a75b5353/loyalty/info', requireAuth, async (c) => {
   try {
     const user = c.get('user');

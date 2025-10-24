@@ -23,7 +23,7 @@ export const set = async (key: string, value: any): Promise<void> => {
   const { error } = await supabase.from("kv_store_a75b5353").upsert({
     key,
     value
-  });
+  }, { onConflict: 'key' });
   if (error) {
     throw new Error(error.message);
   }
@@ -51,7 +51,7 @@ export const del = async (key: string): Promise<void> => {
 // Sets multiple key-value pairs in the database.
 export const mset = async (keys: string[], values: any[]): Promise<void> => {
   const supabase = client()
-  const { error } = await supabase.from("kv_store_a75b5353").upsert(keys.map((k, i) => ({ key: k, value: values[i] })));
+  const { error } = await supabase.from("kv_store_a75b5353").upsert(keys.map((k, i) => ({ key: k, value: values[i] })), { onConflict: 'key' });
   if (error) {
     throw new Error(error.message);
   }
