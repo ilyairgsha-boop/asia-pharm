@@ -1586,4 +1586,91 @@ app.post('/make-server-a75b5353/pages/:pageName', requireAdmin, async (c) => {
   }
 });
 
+// ============================================
+// Settings Endpoints
+// ============================================
+
+// Get all settings (admin only)
+app.get('/make-server-a75b5353/admin/settings', requireAdmin, async (c) => {
+  try {
+    console.log('📋 Fetching all settings');
+    
+    const settingsData = await kv.getByPrefix('setting:');
+    
+    // Convert array of {key, value} to object
+    const settings: Record<string, any> = {};
+    for (const item of settingsData) {
+      // Extract setting name from key (format: "setting:name")
+      const settingName = item.key.replace('setting:', '');
+      settings[settingName] = item.value;
+    }
+    
+    console.log(`✅ Fetched ${Object.keys(settings).length} settings`);
+    return c.json({ settings });
+  } catch (error) {
+    console.error('❌ Error fetching settings:', error);
+    return c.json({ error: 'Failed to fetch settings', details: String(error) }, 500);
+  }
+});
+
+// Get specific setting (admin only)
+app.get('/make-server-a75b5353/admin/settings/:name', requireAdmin, async (c) => {
+  try {
+    const settingName = c.req.param('name');
+    console.log(`📋 Fetching setting: ${settingName}`);
+    
+    const value = await kv.get(`setting:${settingName}`);
+    
+    if (value === null || value === undefined) {
+      console.log(`⚠️ Setting not found: ${settingName}`);
+      return c.json({ value: null });
+    }
+    
+    console.log(`✅ Found setting: ${settingName}`);
+    return c.json({ value });
+  } catch (error) {
+    console.error('❌ Error fetching setting:', error);
+    return c.json({ error: 'Failed to fetch setting', details: String(error) }, 500);
+  }
+});
+
+// Update setting (admin only)
+app.put('/make-server-a75b5353/admin/settings/:name', requireAdmin, async (c) => {
+  try {
+    const settingName = c.req.param('name');
+    const { value } = await c.req.json();
+    
+    console.log(`📝 Updating setting: ${settingName}`);
+    
+    await kv.set(`setting:${settingName}`, value);
+    
+    console.log(`✅ Updated setting: ${settingName}`);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating setting:', error);
+    return c.json({ error: 'Failed to update setting', details: String(error) }, 500);
+  }
+});
+
+// Update multiple settings at once (admin only)
+app.post('/make-server-a75b5353/admin/settings', requireAdmin, async (c) => {
+  try {
+    const { settings } = await c.req.json();
+    
+    console.log(`📝 Updating ${Object.keys(settings).length} settings`);
+    
+    // Save each setting
+    for (const [key, value] of Object.entries(settings)) {
+      await kv.set(`setting:${key}`, value);
+      console.log(`  ✓ Saved ${key}`);
+    }
+    
+    console.log(`✅ All settings updated successfully`);
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error updating settings:', error);
+    return c.json({ error: 'Failed to update settings', details: String(error) }, 500);
+  }
+});
+
 Deno.serve(app.fetch);

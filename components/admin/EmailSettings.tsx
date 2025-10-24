@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Save, Mail } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getServerUrl } from '../../utils/supabase/client';
+import { Save, Mail, Loader2 } from 'lucide-react';
 
 export const EmailSettings = () => {
   const { t } = useLanguage();
+  const { accessToken } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     smtpHost: 'smtp.gmail.com',
     smtpPort: '587',
@@ -16,11 +21,73 @@ export const EmailSettings = () => {
     sendDeliveryConfirmation: true,
   });
 
-  const handleSave = async () => {
-    // В реальном приложении здесь будет сохранение в базу данных
-    alert(t('saveSuccess'));
-    console.log('Email settings saved:', settings);
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch(getServerUrl('/admin/settings/email'), {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.value) {
+          setSettings(data.value);
+          console.log('✅ Email settings loaded');
+        } else {
+          console.log('ℹ️ No saved email settings, using defaults');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading email settings:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    if (!accessToken) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(getServerUrl('/admin/settings/email'), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ value: settings }),
+      });
+
+      if (response.ok) {
+        alert(t('saveSuccess'));
+        console.log('✅ Email settings saved:', settings);
+      } else {
+        const error = await response.json();
+        console.error('❌ Failed to save settings:', error);
+        alert(t('saveFailed') || 'Failed to save settings');
+      }
+    } catch (error) {
+      console.error('❌ Error saving email settings:', error);
+      alert(t('saveFailed') || 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center">
+        <Loader2 className="animate-spin text-red-600" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -153,10 +220,20 @@ export const EmailSettings = () => {
         <div className="pt-4 border-t">
           <button
             onClick={handleSave}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            disabled={saving}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} />
-            <span>{t('saveSettings')}</span>
+            {saving ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>{t('saving') || 'Saving...'}</span>
+              </>
+            ) : (
+              <>
+                <Save size={20} />
+                <span>{t('saveSettings')}</span>
+              </>
+            )}
           </button>
         </div>
       </div>

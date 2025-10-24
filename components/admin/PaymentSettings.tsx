@@ -1,26 +1,84 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { Save, Upload } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+import { getServerUrl } from '../../utils/supabase/client';
+import { Save, Upload, Loader2 } from 'lucide-react';
 
 export const PaymentSettings = () => {
   const { t } = useLanguage();
+  const { accessToken } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     cardNumber: '2202 2004 3395 7386',
     contractNumber: '505 518 5408',
     qrCodeUrl: '',
   });
 
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    if (!accessToken) return;
+    
+    try {
+      const response = await fetch(getServerUrl('/admin/settings/payment'), {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.value) {
+          setSettings(data.value);
+          console.log('✅ Payment settings loaded');
+        } else {
+          console.log('ℹ️ No saved payment settings, using defaults');
+        }
+      }
+    } catch (error) {
+      console.error('❌ Error loading payment settings:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
-    // В реальном приложении здесь будет сохранение в базу данных
-    // Сейчас просто показываем успешное сообщение
-    alert(t('saveSuccess'));
-    console.log('Payment settings saved:', settings);
+    if (!accessToken) return;
+    
+    setSaving(true);
+    try {
+      const response = await fetch(getServerUrl('/admin/settings/payment'), {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ value: settings }),
+      });
+
+      if (response.ok) {
+        alert(t('saveSuccess'));
+        console.log('✅ Payment settings saved:', settings);
+      } else {
+        const error = await response.json();
+        console.error('❌ Failed to save settings:', error);
+        alert(t('saveFailed') || 'Failed to save settings');
+      }
+    } catch (error) {
+      console.error('❌ Error saving payment settings:', error);
+      alert(t('saveFailed') || 'Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleQRUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // В реальном приложении здесь будет загрузка в хранилище
+      // Convert to base64 for storage
       const reader = new FileReader();
       reader.onloadend = () => {
         setSettings({ ...settings, qrCodeUrl: reader.result as string });
@@ -28,6 +86,14 @@ export const PaymentSettings = () => {
       reader.readAsDataURL(file);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6 flex items-center justify-center">
+        <Loader2 className="animate-spin text-red-600" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -101,10 +167,20 @@ export const PaymentSettings = () => {
         <div className="pt-4 border-t">
           <button
             onClick={handleSave}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+            disabled={saving}
+            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Save size={20} />
-            <span>{t('save')}</span>
+            {saving ? (
+              <>
+                <Loader2 className="animate-spin" size={20} />
+                <span>{t('saving') || 'Saving...'}</span>
+              </>
+            ) : (
+              <>
+                <Save size={20} />
+                <span>{t('save')}</span>
+              </>
+            )}
           </button>
         </div>
 
