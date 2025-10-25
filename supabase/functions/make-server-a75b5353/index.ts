@@ -1,4 +1,4 @@
-// ✅ Добавляем ЭТУ строку первой:
+// ✅ Делаем чат публичным
 Deno.env.set("SUPABASE_AUTH_DISABLED", "true");
 
 import { Hono } from 'npm:hono';
@@ -8,36 +8,47 @@ import * as kv from './kv_store.tsx';
 
 const app = new Hono();
 
-// ✅ Правильный глобальный CORS
+// ✅ Разрешаем конкретный домен фронтенда
+const FRONTEND_ORIGIN = "https://asia-pharm-g2n7.vercel.app";
+
+// ✅ Универсальные CORS заголовки
+const corsHeaders = {
+  "Access-Control-Allow-Origin": FRONTEND_ORIGIN,
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
+  "Access-Control-Max-Age": "86400",
+};
+
+// ✅ Глобальная CORS обработка
 app.use('*', async (c, next) => {
-  c.header('Access-Control-Allow-Origin', '*');
-  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, x-client-info');
-  c.header('Access-Control-Expose-Headers', 'Content-Length, X-JSON');
-  c.header('Access-Control-Max-Age', '86400');
-  
-  // ✅ ВАЖНО: Обрабатываем preflight ДО next()
-  if (c.req.method === 'OPTIONS') {
-    return c.text('', 204);
+  Object.entries(corsHeaders).forEach(([k, v]) => c.header(k, v));
+
+  // ✅ Корректная обработка preflight
+  if (c.req.method === "OPTIONS") {
+    return c.text("OK", 204);
   }
 
   await next();
 });
 
-app.use('*', logger(console.log));
+// ✅ Логгер
+app.use('*', logger());
 
-// Supabase clients
-const getSupabaseAdmin = () => {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
-};
-
+// ✅ Supabase (public)
 const getSupabaseClient = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { ...corsHeaders }} }
+  );
+};
+
+// ✅ Supabase (admin)
+const getSupabaseAdmin = () => {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    { global: { headers: { ...corsHeaders }} }
   );
 };
 
