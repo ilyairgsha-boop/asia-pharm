@@ -5,19 +5,12 @@ import * as kv from './kv_store.tsx';
 
 const app = new Hono();
 
-// ✅ Разрешаем конкретный домен фронтенда
-const FRONTEND_ORIGIN = "https://asia-pharm-g2n7.vercel.app";
+// Логирование
+app.use('*', logger(console.log));
 
-// ✅ Универсальные CORS заголовки
-const corsHeaders = {
-  "Access-Control-Allow-Origin": FRONTEND_ORIGIN,
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey, x-client-info",
-  "Access-Control-Max-Age": "86400",
-};
-
-// ✅ Глобальная CORS обработка
+// ✅ Глобальный CORS
 app.use('*', async (c, next) => {
+  // Preflight
   if (c.req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -29,46 +22,46 @@ app.use('*', async (c, next) => {
       },
     });
   }
+
+  // Выполняем основной обработчик
   const res = await next();
-  // Добавляем CORS к каждому ответу
+
+  // Добавляем CORS ко всем другим ответам
   res.headers.set('Access-Control-Allow-Origin', '*');
   res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, x-client-info');
+
   return res;
 });
 
-// === PUBLIC chat settings ===
+// Supabase клиенты
+const getSupabaseAdmin = () => {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+  );
+};
+
+const getSupabaseClient = () => {
+  return createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!
+  );
+};
+
+// Пример GET endpoint
 app.get('/public/settings/chat', async (c) => {
-  try {
-    const settings = await kv.get('chat_settings');
-    return c.json(settings ?? { enabled: false });
-  } catch (err) {
-    console.error(err);
-    return c.json({ enabled: false }, 500);
-  }
+  const client = getSupabaseClient();
+  const settings = await kv.getChatSettings(client); // твоя функция получения
+  return c.json(settings);
 });
 
-// === ADMIN chat settings ===
-app.get('/admin/settings/chat', async (c) => {
-  try {
-    const settings = await kv.get('chat_settings');
-    return c.json(settings ?? { enabled: false });
-  } catch (err) {
-    console.error(err);
-    return c.json({ enabled: false }, 500);
-  }
-});
-
-// === ADMIN update chat settings ===
+// Пример PUT endpoint
 app.put('/admin/settings/chat', async (c) => {
-  try {
-    const body = await c.req.json();
-    await kv.set('chat_settings', body);
-    return c.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    return c.json({ success: false, error: err.message }, 500);
-  }
+  const client = getSupabaseAdmin();
+  const body = await c.req.json();
+  await kv.saveChatSettings(client, body); // твоя функция сохранения
+  return c.json({ success: true });
 });
 
 export default app;
