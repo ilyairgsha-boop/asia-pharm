@@ -1,3 +1,5 @@
+// Asia-Pharm Server - Edge Function
+// Version: 2.0
 import { Hono } from 'npm:hono';
 import { logger } from 'npm:hono/logger';
 import { createClient } from 'npm:@supabase/supabase-js';
@@ -371,6 +373,10 @@ app.get('/make-server-a75b5353/', (c) => {
 app.get('/make-server-a75b5353/public/settings/chat', async (c) => {
   try {
     console.log('📋 [PUBLIC] Fetching chat settings - NO AUTH REQUIRED');
+    console.log('📋 Headers:', {
+      authorization: c.req.header('authorization'),
+      apikey: c.req.header('apikey'),
+    });
     
     const value = await kv.get('setting:chat');
     
