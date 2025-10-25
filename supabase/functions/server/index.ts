@@ -1,5 +1,3 @@
-Deno.env.set("SUPABASE_AUTH_DISABLED", "true");
-
 import { Hono } from 'npm:hono';
 import { logger } from 'npm:hono/logger';
 import { createClient } from 'npm:@supabase/supabase-js';

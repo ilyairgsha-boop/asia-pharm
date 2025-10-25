@@ -5,36 +5,27 @@ import * as kv from './kv_store.tsx';
 
 const app = new Hono();
 
-// Логирование
-app.use('*', logger(console.log));
-
-// ✅ Глобальный CORS
+// Custom CORS middleware - set headers explicitly
 app.use('*', async (c, next) => {
-  // Preflight
+  // Set CORS headers for all requests
+  c.header('Access-Control-Allow-Origin', '*');
+  c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, x-client-info');
+  c.header('Access-Control-Expose-Headers', 'Content-Length, X-JSON');
+  c.header('Access-Control-Max-Age', '86400');
+  
+  // Handle preflight OPTIONS request
   if (c.req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 204,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, apikey, x-client-info',
-        'Access-Control-Max-Age': '86400',
-      },
-    });
+    c.status(200);
+    return c.body(null);
   }
-
-  // Выполняем основной обработчик
-  const res = await next();
-
-  // Добавляем CORS ко всем другим ответам
-  res.headers.set('Access-Control-Allow-Origin', '*');
-  res.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, x-client-info');
-
-  return res;
+  
+  await next();
 });
 
-// Supabase клиенты
+app.use('*', logger(console.log));
+
+// Supabase clients
 const getSupabaseAdmin = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -46,63 +37,6 @@ const getSupabaseClient = () => {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
-  );
-};
-
-// Пример GET endpoint
-app.get('/public/settings/chat', async (c) => {
-  const client = getSupabaseClient();
-  const settings = await kv.getChatSettings(client); // твоя функция получения
-  return c.json(settings);
-});
-
-// Пример PUT endpoint
-app.put('/admin/settings/chat', async (c) => {
-  const client = getSupabaseAdmin();
-  const body = await c.req.json();
-  await kv.saveChatSettings(client, body); // твоя функция сохранения
-  return c.json({ success: true });
-});
-
-export default app;
-
-// ✅ Логгер
-app.use('*', logger());
-
-// PUBLIC SETTINGS GET
-app.get('/public/settings/chat', async (c) => {
-  const store = await kv.get('chat_settings');
-  return c.json(store ?? { enabled: false });
-});
-
-// ADMIN SETTINGS GET
-app.get('/admin/settings/chat', async (c) => {
-  const store = await kv.get('chat_settings');
-  return c.json(store ?? { enabled: false });
-});
-
-// ADMIN SETTINGS UPDATE
-app.put('/admin/settings/chat', async (c) => {
-  const body = await c.req.json();
-  await kv.set('chat_settings', body);
-  return c.json({ success: true });
-});
-
-// ✅ Supabase (public)
-const getSupabaseClient = () => {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { ...corsHeaders }} }
-  );
-};
-
-// ✅ Supabase (admin)
-const getSupabaseAdmin = () => {
-  return createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    { global: { headers: { ...corsHeaders }} }
   );
 };
 
