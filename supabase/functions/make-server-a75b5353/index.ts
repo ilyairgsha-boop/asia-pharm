@@ -34,6 +34,25 @@ app.use('*', async (c, next) => {
 // ✅ Логгер
 app.use('*', logger());
 
+// PUBLIC SETTINGS GET
+app.get('/public/settings/chat', async (c) => {
+  const store = await kv.get('chat_settings');
+  return c.json(store ?? { enabled: false });
+});
+
+// ADMIN SETTINGS GET
+app.get('/admin/settings/chat', async (c) => {
+  const store = await kv.get('chat_settings');
+  return c.json(store ?? { enabled: false });
+});
+
+// ADMIN SETTINGS UPDATE
+app.put('/admin/settings/chat', async (c) => {
+  const body = await c.req.json();
+  await kv.set('chat_settings', body);
+  return c.json({ success: true });
+});
+
 // ✅ Supabase (public)
 const getSupabaseClient = () => {
   return createClient(
