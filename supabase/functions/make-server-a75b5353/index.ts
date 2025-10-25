@@ -21,9 +21,9 @@ app.use('*', async (c, next) => {
   Object.entries(corsHeaders).forEach(([k, v]) => c.header(k, v));
 
   // ✅ Корректная обработка preflight
-  if (c.req.method === "OPTIONS") {
-    return c.text("OK", 204);
-  }
+  if (c.req.method === 'OPTIONS') {
+  return new Response(null, { status: 204 });
+}
 
   await next();
 });
