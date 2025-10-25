@@ -31,6 +31,42 @@ app.use('*', async (c, next) => {
   await next();
 });
 
+// === PUBLIC chat settings ===
+app.get('/public/settings/chat', async (c) => {
+  try {
+    const settings = await kv.get('chat_settings');
+    return c.json(settings ?? { enabled: false });
+  } catch (err) {
+    console.error(err);
+    return c.json({ enabled: false }, 500);
+  }
+});
+
+// === ADMIN chat settings ===
+app.get('/admin/settings/chat', async (c) => {
+  try {
+    const settings = await kv.get('chat_settings');
+    return c.json(settings ?? { enabled: false });
+  } catch (err) {
+    console.error(err);
+    return c.json({ enabled: false }, 500);
+  }
+});
+
+// === ADMIN update chat settings ===
+app.put('/admin/settings/chat', async (c) => {
+  try {
+    const body = await c.req.json();
+    await kv.set('chat_settings', body);
+    return c.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    return c.json({ success: false, error: err.message }, 500);
+  }
+});
+
+export default app;
+
 // ✅ Логгер
 app.use('*', logger());
 
