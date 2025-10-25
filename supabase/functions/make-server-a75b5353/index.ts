@@ -1,3 +1,4 @@
+// ✅ Добавляем ЭТУ строку первой:
 Deno.env.set("SUPABASE_AUTH_DISABLED", "true");
 
 import { Hono } from 'npm:hono';
@@ -7,21 +8,19 @@ import * as kv from './kv_store.tsx';
 
 const app = new Hono();
 
-// Custom CORS middleware - set headers explicitly
+// ✅ Правильный глобальный CORS
 app.use('*', async (c, next) => {
-  // Set CORS headers for all requests
   c.header('Access-Control-Allow-Origin', '*');
   c.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   c.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, apikey, x-client-info');
   c.header('Access-Control-Expose-Headers', 'Content-Length, X-JSON');
   c.header('Access-Control-Max-Age', '86400');
   
-  // Handle preflight OPTIONS request
+  // ✅ ВАЖНО: Обрабатываем preflight ДО next()
   if (c.req.method === 'OPTIONS') {
-    c.status(200);
-    return c.body(null);
+    return c.text('', 204);
   }
-  
+
   await next();
 });
 
