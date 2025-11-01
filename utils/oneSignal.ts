@@ -46,7 +46,12 @@ export class OneSignalService {
   reloadSettings() {
     const settings = this.getSettings();
     this.appId = settings.appId || '';
-    this.apiKey = settings.apiKey || '';
+    // Support both old (apiKey) and new (restApiKey) format
+    this.apiKey = settings.restApiKey || settings.apiKey || '';
+    console.log('🔄 Settings reloaded:', {
+      hasAppId: !!this.appId,
+      hasApiKey: !!this.apiKey,
+    });
     // Don't reset isInitialized flag when reloading settings
   }
 
@@ -58,10 +63,15 @@ export class OneSignalService {
       const settings = localStorage.getItem('oneSignalSettings');
       const parsed = settings ? JSON.parse(settings) : {};
       
+      // Support both old (apiKey) and new (restApiKey) format
+      const apiKey = parsed.restApiKey || parsed.apiKey;
+      
       console.log('📋 OneSignal settings loaded:', {
         enabled: parsed.enabled,
         hasAppId: !!parsed.appId,
+        hasRestApiKey: !!parsed.restApiKey,
         hasApiKey: !!parsed.apiKey,
+        hasAnyKey: !!apiKey,
         appIdLength: parsed.appId?.length,
       });
       
@@ -77,7 +87,14 @@ export class OneSignalService {
    */
   isConfigured(): boolean {
     const settings = this.getSettings();
-    return !!(settings.appId && settings.apiKey);
+    const apiKey = settings.restApiKey || settings.apiKey;
+    const result = !!(settings.appId && apiKey);
+    console.log('🔍 isConfigured check:', {
+      hasAppId: !!settings.appId,
+      hasApiKey: !!apiKey,
+      result: result
+    });
+    return result;
   }
 
   /**
@@ -85,7 +102,15 @@ export class OneSignalService {
    */
   isEnabled(): boolean {
     const settings = this.getSettings();
-    return !!(settings.enabled && settings.appId && settings.apiKey);
+    const apiKey = settings.restApiKey || settings.apiKey;
+    const result = !!(settings.enabled && settings.appId && apiKey);
+    console.log('🔍 isEnabled check:', {
+      enabled: settings.enabled,
+      hasAppId: !!settings.appId,
+      hasApiKey: !!apiKey,
+      result: result
+    });
+    return result;
   }
 
   /**

@@ -100,6 +100,13 @@ export const OrderManagement = () => {
         .eq('id', orderId)
         .single();
       
+      console.log('📦 Order data before update:', {
+        id: orderData?.id,
+        email: orderData?.email,
+        hasEmail: !!orderData?.email,
+        status: orderData?.status,
+      });
+      
       // Update order status
       const { error } = await supabase
         .from('orders')
@@ -118,7 +125,12 @@ export const OrderManagement = () => {
         // Send email notification about status change
         if (orderData && orderData.email && accessToken) {
           try {
-            console.log(`📧 Sending order status email for order ${orderId}, status: ${status}`);
+            console.log(`📧 Sending order status email:`, {
+              orderId,
+              email: orderData.email,
+              status,
+              hasAccessToken: !!accessToken,
+            });
             const emailUrl = getServerUrl('/api/email/order-status');
             const emailResponse = await fetch(emailUrl, {
               method: 'POST',
@@ -135,16 +147,27 @@ export const OrderManagement = () => {
             });
 
             if (emailResponse.ok) {
-              console.log('✅ Order status email sent successfully');
+              const emailResult = await emailResponse.json();
+              console.log('✅ Order status email sent successfully:', emailResult);
               toast.success('📧 Email уведомление отправлено');
             } else {
               const errorData = await emailResponse.json();
-              console.warn('⚠️ Failed to send order status email:', errorData);
-              toast.warning('Email не отправлен (настройте Resend API)');
+              console.error('❌ Failed to send order status email:', {
+                status: emailResponse.status,
+                error: errorData,
+              });
+              toast.warning('Email не отправлен: ' + (errorData.error || 'Неизвестная ошибка'));
             }
           } catch (emailError) {
-            console.warn('⚠️ Email send error (non-critical):', emailError);
+            console.error('❌ Email send error (non-critical):', emailError);
+            toast.warning('Ошибка отправки email: ' + emailError);
           }
+        } else {
+          console.warn('⚠️ Email not sent - missing data:', {
+            hasOrderData: !!orderData,
+            hasEmail: !!orderData?.email,
+            hasAccessToken: !!accessToken,
+          });
         }
         
         await loadOrders();

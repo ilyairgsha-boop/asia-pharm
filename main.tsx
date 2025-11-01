@@ -1,4 +1,4 @@
-// Build: v2.1.5-EMAIL-FIX - Fixed email sender + OneSignal UI
+// Build: v2.1.6-KEY-FIX - Fixed restApiKey compatibility
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
