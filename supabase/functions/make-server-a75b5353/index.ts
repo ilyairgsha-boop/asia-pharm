@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.3-COMPAT - Fixed apiKey/restApiKey compatibility + better logging
-// Build: 2024-11-02 00:05:00 UTC
+// Version: 2.1.4-APIKEY-FIX - Detect wrong OneSignal key type + remove language requirement
+// Build: 2024-11-02 00:15:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.3-COMPAT...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.4-APIKEY-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.3 - Compatibility Fix',
-    version: '2.1.3-COMPAT',
+    message: 'Asia-Pharm API v2.1.4 - API Key Type Detection',
+    version: '2.1.4-APIKEY-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -223,10 +223,10 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     
     console.log('🔍 Querying profiles table for email subscribers...');
     
-    // First check if column exists
+    // First check if column exists - language is optional
     const { data: subscribers, error } = await supabase
       .from('profiles')
-      .select('id, email, name, language, subscribed_to_newsletter')
+      .select('id, email, name, subscribed_to_newsletter')
       .eq('subscribed_to_newsletter', true);
     
     if (error) {
@@ -277,7 +277,8 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     for (let i = 0; i < subscribers.length; i++) {
       const subscriber = subscribers[i];
       try {
-        const userLanguage = (subscriber.language || 'ru') as 'ru' | 'en' | 'zh' | 'vi';
+        // Default to 'ru' if language not available
+        const userLanguage = 'ru' as 'ru' | 'en' | 'zh' | 'vi';
         const unsubscribeUrl = 'https://asia-pharm.com/profile';
         
         const fullHtml = generateBroadcastEmailHTML(
@@ -399,9 +400,23 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       }, 500);
     }
     
+    // Check if this is a User Auth Key (starts with os_v2_org_)
+    if (apiKey.startsWith('os_v2_org_')) {
+      console.error('❌ WRONG API KEY TYPE!');
+      console.error('You provided a USER AUTH KEY (os_v2_org_...), but we need REST API KEY');
+      return c.json({ 
+        error: 'Wrong OneSignal API Key Type',
+        details: 'You are using a User Auth Key (os_v2_org_...). Please use REST API KEY instead.',
+        hint: 'OneSignal Dashboard → Settings → Keys & IDs → REST API KEY (starts with Basic or just random string)',
+        currentKeyType: 'User Auth Key (WRONG)',
+        expectedKeyType: 'REST API Key'
+      }, 500);
+    }
+    
     console.log('✅ OneSignal configured:', {
       hasAppId: !!settings.appId,
       hasApiKey: !!apiKey,
+      apiKeyPrefix: apiKey.substring(0, 10) + '...',
       enabled: settings.enabled,
     });
 
@@ -462,6 +477,17 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
         players: 0,
         details: 'Save OneSignal settings in Admin Panel first',
         debugUrl: '/make-server-a75b5353/api/debug/onesignal-check'
+      });
+    }
+    
+    // Check if this is a User Auth Key (starts with os_v2_org_)
+    if (apiKey.startsWith('os_v2_org_')) {
+      console.error('❌ WRONG API KEY TYPE! User Auth Key detected');
+      return c.json({ 
+        error: 'Wrong OneSignal API Key Type',
+        players: 0,
+        details: 'You are using a User Auth Key. Please use REST API KEY instead.',
+        hint: 'OneSignal Dashboard → Settings → Keys & IDs → REST API KEY'
       });
     }
     
@@ -666,6 +692,12 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
     const apiKey = kvSettings?.restApiKey || kvSettings?.apiKey;
     const keyType = kvSettings?.restApiKey ? 'restApiKey (new)' : kvSettings?.apiKey ? 'apiKey (old)' : 'none';
     
+    // Detect if wrong key type
+    let keyWarning = null;
+    if (apiKey && apiKey.startsWith('os_v2_org_')) {
+      keyWarning = '⚠️ WRONG KEY TYPE! This is a User Auth Key (os_v2_org_...). You need REST API KEY!';
+    }
+    
     return c.json({
       success: true,
       kvStore: {
@@ -678,8 +710,14 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
         // Show partial key for verification
         appIdPrefix: kvSettings?.appId ? kvSettings.appId.substring(0, 8) + '...' : null,
         apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : null,
+        isUserAuthKey: apiKey ? apiKey.startsWith('os_v2_org_') : false,
+        warning: keyWarning,
       },
-      note: 'Both apiKey and restApiKey are supported. Save settings in Admin Panel if not configured.'
+      note: keyWarning || 'Both apiKey and restApiKey are supported. Save settings in Admin Panel if not configured.',
+      help: {
+        wrongKey: keyWarning ? true : false,
+        solution: keyWarning ? 'Go to OneSignal Dashboard → Settings → Keys & IDs → Copy REST API KEY (NOT User Auth Key)' : null,
+      }
     });
   } catch (error: any) {
     return c.json({ 
@@ -697,5 +735,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.3-COMPAT initialized!');
+console.log('✅ Edge Function v2.1.4-APIKEY-FIX initialized!');
 Deno.serve(app.fetch);

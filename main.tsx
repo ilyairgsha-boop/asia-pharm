@@ -1,4 +1,4 @@
-// Build: v2.1.3-COMPAT - Fixed apiKey/restApiKey compatibility
+// Build: v2.1.4-APIKEY-FIX - Detect wrong OneSignal key + DB fix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

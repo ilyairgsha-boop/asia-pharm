@@ -51,7 +51,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.1.3-COMPAT');
+    console.log('🚀 Asia Pharm - Starting application... v2.1.4-APIKEY-FIX');
     
     if (MOCK_MODE) {
       console.log('');
