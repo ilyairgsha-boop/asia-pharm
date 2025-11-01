@@ -374,6 +374,40 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         console.log(`ℹ️ Cashback points will be earned when order is delivered`);
       }
       
+      // Send order confirmation email
+      try {
+        console.log('📧 Sending order confirmation email...');
+        const { data: { session } } = await supabase.auth.getSession();
+        const authToken = session?.access_token;
+        
+        if (authToken) {
+          const serverUrl = import.meta.env.VITE_SUPABASE_URL + '/functions/v1';
+          const response = await fetch(`${serverUrl}/make-server-a75b5353/api/email/order-status`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`,
+              'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({
+              orderId: order.id,
+              email: formData.email,
+              status: 'pending'
+            }),
+          });
+          
+          if (response.ok) {
+            console.log('✅ Order confirmation email sent successfully');
+          } else {
+            const errorData = await response.json();
+            console.error('❌ Failed to send order email:', errorData);
+          }
+        }
+      } catch (emailError) {
+        console.error('❌ Error sending order email:', emailError);
+        // Don't fail the whole order if email fails
+      }
+      
       // Save order payment info to localStorage
       const paymentInfo = {
         orderNumber: order.order_number,

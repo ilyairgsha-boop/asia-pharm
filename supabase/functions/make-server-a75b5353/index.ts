@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.8-EMAIL-FINAL - Fixed email template data + OneSignal auth
-// Build: 2024-11-02 01:00:00 UTC
+// Version: 2.1.9-COMPLETE - Added order email + full OneSignal debug
+// Build: 2024-11-02 01:15:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.8-EMAIL-FINAL...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.9-COMPLETE...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.8 - Email & Auth Final Fix',
-    version: '2.1.8-EMAIL-FINAL',
+    message: 'Asia-Pharm API v2.1.9 - Complete Debug & Email Fix',
+    version: '2.1.9-COMPLETE',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -495,10 +495,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
     console.log('🔑 Authorization details:', {
       originalKeyPrefix: apiKey.substring(0, 15) + '...',
+      originalKeySuffix: '...' + apiKey.substring(apiKey.length - 5),
+      originalKeyLength: apiKey.length,
       authHeaderPrefix: authHeader.substring(0, 20) + '...',
-      addedBasic: !apiKey.startsWith('Basic ')
+      authHeaderLength: authHeader.length,
+      addedBasic: !apiKey.startsWith('Basic '),
+      FULL_AUTH_HEADER: authHeader, // FOR DEBUG - REMOVE IN PRODUCTION!
     });
 
+    console.log('📤 Sending to OneSignal API...');
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
@@ -507,6 +512,8 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       },
       body: JSON.stringify(notificationData)
     });
+    
+    console.log('📥 OneSignal response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -563,8 +570,13 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
 
     // Format Authorization header - add "Basic" only if not already present
     const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
-    console.log('🔑 Stats Authorization header:', authHeader.substring(0, 20) + '...');
+    console.log('🔑 Stats Authorization details:', {
+      authHeaderPrefix: authHeader.substring(0, 20) + '...',
+      authHeaderLength: authHeader.length,
+      FULL_AUTH_HEADER: authHeader, // FOR DEBUG - REMOVE IN PRODUCTION!
+    });
 
+    console.log('📤 Fetching OneSignal app stats...');
     // Get app info from OneSignal
     const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
       method: 'GET',
@@ -572,6 +584,8 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
         'Authorization': authHeader
       }
     });
+    
+    console.log('📥 OneSignal stats response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -766,8 +780,28 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
     
     // Detect if wrong key type
     let keyWarning = null;
-    if (apiKey && apiKey.startsWith('os_v2_org_')) {
-      keyWarning = '⚠️ WRONG KEY TYPE! This is a User Auth Key (os_v2_org_...). You need REST API KEY!';
+    let keyAnalysis = {
+      startsWithBasic: false,
+      startsWithOs: false,
+      length: 0,
+      hasSpaces: false,
+      format: 'unknown'
+    };
+    
+    if (apiKey) {
+      keyAnalysis = {
+        startsWithBasic: apiKey.startsWith('Basic '),
+        startsWithOs: apiKey.startsWith('os_'),
+        length: apiKey.length,
+        hasSpaces: apiKey.includes(' '),
+        format: apiKey.startsWith('os_v2_org_') ? 'User Auth Key (WRONG!)' : 
+                apiKey.startsWith('Basic ') ? 'REST API Key with Basic prefix' :
+                apiKey.length > 30 ? 'REST API Key (correct format)' : 'Unknown/Invalid'
+      };
+      
+      if (apiKey.startsWith('os_v2_org_')) {
+        keyWarning = '⚠️ WRONG KEY TYPE! This is a User Auth Key (os_v2_org_...). You need REST API KEY!';
+      }
     }
     
     return c.json({
@@ -781,9 +815,12 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
         enabled: kvSettings?.enabled || false,
         // Show partial key for verification
         appIdPrefix: kvSettings?.appId ? kvSettings.appId.substring(0, 8) + '...' : null,
-        apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : null,
+        apiKeyPrefix: apiKey ? apiKey.substring(0, 15) + '...' : null,
+        apiKeySuffix: apiKey ? '...' + apiKey.substring(apiKey.length - 5) : null,
         isUserAuthKey: apiKey ? apiKey.startsWith('os_v2_org_') : false,
+        keyAnalysis: keyAnalysis,
         warning: keyWarning,
+        fullKey: apiKey, // FOR DEBUG ONLY - REMOVE IN PRODUCTION!
       },
       note: keyWarning || 'Both apiKey and restApiKey are supported. Save settings in Admin Panel if not configured.',
       help: {
@@ -807,5 +844,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.8-EMAIL-FINAL initialized!');
+console.log('✅ Edge Function v2.1.9-COMPLETE initialized!');
 Deno.serve(app.fetch);
