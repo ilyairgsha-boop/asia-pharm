@@ -1,4 +1,4 @@
-// Build: v2.2.0-FINAL-DEBUG - Critical OneSignal diagnostics
+// Build: v2.2.1-SUBSCRIBERS - OneSignal auto-subscribe fix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

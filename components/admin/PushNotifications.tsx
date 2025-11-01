@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Send, Users, Filter, History, Bell, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { oneSignalService } from '../../utils/oneSignal';
+import { getServerUrl, getAnonKey, supabase } from '../../utils/supabase/client';
 
 interface NotificationTemplate {
   id: string;
@@ -35,6 +36,7 @@ export const PushNotifications = () => {
   const { t, currentLanguage } = useLanguage();
   const [isConfigured, setIsConfigured] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
   
   // Notification form
   const [title, setTitle] = useState<Record<string, string>>({
@@ -131,17 +133,62 @@ export const PushNotifications = () => {
   // History
   const [history] = useState<NotificationHistory[]>([]);
 
+  // Load subscriber count
+  const loadSubscriberCount = async () => {
+    if (!isConfigured) {
+      setSubscriberCount(null);
+      return;
+    }
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        console.warn('⚠️ No auth token available');
+        return;
+      }
+
+      const statsUrl = getServerUrl('/api/push/stats');
+      const response = await fetch(statsUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+          'apikey': getAnonKey(),
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriberCount(data.players || 0);
+        console.log('✅ OneSignal subscriber count:', data.players || 0);
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to get subscriber count:', errorData);
+      }
+    } catch (error) {
+      console.error('Error loading OneSignal subscriber count:', error);
+    }
+  };
+
   useEffect(() => {
-    // Check if OneSignal is enabled
+    // Check if OneSignal is configured (has credentials)
     const checkConfiguration = () => {
-      const enabled = oneSignalService.isEnabled();
-      setIsConfigured(enabled);
+      const configured = oneSignalService.isConfigured();
+      console.log('🔍 PushNotifications: checking configuration:', configured);
+      setIsConfigured(configured);
+      
+      // Load subscriber count if configured
+      if (configured) {
+        loadSubscriberCount();
+      }
     };
     
     checkConfiguration();
     
     // Listen for settings updates
     const handleSettingsUpdate = () => {
+      console.log('📡 PushNotifications: settings updated, rechecking...');
       checkConfiguration();
     };
     
@@ -150,7 +197,7 @@ export const PushNotifications = () => {
     return () => {
       window.removeEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     };
-  }, []);
+  }, [isConfigured]);
 
   const handleLoadTemplate = (template: NotificationTemplate) => {
     setTitle(template.title);
@@ -232,12 +279,30 @@ export const PushNotifications = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Send className="w-8 h-8 text-red-600" />
-        <div>
-          <h2 className="text-2xl font-semibold">{t('pushNotifications')}</h2>
-          <p className="text-gray-600">{t('sendPushNotificationsToUsers')}</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Send className="w-8 h-8 text-red-600" />
+          <div>
+            <h2 className="text-2xl font-semibold">{t('pushNotifications')}</h2>
+            <p className="text-gray-600">{t('sendPushNotificationsToUsers')}</p>
+          </div>
         </div>
+        {subscriberCount !== null && (
+          <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+            <Users className="w-5 h-5 text-green-600" />
+            <div>
+              <div className="text-sm text-gray-600">{t('pushSubscribers')}</div>
+              <div className="text-2xl font-bold text-green-600">{subscriberCount}</div>
+            </div>
+            <button
+              onClick={loadSubscriberCount}
+              className="ml-2 text-gray-600 hover:text-gray-800"
+              title={t('refresh')}
+            >
+              🔄
+            </button>
+          </div>
+        )}
       </div>
 
       <Tabs defaultValue="send" className="space-y-6">

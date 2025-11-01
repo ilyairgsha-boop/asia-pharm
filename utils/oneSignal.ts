@@ -185,6 +185,8 @@ export class OneSignalService {
     
     console.log('🔧 Initializing OneSignal with App ID:', this.appId);
     
+    const settings = this.getSettings();
+    
     return new Promise<void>((resolve) => {
       window.OneSignal = window.OneSignal || [];
       window.OneSignal.push(() => {
@@ -194,9 +196,27 @@ export class OneSignalService {
           notifyButton: {
             enable: false,
           },
+          // Automatically prompt for permission if autoSubscribe is enabled
+          autoRegister: settings.autoSubscribe || false,
+          autoResubscribe: true,
+          // Show native browser prompt
+          promptOptions: {
+            slidedown: {
+              enabled: settings.autoSubscribe || false,
+              autoPrompt: settings.autoSubscribe || false,
+            }
+          }
         });
         this.isInitialized = true;
         console.log('✅ OneSignal initialized with App ID:', this.appId);
+        console.log('📱 Auto subscribe enabled:', settings.autoSubscribe || false);
+        
+        // If autoSubscribe is enabled, register for push immediately
+        if (settings.autoSubscribe) {
+          console.log('🔔 Auto-registering for push notifications...');
+          window.OneSignal.showNativePrompt();
+        }
+        
         resolve();
       });
     });

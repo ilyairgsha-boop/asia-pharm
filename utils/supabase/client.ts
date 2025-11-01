@@ -44,7 +44,7 @@ export const createClient = () => {
       },
     });
     
-    console.log('✅ Supabase client initialized [v2.2.0-FINAL-DEBUG]', {
+    console.log('✅ Supabase client initialized [v2.2.1-SUBSCRIBERS]', {
       url: supabaseUrl,
       hasKey: !!supabaseAnonKey,
       keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
