@@ -255,10 +255,15 @@ export class OneSignalService {
       console.log('📡 Calling Edge Function URL:', url);
       console.log('⚠️ Note: OneSignal settings must be synced to KV store for this to work');
       
+      // Import anon key for Supabase Edge Function
+      const { getAnonKey } = await import('./supabase/client');
+      const anonKey = getAnonKey();
+      
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'apikey': anonKey, // Required by Supabase Edge Functions
         },
         body: JSON.stringify({
           title: data.title,

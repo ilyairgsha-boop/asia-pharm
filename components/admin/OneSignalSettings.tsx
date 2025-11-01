@@ -9,7 +9,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Bell, Info, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { oneSignalService } from '../../utils/oneSignal';
-import { getServerUrl } from '../../utils/supabase/client';
+import { getServerUrl, supabase, getAnonKey } from '../../utils/supabase/client';
 
 interface OneSignalSettingsData {
   appId: string;
@@ -69,11 +69,23 @@ export const OneSignalSettings = () => {
       
       // Sync to KV store via Edge Function (so push notifications work server-side)
       try {
+        // Get auth token and anon key for Edge Function
+        const { data: { session } } = await supabase.auth.getSession();
+        const authToken = session?.access_token;
+        
+        if (!authToken) {
+          console.warn('⚠️ No auth token available, skipping KV sync');
+          toast.warning('Настройки сохранены локально, но требуется авторизация для синхронизации с сервером');
+          return;
+        }
+        
         const syncUrl = getServerUrl('/api/kv/set');
         const response = await fetch(syncUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
+            'apikey': getAnonKey(),
           },
           body: JSON.stringify({
             key: 'oneSignalSettings',
