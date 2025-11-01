@@ -1,4 +1,4 @@
-// Build: v2.0.5-hotfix - Edge Function nested router fix
+// Build: v2.0.6-MINIMAL-TEST - Testing minimal Edge Function
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
