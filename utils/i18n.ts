@@ -454,8 +454,7 @@ export const translations = {
     administrator: 'Администратор',
     clientRole: 'Клиент',
     
-    // Favorites
-    favorites: 'Избранное',
+    // Favorites (additional keys)
     addToFavorites: 'Добавить в избранное',
     removeFromFavorites: 'Удалить из избранного',
     noFavorites: 'У вас пока нет избранных товаров',
@@ -770,7 +769,6 @@ export const translations = {
     footerAuto: 'Footer (автоматически)',
     sendBroadcast: 'Отправить рассылку',
     clearForm: 'Очистить',
-    sending: 'Отправка...',
     exampleInserted: 'Пример вставлен',
     authRequired: 'Необходима авторизация',
     fillSubjectAndContent: 'Заполните тему и содержание письма',
@@ -960,18 +958,6 @@ export const translations = {
     fillRequiredFields: 'Заполните все обязательные поля',
     settingsSaved: '✅ Настройки сохранены',
     firstFillCredentials: 'Сначала заполните App ID и REST API Key из OneSignal, затем включите уведомления',
-    
-    // Bonus History
-    bonusPointsHistory: 'История бонусов',
-    noBonusHistory: 'История бонусов пуста',
-    action: 'Действие',
-    forOrder: 'За заказ',
-    creditedDate: 'Дата начисления',
-    pointsCredited: 'Начислено баллов',
-    pointsSpent: 'Списано баллов',
-    tierAtCredit: 'Уровень при начислении',
-    crediting: 'Начисление',
-    spending: 'Списание',
     
     // Common UI elements
     templates: 'Шаблоны',
@@ -1404,8 +1390,7 @@ export const translations = {
     administrator: 'Administrator',
     clientRole: 'Client',
     
-    // Favorites
-    favorites: 'Favorites',
+    // Favorites (additional keys)
     addToFavorites: 'Add to favorites',
     removeFromFavorites: 'Remove from favorites',
     noFavorites: 'You have no favorite products yet',
@@ -1415,7 +1400,6 @@ export const translations = {
     // Order details extended
     orderItems: 'Order Items',
     shippingDetails: 'Shipping Details',
-    close: 'Close',
     paid: 'Paid',
     
     // Payment Info Page
@@ -1654,7 +1638,6 @@ export const translations = {
     footerAuto: 'Footer (automatic)',
     sendBroadcast: 'Send Broadcast',
     clearForm: 'Clear',
-    sending: 'Sending...',
     exampleInserted: 'Example inserted',
     authRequired: 'Authorization required',
     fillSubjectAndContent: 'Fill in subject and content',
@@ -1935,18 +1918,6 @@ export const translations = {
     fillRequiredFields: 'Fill in all required fields',
     settingsSaved: '✅ Settings saved',
     firstFillCredentials: 'First fill in the App ID and REST API Key from OneSignal, then enable notifications',
-    
-    // Bonus History
-    bonusPointsHistory: 'Bonus History',
-    noBonusHistory: 'No bonus history yet',
-    action: 'Action',
-    forOrder: 'For Order',
-    creditedDate: 'Credited Date',
-    pointsCredited: 'Points Credited',
-    pointsSpent: 'Points Spent',
-    tierAtCredit: 'Tier at Credit',
-    crediting: 'Crediting',
-    spending: 'Spending',
     
     // Common UI elements
     templates: 'Templates',
@@ -2378,8 +2349,7 @@ export const translations = {
     administrator: '管理员',
     clientRole: '客户',
     
-    // Favorites
-    favorites: '收藏夹',
+    // Favorites (additional keys)
     addToFavorites: '添加到收藏',
     removeFromFavorites: '从收藏中移除',
     noFavorites: '您还没有收藏的产品',
@@ -2389,7 +2359,6 @@ export const translations = {
     // Order details extended
     orderItems: '订单商品',
     shippingDetails: '配送详情',
-    close: '关闭',
     paid: '已付款',
     
     // Payment Info Page
@@ -2634,7 +2603,6 @@ export const translations = {
     footerAuto: '页脚（自动）',
     sendBroadcast: '发送群发',
     clearForm: '清除',
-    sending: '发送中...',
     exampleInserted: '示例已插入',
     authRequired: '需要授权',
     fillSubjectAndContent: '填写主题和内容',
@@ -2911,18 +2879,6 @@ export const translations = {
     fillRequiredFields: '填写所有必填字段',
     settingsSaved: '✅ 设置已保存',
     firstFillCredentials: '首先从OneSignal填写App ID和REST API Key，然后启用通知',
-    
-    // Bonus History
-    bonusPointsHistory: '积分历史',
-    noBonusHistory: '暂无积分历史',
-    action: '操作',
-    forOrder: '订单',
-    creditedDate: '记账日期',
-    pointsCredited: '已记账积分',
-    pointsSpent: '已使用积分',
-    tierAtCredit: '记账时等级',
-    crediting: '记账',
-    spending: '使用',
     
     // Common UI elements
     templates: '模板',
@@ -3332,7 +3288,7 @@ export const translations = {
     administrator: 'Quản trị viên',
     clientRole: 'Khách hàng',
     
-    // Favorites
+    // Favorites (additional keys)
     favorites: 'Yêu thích',
     addToFavorites: 'Thêm vào yêu thích',
     removeFromFavorites: 'Xóa khỏi yêu thích',
@@ -3343,7 +3299,6 @@ export const translations = {
     // Order details extended
     orderItems: 'Sản phẩm trong đơn hàng',
     shippingDetails: 'Chi tiết giao hàng',
-    close: 'Đóng',
     paid: 'Đã thanh toán',
     
     // Payment Info Page
@@ -3392,7 +3347,7 @@ export const translations = {
     // Agreement texts
     iAgreeWith: 'Tôi đồng ý với',
     privacyPolicyInstrumental: 'Chính sách bảo mật',
-    termsOfServiceInstrumental: 'Điều khoản dịch vụ',
+    termsOfServiceInstrumental: 'Điều khoản d��ch vụ',
     
     // Admin panel translations
     selectPage: 'Chọn trang',
@@ -3609,7 +3564,6 @@ export const translations = {
     footerAuto: 'Footer (tự động)',
     sendBroadcast: 'Gửi bản tin',
     clearForm: 'Xóa',
-    sending: 'Đang gửi...',
     exampleInserted: 'Ví dụ đã được chèn',
     authRequired: 'Yêu cầu xác thực',
     fillSubjectAndContent: 'Điền chủ đề và nội dung',
@@ -3886,18 +3840,6 @@ export const translations = {
     fillRequiredFields: 'Điền tất cả các trường bắt buộc',
     settingsSaved: '✅ Cài đặt đã được lưu',
     firstFillCredentials: 'Đầu tiên điền App ID và REST API Key từ OneSignal, sau đó bật thông báo',
-    
-    // Bonus History
-    bonusPointsHistory: 'Lịch sử điểm thưởng',
-    noBonusHistory: 'Chưa có lịch sử điểm thưởng',
-    action: 'Hành động',
-    forOrder: 'Cho đơn hàng',
-    creditedDate: 'Ngày ghi nhận',
-    pointsCredited: 'Điểm đã ghi nhận',
-    pointsSpent: 'Điểm đã sử dụng',
-    tierAtCredit: 'Cấp độ khi ghi nhận',
-    crediting: 'Ghi nhận',
-    spending: 'Sử dụng',
     
     // Common UI elements
     templates: 'Mẫu',
