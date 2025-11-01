@@ -57,49 +57,24 @@ export const OneSignalSettings = () => {
   const handleSave = async () => {
     setIsSaving(true);
     try {
+      // Validate if enabled
+      if (settings.enabled && (!settings.appId || !settings.apiKey)) {
+        toast.error(t('fillRequiredFields'));
+        setIsSaving(false);
+        return;
+      }
+
       // Save to localStorage (always save, even if disabled)
       localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
       
-      // Sync to KV store via Edge Function (so push notifications work)
-      try {
-        const syncUrl = getServerUrl('/api/kv/set');
-        await fetch(syncUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            key: 'oneSignalSettings',
-            value: settings,
-          }),
-        });
-        console.log('✅ OneSignal settings synced to KV store');
-      } catch (kvError) {
-        console.warn('⚠️ Failed to sync to KV store:', kvError);
-        // Don't fail the save operation if KV sync fails
-      }
-      
-      // Trigger settings update event
+      // Trigger settings update event for App.tsx to reinitialize
       window.dispatchEvent(new CustomEvent('oneSignalSettingsUpdated'));
       
       toast.success(t('settingsSaved'));
       
-      // Show warning if enabled but credentials are missing
-      if (settings.enabled && (!settings.appId || !settings.apiKey)) {
-        setTimeout(() => {
-          toast.error(t('fillRequiredFields'));
-        }, 500);
-      } else if (settings.enabled && settings.appId && settings.apiKey) {
-        // If enabled and configured, try to initialize OneSignal
-        setTimeout(async () => {
-          try {
-            await oneSignalService.initializeSDK();
-            toast.success('✅ OneSignal инициализирован');
-          } catch (error) {
-            console.error('OneSignal initialization error:', error);
-          }
-        }, 500);
-      }
+      // Note: KV store sync will be implemented later with /api/kv/set endpoint
+      console.log('💡 OneSignal settings saved to localStorage');
+      console.log('💡 To use push notifications via Edge Function, you need to manually sync settings to KV store');
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error(t('saveError'));

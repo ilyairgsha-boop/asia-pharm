@@ -10,7 +10,7 @@
  * - Get user ID: await oneSignalService.getUserId()
  */
 
-import { getServerUrl, getAnonKey } from './supabase/client';
+import { getServerUrl } from './supabase/client';
 
 export interface PushNotificationData {
   title: string;
@@ -47,7 +47,7 @@ export class OneSignalService {
     const settings = this.getSettings();
     this.appId = settings.appId || '';
     this.apiKey = settings.apiKey || '';
-    this.isInitialized = false;
+    // Don't reset isInitialized flag when reloading settings
   }
 
   /**
@@ -93,29 +93,24 @@ export class OneSignalService {
    */
   async initializeSDK(): Promise<void> {
     // Reload settings to get latest values
-    const oldAppId = this.appId;
     this.reloadSettings();
     
     if (!this.isEnabled()) {
-      console.warn('OneSignal not enabled or not configured');
-      // If was initialized but now disabled, we should deinitialize
-      if (this.isInitialized) {
-        console.log('🔕 OneSignal disabled, marking as uninitialized');
-        this.isInitialized = false;
-      }
+      console.log('ℹ️ OneSignal not enabled or not configured, skipping initialization');
       return;
     }
 
-    // If already initialized with same appId, skip
-    if (this.isInitialized && window.OneSignal && oldAppId === this.appId) {
-      console.log('OneSignal already initialized with same App ID');
+    // Check if OneSignal is already initialized globally
+    if (window.OneSignal && window.OneSignal.initialized) {
+      console.log('✅ OneSignal already initialized globally, skipping');
+      this.isInitialized = true;
       return;
     }
-    
-    // If appId changed, mark as not initialized to force reinit
-    if (oldAppId !== this.appId) {
-      console.log('🔄 App ID changed, will reinitialize');
-      this.isInitialized = false;
+
+    // If already initialized in our service, skip
+    if (this.isInitialized) {
+      console.log('✅ OneSignal already initialized in service, skipping');
+      return;
     }
 
     // Check if script is already loaded
@@ -123,6 +118,7 @@ export class OneSignalService {
     
     if (!existingScript) {
       // Load OneSignal SDK
+      console.log('📥 Loading OneSignal SDK script...');
       const script = document.createElement('script');
       script.src = 'https://cdn.onesignal.com/sdks/OneSignalSDK.js';
       script.async = true;
@@ -130,6 +126,7 @@ export class OneSignalService {
 
       await new Promise<void>((resolve, reject) => {
         script.onload = () => {
+          console.log('✅ OneSignal SDK script loaded');
           this.initializeOneSignal().then(resolve).catch(reject);
         };
         script.onerror = () => {
@@ -137,8 +134,16 @@ export class OneSignalService {
         };
       });
     } else {
-      // Script already loaded, just initialize
-      await this.initializeOneSignal();
+      // Script already loaded
+      console.log('📝 OneSignal SDK script already loaded');
+      if (!window.OneSignal || !window.OneSignal.initialized) {
+        // Not yet initialized, initialize now
+        await this.initializeOneSignal();
+      } else {
+        // Already initialized
+        console.log('✅ OneSignal SDK already initialized');
+        this.isInitialized = true;
+      }
     }
   }
 
@@ -146,14 +151,14 @@ export class OneSignalService {
    * Initialize OneSignal with current settings
    */
   private async initializeOneSignal(): Promise<void> {
-    console.log('🔧 Initializing OneSignal with App ID:', this.appId);
-    
-    // Check if OneSignal is already initialized
+    // Double-check if already initialized
     if (window.OneSignal && window.OneSignal.initialized) {
-      console.log('⚠️ OneSignal already initialized, skipping...');
+      console.log('⚠️ OneSignal already initialized, skipping init call');
       this.isInitialized = true;
       return Promise.resolve();
     }
+    
+    console.log('🔧 Initializing OneSignal with App ID:', this.appId);
     
     return new Promise<void>((resolve) => {
       window.OneSignal = window.OneSignal || [];
@@ -225,7 +230,8 @@ export class OneSignalService {
   }
 
   /**
-   * Send push notification via OneSignal API
+   * Send push notification via OneSignal API through Edge Function
+   * Note: Settings must be configured in KV store for this to work
    */
   async sendNotification(
     data: PushNotificationData,
@@ -243,12 +249,12 @@ export class OneSignalService {
         targeting: options,
       });
       
-      // Use Supabase Edge Function to avoid CORS issues
+      // Use Supabase Edge Function
+      // Note: Settings must be synced to KV store manually
       const url = getServerUrl('/api/push/send');
       console.log('📡 Calling Edge Function URL:', url);
+      console.log('⚠️ Note: OneSignal settings must be synced to KV store for this to work');
       
-      // Note: Edge Function doesn't require auth for push notifications
-      // It uses settings stored in KV store instead
       const response = await fetch(url, {
         method: 'POST',
         headers: {
