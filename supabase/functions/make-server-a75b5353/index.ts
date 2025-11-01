@@ -572,8 +572,8 @@ app.delete('/api/kv/delete', requireAdmin, async (c) => {
 // OneSignal Push Notifications API Endpoints
 // ============================================================================
 
-// Send push notification (Public endpoint - uses KV store for credentials)
-app.post('/api/push/send', async (c) => {
+// Send push notification (Admin only - uses KV store for credentials)
+app.post('/api/push/send', requireAdmin, async (c) => {
   try {
     console.log('📬 Push notification request received');
     const { title, message, url, icon, image, data, userIds, segments, tags, language, store } = await c.req.json();

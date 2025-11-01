@@ -255,14 +255,23 @@ export class OneSignalService {
       console.log('📡 Calling Edge Function URL:', url);
       console.log('⚠️ Note: OneSignal settings must be synced to KV store for this to work');
       
-      // Import anon key for Supabase Edge Function
-      const { getAnonKey } = await import('./supabase/client');
+      // Import anon key and supabase for Supabase Edge Function
+      const { getAnonKey, supabase } = await import('./supabase/client');
       const anonKey = getAnonKey();
+      
+      // Get auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+      
+      if (!authToken) {
+        throw new Error('Authentication required to send push notifications');
+      }
       
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
           'apikey': anonKey, // Required by Supabase Edge Functions
         },
         body: JSON.stringify({
