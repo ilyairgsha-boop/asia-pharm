@@ -1,4 +1,4 @@
-// Build: v2.0.6-MINIMAL-TEST - Testing minimal Edge Function
+// Build: v2.0.7-FIXED - Direct routing fix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
