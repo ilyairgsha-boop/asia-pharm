@@ -49,7 +49,7 @@ export const createClient = () => {
       hasKey: !!supabaseAnonKey,
       keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
       projectId: supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown',
-      serverUrl: `https://${supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown'}.supabase.co/functions/v1/make-server-a75b5353`,
+      serverUrl: `https://${supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown'}.supabase.co/functions/v1/server`,
     });
   }
   return supabaseInstance;
@@ -57,8 +57,8 @@ export const createClient = () => {
 
 export const getServerUrl = (route: string) => {
   const projectId = 'boybkoyidxwrgsayifrd';
-  // Use make-server-a75b5353 function with routes
-  return `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353${route}`;
+  // Use server function with routes
+  return `https://${projectId}.supabase.co/functions/v1/server${route}`;
 };
 
 export const getAnonKey = () => {
