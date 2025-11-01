@@ -1,4 +1,4 @@
-// Build: v2.0.7-FIXED - Direct routing fix
+// Build: v2.0.8-PREFIXED - Routes with Supabase prefix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
