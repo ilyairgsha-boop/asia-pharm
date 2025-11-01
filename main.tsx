@@ -1,4 +1,4 @@
-// Build: v2.0.4-hotfix - Edge Function path rewrite middleware
+// Build: v2.0.5-hotfix - Edge Function nested router fix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

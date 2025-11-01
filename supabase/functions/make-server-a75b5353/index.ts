@@ -12,26 +12,11 @@ console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Anon Key exists:', !!Deno.env.get('SUPABASE_ANON_KEY'));
 console.log('🔐 Service Role Key exists:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
-const app = new Hono();
-
-// Middleware to strip function name from path
-app.use('*', async (c, next) => {
-  const url = new URL(c.req.url);
-  // Remove /make-server-a75b5353 prefix from pathname
-  if (url.pathname.startsWith('/make-server-a75b5353')) {
-    const newPath = url.pathname.substring('/make-server-a75b5353'.length) || '/';
-    console.log(`🔄 Path rewrite: ${url.pathname} → ${newPath}`);
-    // Create new request with modified path
-    const newUrl = new URL(url);
-    newUrl.pathname = newPath;
-    const newReq = new Request(newUrl, c.req.raw);
-    c.req = newReq as any;
-  }
-  await next();
-});
+// Create API router - all routes will be defined here without prefix
+const api = new Hono();
 
 // CORS middleware - MUST be first
-app.use('*', cors({
+api.use('*', cors({
   origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'apikey', 'x-client-info'],
@@ -40,10 +25,10 @@ app.use('*', cors({
   credentials: false,
 }));
 
-app.use('*', logger(console.log));
+api.use('*', logger(console.log));
 
 // Handle OPTIONS preflight
-app.options('*', (c) => {
+api.options('*', (c) => {
   return c.text('', 204);
 });
 
@@ -119,7 +104,7 @@ const requireAdmin = async (c: any, next: any) => {
 };
 
 // Health check - MUST be first route
-app.get('/', (c) => {
+api.get('/', (c) => {
   console.log('✅ Health check endpoint called');
   console.log('Headers:', Object.fromEntries(c.req.raw.headers.entries()));
   return c.json({ 
@@ -143,7 +128,7 @@ app.get('/', (c) => {
 });
 
 // Test database connection
-app.get('/test/db', async (c) => {
+api.get('/test/db', async (c) => {
   try {
     console.log('🧪 Testing database connection...');
     const supabase = getSupabaseClient();
@@ -176,7 +161,7 @@ app.get('/test/db', async (c) => {
 });
 
 // User registration endpoint
-app.post('/signup', async (c) => {
+api.post('/signup', async (c) => {
   try {
     console.log('👤 User registration request received');
     const body = await c.req.json();
@@ -238,7 +223,7 @@ app.post('/signup', async (c) => {
 });
 
 // Get categories endpoint
-app.get('/categories', async (c) => {
+api.get('/categories', async (c) => {
   try {
     console.log('📂 Fetching categories from database...');
     const supabase = getSupabaseClient();
@@ -262,7 +247,7 @@ app.get('/categories', async (c) => {
 });
 
 // Get all products - PUBLIC endpoint
-app.get('/products', async (c) => {
+api.get('/products', async (c) => {
   try {
     console.log('📦 Fetching products from database...');
     const supabase = getSupabaseClient();
@@ -332,7 +317,7 @@ app.get('/products', async (c) => {
 // ============================================================================
 
 // Get Google Translate API key
-app.get('/api/translate/key', requireAdmin, async (c) => {
+api.get('/api/translate/key', requireAdmin, async (c) => {
   try {
     const apiKey = await kv.get('google_translate_api_key');
     return c.json({ 
@@ -347,7 +332,7 @@ app.get('/api/translate/key', requireAdmin, async (c) => {
 });
 
 // Set Google Translate API key
-app.post('/api/translate/key', requireAdmin, async (c) => {
+api.post('/api/translate/key', requireAdmin, async (c) => {
   try {
     const { apiKey } = await c.req.json();
     
@@ -374,7 +359,7 @@ app.post('/api/translate/key', requireAdmin, async (c) => {
 });
 
 // Delete Google Translate API key
-app.delete('/api/translate/key', requireAdmin, async (c) => {
+api.delete('/api/translate/key', requireAdmin, async (c) => {
   try {
     await kv.del('google_translate_api_key');
     console.log('✅ Google Translate API key deleted successfully');
@@ -386,7 +371,7 @@ app.delete('/api/translate/key', requireAdmin, async (c) => {
 });
 
 // Translate text
-app.post('/api/translate/text', requireAdmin, async (c) => {
+api.post('/api/translate/text', requireAdmin, async (c) => {
   try {
     const { text, targetLanguage, sourceLanguage } = await c.req.json();
     
@@ -448,7 +433,7 @@ app.post('/api/translate/text', requireAdmin, async (c) => {
 });
 
 // Translate batch
-app.post('/api/translate/batch', requireAdmin, async (c) => {
+api.post('/api/translate/batch', requireAdmin, async (c) => {
   try {
     const { texts, targetLanguage, sourceLanguage } = await c.req.json();
     
@@ -520,7 +505,7 @@ app.post('/api/translate/batch', requireAdmin, async (c) => {
 // ============================================================================
 
 // Get value from KV store (Admin only)
-app.get('/api/kv/get', requireAdmin, async (c) => {
+api.get('/api/kv/get', requireAdmin, async (c) => {
   try {
     const key = c.req.query('key');
     
@@ -543,7 +528,7 @@ app.get('/api/kv/get', requireAdmin, async (c) => {
 });
 
 // Set value in KV store (Admin only)
-app.post('/api/kv/set', requireAdmin, async (c) => {
+api.post('/api/kv/set', requireAdmin, async (c) => {
   try {
     const { key, value } = await c.req.json();
     
@@ -570,7 +555,7 @@ app.post('/api/kv/set', requireAdmin, async (c) => {
 });
 
 // Delete value from KV store (Admin only)
-app.delete('/api/kv/delete', requireAdmin, async (c) => {
+api.delete('/api/kv/delete', requireAdmin, async (c) => {
   try {
     const key = c.req.query('key');
     
@@ -597,7 +582,7 @@ app.delete('/api/kv/delete', requireAdmin, async (c) => {
 // ============================================================================
 
 // Send order status email (Admin only)
-app.post('/api/email/order-status', requireAdmin, async (c) => {
+api.post('/api/email/order-status', requireAdmin, async (c) => {
   try {
     console.log('📧 Order status email request received');
     console.log('Request URL:', c.req.url);
@@ -706,7 +691,7 @@ app.post('/api/email/order-status', requireAdmin, async (c) => {
 });
 
 // Send email broadcast (Admin only - uses Resend API)
-app.post('/api/email/broadcast', requireAdmin, async (c) => {
+api.post('/api/email/broadcast', requireAdmin, async (c) => {
   try {
     console.log('📧 Email broadcast request received');
     console.log('Request URL:', c.req.url);
@@ -818,7 +803,7 @@ app.post('/api/email/broadcast', requireAdmin, async (c) => {
 });
 
 // Get OneSignal app stats (subscriber count)
-app.get('/api/push/stats', requireAdmin, async (c) => {
+api.get('/api/push/stats', requireAdmin, async (c) => {
   try {
     console.log('📊 OneSignal stats request received');
 
@@ -866,7 +851,7 @@ app.get('/api/push/stats', requireAdmin, async (c) => {
 });
 
 // Send push notification (Admin only - uses KV store for credentials)
-app.post('/api/push/send', requireAdmin, async (c) => {
+api.post('/api/push/send', requireAdmin, async (c) => {
   try {
     console.log('📬 Push notification request received');
     console.log('Request URL:', c.req.url);
@@ -978,20 +963,32 @@ app.post('/api/push/send', requireAdmin, async (c) => {
   }
 });
 
-// 404 handler
-app.notFound((c) => {
+// 404 handler for API routes
+api.notFound((c) => {
   console.log('❌ 404 Not Found:', c.req.url);
   return c.json({ error: 'Not Found', path: c.req.url }, 404);
 });
 
-// Error handler
-app.onError((err, c) => {
+// Error handler for API routes
+api.onError((err, c) => {
   console.error('❌ Server error:', err);
   return c.json({ 
     error: 'Internal Server Error', 
     message: err.message,
     stack: err.stack 
   }, 500);
+});
+
+// Create main app and mount API router on the function path
+const app = new Hono();
+
+// Mount API router at /make-server-a75b5353
+app.route('/make-server-a75b5353', api);
+
+// Global 404 handler
+app.notFound((c) => {
+  console.log('❌ Global 404:', c.req.url);
+  return c.json({ error: 'Not Found', url: c.req.url }, 404);
 });
 
 console.log('✅ Edge Function initialized, starting server...');
