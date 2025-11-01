@@ -17,6 +17,7 @@ import { CatalogCSV } from './CatalogCSV';
 import { CategoryDebugger } from './CategoryDebugger';
 import { OneSignalSettings } from './OneSignalSettings';
 import { PushNotifications } from './PushNotifications';
+import { EdgeFunctionStatus } from '../EdgeFunctionStatus';
 import { 
   Package, 
   ShoppingBag, 
@@ -107,6 +108,11 @@ export const AdminPanelNew = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-gray-800 mb-6">{t('adminPanel')}</h2>
+
+      {/* Edge Function Status */}
+      <div className="mb-6">
+        <EdgeFunctionStatus />
+      </div>
 
       {/* Tabs */}
       <div className="bg-white rounded-lg shadow-md mb-6">
