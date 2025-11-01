@@ -492,6 +492,83 @@ app.post('/api/translate/batch', requireAdmin, async (c) => {
 });
 
 // ============================================================================
+// KV Store API Endpoints
+// ============================================================================
+
+// Get value from KV store (Admin only)
+app.get('/api/kv/get', requireAdmin, async (c) => {
+  try {
+    const key = c.req.query('key');
+    
+    if (!key) {
+      return c.json({ error: 'Key parameter is required' }, 400);
+    }
+    
+    const value = await kv.get(key);
+    
+    return c.json({ 
+      success: true, 
+      key,
+      value,
+      hasValue: value !== null && value !== undefined
+    });
+  } catch (error) {
+    console.error('❌ Error getting value from KV store:', error);
+    return c.json({ error: 'Failed to get value from KV store', details: String(error) }, 500);
+  }
+});
+
+// Set value in KV store (Admin only)
+app.post('/api/kv/set', requireAdmin, async (c) => {
+  try {
+    const { key, value } = await c.req.json();
+    
+    if (!key) {
+      return c.json({ error: 'Key is required' }, 400);
+    }
+    
+    if (value === undefined) {
+      return c.json({ error: 'Value is required' }, 400);
+    }
+    
+    await kv.set(key, value);
+    
+    console.log(`✅ KV store updated: ${key}`);
+    
+    return c.json({ 
+      success: true,
+      message: `Successfully saved ${key} to KV store`
+    });
+  } catch (error) {
+    console.error('❌ Error setting value in KV store:', error);
+    return c.json({ error: 'Failed to set value in KV store', details: String(error) }, 500);
+  }
+});
+
+// Delete value from KV store (Admin only)
+app.delete('/api/kv/delete', requireAdmin, async (c) => {
+  try {
+    const key = c.req.query('key');
+    
+    if (!key) {
+      return c.json({ error: 'Key parameter is required' }, 400);
+    }
+    
+    await kv.del(key);
+    
+    console.log(`✅ KV store key deleted: ${key}`);
+    
+    return c.json({ 
+      success: true,
+      message: `Successfully deleted ${key} from KV store`
+    });
+  } catch (error) {
+    console.error('❌ Error deleting value from KV store:', error);
+    return c.json({ error: 'Failed to delete value from KV store', details: String(error) }, 500);
+  }
+});
+
+// ============================================================================
 // OneSignal Push Notifications API Endpoints
 // ============================================================================
 

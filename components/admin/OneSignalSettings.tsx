@@ -67,14 +67,36 @@ export const OneSignalSettings = () => {
       // Save to localStorage (always save, even if disabled)
       localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
       
+      // Sync to KV store via Edge Function (so push notifications work server-side)
+      try {
+        const syncUrl = getServerUrl('/api/kv/set');
+        const response = await fetch(syncUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            key: 'oneSignalSettings',
+            value: settings,
+          }),
+        });
+        
+        if (response.ok) {
+          console.log('✅ OneSignal settings synced to KV store');
+        } else {
+          const errorData = await response.json();
+          console.warn('⚠️ Failed to sync to KV store:', errorData);
+          toast.warning('Настройки сохранены локально, но не синхронизированы с сервером');
+        }
+      } catch (kvError) {
+        console.warn('⚠️ Failed to sync to KV store:', kvError);
+        toast.warning('Настройки сохранены локально, но не синхронизированы с сервером');
+      }
+      
       // Trigger settings update event for App.tsx to reinitialize
       window.dispatchEvent(new CustomEvent('oneSignalSettingsUpdated'));
       
       toast.success(t('settingsSaved'));
-      
-      // Note: KV store sync will be implemented later with /api/kv/set endpoint
-      console.log('💡 OneSignal settings saved to localStorage');
-      console.log('💡 To use push notifications via Edge Function, you need to manually sync settings to KV store');
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error(t('saveError'));
