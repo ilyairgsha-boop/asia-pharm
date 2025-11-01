@@ -1,4 +1,4 @@
-// Build: v2.1.2-DEBUG - Added debug endpoints & better logging
+// Build: v2.1.3-COMPAT - Fixed apiKey/restApiKey compatibility
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

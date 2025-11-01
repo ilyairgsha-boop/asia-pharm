@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.2-DEBUG - Added debug endpoints and better error handling
-// Build: 2024-11-01 23:55:00 UTC
+// Version: 2.1.3-COMPAT - Fixed apiKey/restApiKey compatibility + better logging
+// Build: 2024-11-02 00:05:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.0...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.3-COMPAT...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -84,10 +84,13 @@ app.options('*', (c) => c.text('', 204));
 
 app.get('/make-server-a75b5353/', (c) => {
   console.log('✅ Health check called');
+  const resendKey = Deno.env.get('RESEND_API_KEY');
+  console.log('RESEND_API_KEY status:', resendKey ? `Set (${resendKey.substring(0, 10)}...)` : 'NOT SET');
+  
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.2 - Debug Implementation',
-    version: '2.1.2-DEBUG',
+    message: 'Asia-Pharm API v2.1.3 - Compatibility Fix',
+    version: '2.1.3-COMPAT',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -97,7 +100,8 @@ app.get('/make-server-a75b5353/', (c) => {
       debug: ['/make-server-a75b5353/api/debug/db-check', '/make-server-a75b5353/api/debug/onesignal-check'],
     },
     env: {
-      hasResendKey: !!Deno.env.get('RESEND_API_KEY'),
+      hasResendKey: !!resendKey,
+      resendKeyPrefix: resendKey ? resendKey.substring(0, 10) + '...' : null,
     }
   });
 });
@@ -255,8 +259,14 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     console.log(`📧 Broadcasting to ${subscribers.length} subscribers`);
     
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    console.log('RESEND_API_KEY status:', resendApiKey ? `Set (${resendApiKey.substring(0, 10)}...)` : 'NOT SET');
+    
     if (!resendApiKey) {
-      return c.json({ error: 'RESEND_API_KEY not configured' }, 500);
+      console.error('❌ RESEND_API_KEY not found in environment variables!');
+      return c.json({ 
+        error: 'RESEND_API_KEY not configured',
+        hint: 'Add RESEND_API_KEY to Supabase Edge Function secrets'
+      }, 500);
     }
     
     const { generateBroadcastEmailHTML } = await import('./email-templates.tsx');
@@ -277,6 +287,8 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
           unsubscribeUrl
         );
         
+        console.log(`📤 [${i + 1}/${subscribers.length}] Sending to ${subscriber.email}...`);
+        
         const response = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
@@ -292,8 +304,9 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
         });
         
         if (response.ok) {
+          const result = await response.json();
           sentCount++;
-          console.log(`✅ [${i + 1}/${subscribers.length}] Sent to ${subscriber.email}`);
+          console.log(`✅ [${i + 1}/${subscribers.length}] Sent to ${subscriber.email}, ID: ${result.id}`);
         } else {
           failedCount++;
           const errorData = await response.text();
@@ -372,8 +385,11 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     console.log('🔍 Loading OneSignal settings from KV store...');
     const settings = await kv.get('oneSignalSettings');
     console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
+    
+    // Support both old (apiKey) and new (restApiKey) format
+    const apiKey = settings?.restApiKey || settings?.apiKey;
 
-    if (!settings || !settings.appId || !settings.restApiKey) {
+    if (!settings || !settings.appId || !apiKey) {
       console.error('❌ OneSignal not configured in KV store');
       console.error('Settings object:', settings);
       return c.json({ 
@@ -385,7 +401,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     
     console.log('✅ OneSignal configured:', {
       hasAppId: !!settings.appId,
-      hasRestApiKey: !!settings.restApiKey,
+      hasApiKey: !!apiKey,
       enabled: settings.enabled,
     });
 
@@ -404,7 +420,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${settings.restApiKey}`
+        'Authorization': `Basic ${apiKey}`
       },
       body: JSON.stringify(notificationData)
     });
@@ -434,8 +450,11 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
     console.log('🔍 Loading OneSignal settings from KV store...');
     const settings = await kv.get('oneSignalSettings');
     console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
+    
+    // Support both old (apiKey) and new (restApiKey) format
+    const apiKey = settings?.restApiKey || settings?.apiKey;
 
-    if (!settings || !settings.appId || !settings.restApiKey) {
+    if (!settings || !settings.appId || !apiKey) {
       console.error('❌ OneSignal not configured in KV store');
       console.error('Settings object:', settings);
       return c.json({ 
@@ -452,7 +471,7 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
     const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${settings.restApiKey}`
+        'Authorization': `Basic ${apiKey}`
       }
     });
 
@@ -643,16 +662,24 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
     // Try to get from KV store
     const kvSettings = await kv.get('oneSignalSettings');
     
+    // Check which key is available
+    const apiKey = kvSettings?.restApiKey || kvSettings?.apiKey;
+    const keyType = kvSettings?.restApiKey ? 'restApiKey (new)' : kvSettings?.apiKey ? 'apiKey (old)' : 'none';
+    
     return c.json({
       success: true,
       kvStore: {
         exists: !!kvSettings,
-        data: kvSettings || null,
+        configured: !!(kvSettings?.appId && apiKey),
+        keyType: keyType,
+        hasAppId: !!kvSettings?.appId,
+        hasApiKey: !!apiKey,
+        enabled: kvSettings?.enabled || false,
+        // Show partial key for verification
+        appIdPrefix: kvSettings?.appId ? kvSettings.appId.substring(0, 8) + '...' : null,
+        apiKeyPrefix: apiKey ? apiKey.substring(0, 10) + '...' : null,
       },
-      expected: {
-        fields: ['appId', 'restApiKey', 'enabled'],
-        note: 'Make sure to save settings in Admin Panel → OneSignal Settings'
-      }
+      note: 'Both apiKey and restApiKey are supported. Save settings in Admin Panel if not configured.'
     });
   } catch (error: any) {
     return c.json({ 
@@ -670,5 +697,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.2-DEBUG initialized!');
+console.log('✅ Edge Function v2.1.3-COMPAT initialized!');
 Deno.serve(app.fetch);
