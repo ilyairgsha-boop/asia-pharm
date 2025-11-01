@@ -44,11 +44,12 @@ export const createClient = () => {
       },
     });
     
-    console.log('✅ Supabase client initialized', {
+    console.log('✅ Supabase client initialized [v2.0.1-hotfix]', {
       url: supabaseUrl,
       hasKey: !!supabaseAnonKey,
       keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
       projectId: supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown',
+      edgeFunctionName: 'make-server-a75b5353',
       serverUrl: `https://${supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1] || 'unknown'}.supabase.co/functions/v1/make-server-a75b5353`,
     });
   }
