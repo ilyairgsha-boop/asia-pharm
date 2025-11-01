@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.9-COMPLETE - Added order email + full OneSignal debug
-// Build: 2024-11-02 01:15:00 UTC
+// Version: 2.2.0-FINAL-DEBUG - Critical OneSignal diagnostics + Email
+// Build: 2024-11-02 01:30:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.9-COMPLETE...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.0-FINAL-DEBUG...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.9 - Complete Debug & Email Fix',
-    version: '2.1.9-COMPLETE',
+    message: 'Asia-Pharm API v2.2.0 - Final OneSignal Debug',
+    version: '2.2.0-FINAL-DEBUG',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -491,19 +491,45 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.url = url;
     }
 
-    // Format Authorization header - add "Basic" only if not already present
-    const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
-    console.log('🔑 Authorization details:', {
-      originalKeyPrefix: apiKey.substring(0, 15) + '...',
-      originalKeySuffix: '...' + apiKey.substring(apiKey.length - 5),
-      originalKeyLength: apiKey.length,
-      authHeaderPrefix: authHeader.substring(0, 20) + '...',
-      authHeaderLength: authHeader.length,
-      addedBasic: !apiKey.startsWith('Basic '),
-      FULL_AUTH_HEADER: authHeader, // FOR DEBUG - REMOVE IN PRODUCTION!
-    });
+    // CRITICAL DEBUG: Log the EXACT key before formatting
+    console.log('🔍 CRITICAL DEBUG - Raw API Key from KV:');
+    console.log('FULL_RAW_KEY:', apiKey);
+    console.log('Key length:', apiKey.length);
+    console.log('First 20 chars:', apiKey.substring(0, 20));
+    console.log('Last 20 chars:', apiKey.substring(apiKey.length - 20));
+    console.log('Contains spaces:', apiKey.includes(' '));
+    console.log('Starts with Basic:', apiKey.startsWith('Basic'));
+    console.log('Starts with Basic (with space):', apiKey.startsWith('Basic '));
+    
+    // OneSignal REST API expects: Basic <REST_API_KEY>
+    // The REST API key itself should NOT contain "Basic"
+    // We need to add "Basic " prefix if not present
+    let authHeader = apiKey;
+    
+    // If key already has "Basic " prefix, use as is
+    if (apiKey.startsWith('Basic ')) {
+      authHeader = apiKey;
+      console.log('✅ Key already has "Basic " prefix, using as is');
+    } 
+    // If key is just "Basic" without space and key, add space
+    else if (apiKey.startsWith('Basic') && !apiKey.startsWith('Basic ')) {
+      authHeader = apiKey.replace('Basic', 'Basic ');
+      console.log('⚠️ Key has "Basic" without space, fixing...');
+    }
+    // If key doesn't have "Basic" at all, add it
+    else {
+      authHeader = `Basic ${apiKey}`;
+      console.log('✅ Adding "Basic " prefix to key');
+    }
+    
+    console.log('🔑 FINAL Authorization header to send:');
+    console.log('FULL_AUTH_HEADER:', authHeader);
+    console.log('Header length:', authHeader.length);
 
     console.log('📤 Sending to OneSignal API...');
+    console.log('App ID:', settings.appId);
+    console.log('Notification data:', JSON.stringify(notificationData));
+    
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
@@ -514,6 +540,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     });
     
     console.log('📥 OneSignal response status:', response.status);
+    console.log('📥 OneSignal response headers:', JSON.stringify([...response.headers.entries()]));
 
     if (!response.ok) {
       const errorData = await response.text();
@@ -568,15 +595,26 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
     
     console.log('✅ OneSignal configured, fetching stats from API...');
 
-    // Format Authorization header - add "Basic" only if not already present
-    const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
-    console.log('🔑 Stats Authorization details:', {
-      authHeaderPrefix: authHeader.substring(0, 20) + '...',
-      authHeaderLength: authHeader.length,
-      FULL_AUTH_HEADER: authHeader, // FOR DEBUG - REMOVE IN PRODUCTION!
-    });
+    // CRITICAL DEBUG: Log the EXACT key before formatting
+    console.log('🔍 STATS DEBUG - Raw API Key from KV:');
+    console.log('FULL_RAW_KEY:', apiKey);
+    
+    // OneSignal REST API expects: Basic <REST_API_KEY>
+    let authHeader = apiKey;
+    if (apiKey.startsWith('Basic ')) {
+      authHeader = apiKey;
+    } else if (apiKey.startsWith('Basic') && !apiKey.startsWith('Basic ')) {
+      authHeader = apiKey.replace('Basic', 'Basic ');
+    } else {
+      authHeader = `Basic ${apiKey}`;
+    }
+    
+    console.log('🔑 FINAL Stats Authorization header:');
+    console.log('FULL_AUTH_HEADER:', authHeader);
 
     console.log('📤 Fetching OneSignal app stats...');
+    console.log('App ID:', settings.appId);
+    
     // Get app info from OneSignal
     const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
       method: 'GET',
@@ -844,5 +882,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.9-COMPLETE initialized!');
+console.log('✅ Edge Function v2.2.0-FINAL-DEBUG initialized!');
 Deno.serve(app.fetch);

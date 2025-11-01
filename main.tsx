@@ -1,4 +1,4 @@
-// Build: v2.1.9-COMPLETE - Order email + OneSignal debug
+// Build: v2.2.0-FINAL-DEBUG - Critical OneSignal diagnostics
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
