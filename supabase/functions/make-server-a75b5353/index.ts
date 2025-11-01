@@ -12,8 +12,23 @@ console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Anon Key exists:', !!Deno.env.get('SUPABASE_ANON_KEY'));
 console.log('🔐 Service Role Key exists:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
-// Hono with basePath to handle Supabase Edge Function routing
-const app = new Hono().basePath('/make-server-a75b5353');
+const app = new Hono();
+
+// Middleware to strip function name from path
+app.use('*', async (c, next) => {
+  const url = new URL(c.req.url);
+  // Remove /make-server-a75b5353 prefix from pathname
+  if (url.pathname.startsWith('/make-server-a75b5353')) {
+    const newPath = url.pathname.substring('/make-server-a75b5353'.length) || '/';
+    console.log(`🔄 Path rewrite: ${url.pathname} → ${newPath}`);
+    // Create new request with modified path
+    const newUrl = new URL(url);
+    newUrl.pathname = newPath;
+    const newReq = new Request(newUrl, c.req.raw);
+    c.req = newReq as any;
+  }
+  await next();
+});
 
 // CORS middleware - MUST be first
 app.use('*', cors({

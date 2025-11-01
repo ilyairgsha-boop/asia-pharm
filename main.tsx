@@ -1,4 +1,4 @@
-// Build: v2.0.3-hotfix - Edge Function basePath added to Hono
+// Build: v2.0.4-hotfix - Edge Function path rewrite middleware
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
