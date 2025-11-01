@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.5-EMAIL-FIX - Fixed email sender + OneSignal UI check
-// Build: 2024-11-02 00:25:00 UTC
+// Version: 2.1.6-KEY-FIX - Fixed restApiKey compatibility + email logging
+// Build: 2024-11-02 00:35:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.5-EMAIL-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.6-KEY-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.5 - Email & UI Fix',
-    version: '2.1.5-EMAIL-FIX',
+    message: 'Asia-Pharm API v2.1.6 - Key Compatibility Fix',
+    version: '2.1.6-KEY-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -735,5 +735,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.5-EMAIL-FIX initialized!');
+console.log('✅ Edge Function v2.1.6-KEY-FIX initialized!');
 Deno.serve(app.fetch);
