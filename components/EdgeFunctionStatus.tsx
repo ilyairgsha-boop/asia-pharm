@@ -23,13 +23,16 @@ export const EdgeFunctionStatus = () => {
 
     try {
       const url = getServerUrl('');
+      const anonKey = getAnonKey();
       console.log('🔍 Проверка Edge Function:', url);
+      console.log('🔑 Using API Key:', anonKey.substring(0, 20) + '...');
 
       const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': getAnonKey(),
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
         },
       });
 

@@ -21,6 +21,7 @@ async function testEdgeFunction() {
   try {
     const response = await fetch(baseUrl, {
       headers: {
+        'Authorization': `Bearer ${anonKey}`,
         'apikey': anonKey,
         'Content-Type': 'application/json',
       }
@@ -49,6 +50,7 @@ async function testEdgeFunction() {
   try {
     const response = await fetch(`${baseUrl}/test/db`, {
       headers: {
+        'Authorization': `Bearer ${anonKey}`,
         'apikey': anonKey,
         'Content-Type': 'application/json',
       }
@@ -75,6 +77,7 @@ async function testEdgeFunction() {
   try {
     const response = await fetch(`${baseUrl}/categories`, {
       headers: {
+        'Authorization': `Bearer ${anonKey}`,
         'apikey': anonKey,
         'Content-Type': 'application/json',
       }

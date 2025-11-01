@@ -18,11 +18,13 @@ export const CreateAdminPage = ({ onBack }: { onBack: () => void }) => {
     try {
       console.log('Creating admin...', { email, name });
       
+      const anonKey = getAnonKey();
       const response = await fetch(getServerUrl('/create-admin'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': getAnonKey(),
+          'Authorization': `Bearer ${anonKey}`,
+          'apikey': anonKey,
         },
         body: JSON.stringify({ email, password, name }),
       });

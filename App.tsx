@@ -27,7 +27,7 @@ import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-che
 import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
-import { createClient } from './utils/supabase/client';
+import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
 import './utils/clearOldCategories'; // Import to make functions available in console
 
 function AppContent() {
@@ -95,7 +95,38 @@ function AppContent() {
     // Make oneSignalService available in console for debugging
     if (typeof window !== 'undefined') {
       (window as any).oneSignalService = oneSignalService;
-      console.log('💡 Debug: window.oneSignalService is available');
+      (window as any).debugSupabase = {
+        getAnonKey,
+        getServerUrl,
+        testConnection: async () => {
+          const url = getServerUrl('');
+          const key = getAnonKey();
+          console.log('🧪 Testing Edge Function...');
+          console.log('URL:', url);
+          console.log('API Key:', key.substring(0, 20) + '...');
+          
+          try {
+            const response = await fetch(url, {
+              headers: {
+                'Authorization': `Bearer ${key}`,
+                'apikey': key,
+              }
+            });
+            const data = await response.json();
+            console.log('✅ Status:', response.status);
+            console.log('✅ Response:', data);
+            return data;
+          } catch (error) {
+            console.error('❌ Error:', error);
+            throw error;
+          }
+        }
+      };
+      console.log('💡 Debug tools available:');
+      console.log('  - window.oneSignalService');
+      console.log('  - window.debugSupabase.getAnonKey()');
+      console.log('  - window.debugSupabase.getServerUrl(path)');
+      console.log('  - await window.debugSupabase.testConnection()');
     }
     
     try {
