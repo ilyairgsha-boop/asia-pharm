@@ -60,6 +60,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
   const [favoriteProducts, setFavoriteProducts] = useState<Product[]>([]);
   const [loadingFavorites, setLoadingFavorites] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isSubscribedToNewsletter, setIsSubscribedToNewsletter] = useState(false);
   const [newEmail, setNewEmail] = useState('');
   const [showEmailEdit, setShowEmailEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -82,12 +83,13 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('profiles')
-        .select('subscribed')
+        .select('subscribed, subscribed_to_newsletter')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
-        setIsSubscribed(data.subscribed || false);
+        setIsSubscribed(data.subscribed !== false); // По умолчанию true для push
+        setIsSubscribedToNewsletter(data.subscribed_to_newsletter || false);
       }
     } catch (error) {
       console.error('Error loading user settings:', error);
@@ -133,13 +135,35 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
 
       if (!error) {
         setIsSubscribed(!isSubscribed);
-        toast.success(t('subscriptionUpdated'));
+        toast.success(t('subscriptionUpdated') || 'Push subscription updated');
       } else {
-        toast.error(t('subscriptionError'));
+        toast.error(t('subscriptionError') || 'Failed to update subscription');
       }
     } catch (error) {
-      console.error('Error toggling subscription:', error);
-      toast.error(t('subscriptionError'));
+      console.error('Error toggling push subscription:', error);
+      toast.error(t('subscriptionError') || 'Failed to update subscription');
+    }
+  };
+
+  const handleToggleNewsletterSubscription = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('profiles')
+        .update({ subscribed_to_newsletter: !isSubscribedToNewsletter })
+        .eq('id', user.id);
+
+      if (!error) {
+        setIsSubscribedToNewsletter(!isSubscribedToNewsletter);
+        toast.success(t('subscriptionUpdated') || 'Email subscription updated');
+      } else {
+        toast.error(t('subscriptionError') || 'Failed to update subscription');
+      }
+    } catch (error) {
+      console.error('Error toggling newsletter subscription:', error);
+      toast.error(t('subscriptionError') || 'Failed to update subscription');
     }
   };
 
@@ -942,18 +966,20 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                 </div>
               </div>
 
-              {/* Newsletter Settings */}
+              {/* Push Notification Settings */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Bell size={20} className="text-red-600" />
-                  <h3 className="text-gray-800">{t('newsletterSettings')}</h3>
+                  <h3 className="text-gray-800">{t('pushNotificationSettings') || 'Push Notifications'}</h3>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="text-gray-800">{isSubscribed ? t('newsletterSubscribed') : t('newsletterUnsubscribed')}</p>
+                    <p className="text-gray-800">
+                      {isSubscribed ? (t('pushSubscribed') || 'You are subscribed to push notifications') : (t('pushUnsubscribed') || 'Push notifications are disabled')}
+                    </p>
                     <p className="text-sm text-gray-600 mt-1">
-                      {isSubscribed ? t('unsubscribeNewsletter') : t('subscribeNewsletter')}
+                      {isSubscribed ? (t('pushSubscribedDesc') || 'You will receive notifications about orders and promotions') : (t('pushUnsubscribedDesc') || 'Enable to receive instant updates')}
                     </p>
                   </div>
                   <button
@@ -964,7 +990,36 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                         : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
                   >
-                    {isSubscribed ? t('unsubscribeNewsletter') : t('subscribeNewsletter')}
+                    {isSubscribed ? (t('unsubscribe') || 'Disable') : (t('subscribe') || 'Enable')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Email Newsletter Settings */}
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Mail size={20} className="text-red-600" />
+                  <h3 className="text-gray-800">{t('newsletterSettings') || 'Email Newsletter'}</h3>
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-gray-800">
+                      {isSubscribedToNewsletter ? (t('newsletterSubscribed') || 'Subscribed to email newsletter') : (t('newsletterUnsubscribed') || 'Not subscribed to newsletter')}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">
+                      {isSubscribedToNewsletter ? (t('newsletterSubscribedDesc') || 'You will receive promotional emails and updates') : (t('newsletterUnsubscribedDesc') || 'Subscribe to receive special offers via email')}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleToggleNewsletterSubscription}
+                    className={`px-6 py-2 rounded-lg transition-colors ${
+                      isSubscribedToNewsletter
+                        ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                  >
+                    {isSubscribedToNewsletter ? (t('unsubscribeNewsletter') || 'Unsubscribe') : (t('subscribeNewsletter') || 'Subscribe')}
                   </button>
                 </div>
               </div>

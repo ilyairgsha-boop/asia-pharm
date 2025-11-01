@@ -1,4 +1,4 @@
-// Build: v2.0.8-PREFIXED - Routes with Supabase prefix
+// Build: v2.1.0-FULL - Complete API with email & push
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
