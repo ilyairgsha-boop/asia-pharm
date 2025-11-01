@@ -51,7 +51,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.1.0-FULL');
+    console.log('🚀 Asia Pharm - Starting application... v2.1.1-FIXED');
     
     if (MOCK_MODE) {
       console.log('');

@@ -13,7 +13,7 @@ import { getServerUrl, supabase, getAnonKey } from '../../utils/supabase/client'
 
 interface OneSignalSettingsData {
   appId: string;
-  apiKey: string;
+  restApiKey: string; // Changed from apiKey to match Edge Function
   safariWebId?: string;
   enabled: boolean;
   autoSubscribe: boolean;
@@ -26,7 +26,7 @@ export const OneSignalSettings = () => {
   const { t } = useLanguage();
   const [settings, setSettings] = useState<OneSignalSettingsData>({
     appId: '',
-    apiKey: '',
+    restApiKey: '',
     safariWebId: '',
     enabled: false,
     autoSubscribe: false,
@@ -45,13 +45,13 @@ export const OneSignalSettings = () => {
 
   // Load subscriber count when settings change
   useEffect(() => {
-    if (settings.enabled && settings.appId && settings.apiKey) {
+    if (settings.enabled && settings.appId && settings.restApiKey) {
       loadSubscriberCount();
     }
-  }, [settings.enabled, settings.appId, settings.apiKey]);
+  }, [settings.enabled, settings.appId, settings.restApiKey]);
 
   const loadSubscriberCount = async () => {
-    if (!settings.enabled || !settings.appId || !settings.apiKey) {
+    if (!settings.enabled || !settings.appId || !settings.restApiKey) {
       setSubscriberCount(null);
       return;
     }
@@ -93,6 +93,11 @@ export const OneSignalSettings = () => {
       const stored = localStorage.getItem('oneSignalSettings');
       if (stored) {
         const parsed = JSON.parse(stored);
+        // Migrate old apiKey to restApiKey
+        if (parsed.apiKey && !parsed.restApiKey) {
+          parsed.restApiKey = parsed.apiKey;
+          delete parsed.apiKey;
+        }
         setSettings({ ...settings, ...parsed });
       }
     } catch (error) {
@@ -104,7 +109,7 @@ export const OneSignalSettings = () => {
     setIsSaving(true);
     try {
       // Validate if enabled
-      if (settings.enabled && (!settings.appId || !settings.apiKey)) {
+      if (settings.enabled && (!settings.appId || !settings.restApiKey)) {
         toast.error(t('fillRequiredFields'));
         setIsSaving(false);
         return;
@@ -184,7 +189,7 @@ export const OneSignalSettings = () => {
     }
   };
 
-  const isConfigured = settings.appId && settings.apiKey;
+  const isConfigured = settings.appId && settings.restApiKey;
 
   return (
     <div className="space-y-6">
@@ -306,15 +311,15 @@ export const OneSignalSettings = () => {
 
           {/* REST API Key */}
           <div className="space-y-2">
-            <Label htmlFor="apiKey">
+            <Label htmlFor="restApiKey">
               {t('oneSignalRestApiKey')} <span className="text-red-500">*</span>
             </Label>
             <Input
-              id="apiKey"
+              id="restApiKey"
               type="password"
               placeholder="**********************************"
-              value={settings.apiKey}
-              onChange={(e) => setSettings({ ...settings, apiKey: e.target.value })}
+              value={settings.restApiKey}
+              onChange={(e) => setSettings({ ...settings, restApiKey: e.target.value })}
             />
             <p className="text-sm text-gray-500">{t('oneSignalRestApiKeyDescription')}</p>
           </div>

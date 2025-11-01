@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.0-FULL - Complete API with all endpoints
-// Build: 2024-11-01 23:30:00 UTC
+// Version: 2.1.1-FIXED - Fixed OneSignal key name and DB error handling
+// Build: 2024-11-01 23:45:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -86,11 +86,11 @@ app.get('/make-server-a75b5353/', (c) => {
   console.log('✅ Health check called');
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.0 - Full Implementation',
-    version: '2.1.0-FULL',
+    message: 'Asia-Pharm API v2.1.1 - Fixed Implementation',
+    version: '2.1.1-FIXED',
     timestamp: new Date().toISOString(),
     routes: {
-      email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast'],
+      email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
       push: ['/make-server-a75b5353/api/push/send', '/make-server-a75b5353/api/push/stats'],
       kv: ['/make-server-a75b5353/api/kv/*'],
       translate: ['/make-server-a75b5353/api/translate/*'],
@@ -215,14 +215,27 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     }
 
     const supabase = getSupabaseAdmin();
+    
+    // First check if column exists
     const { data: subscribers, error } = await supabase
       .from('profiles')
-      .select('id, email, name, language')
+      .select('id, email, name, language, subscribed_to_newsletter')
       .eq('subscribed_to_newsletter', true);
     
     if (error) {
-      console.error('Error fetching subscribers:', error);
-      return c.json({ error: 'Failed to fetch subscribers' }, 500);
+      console.error('❌ Error fetching subscribers:', error);
+      console.error('Error details:', error.message, error.code, error.details);
+      
+      // If column doesn't exist, return helpful error
+      if (error.code === '42703' || error.message.includes('column') || error.message.includes('does not exist')) {
+        return c.json({ 
+          error: 'Database not configured',
+          details: 'Column subscribed_to_newsletter does not exist. Run SUBSCRIPTIONS_FIX.sql in Supabase Dashboard.',
+          hint: 'ALTER TABLE profiles ADD COLUMN subscribed_to_newsletter BOOLEAN DEFAULT FALSE;'
+        }, 500);
+      }
+      
+      return c.json({ error: 'Failed to fetch subscribers', details: error.message }, 500);
     }
     
     if (!subscribers || subscribers.length === 0) {
@@ -314,14 +327,21 @@ app.get('/make-server-a75b5353/api/email/subscribers-count', requireAdmin, async
       .eq('subscribed_to_newsletter', true);
     
     if (error) {
-      console.error('Error fetching subscribers count:', error);
-      return c.json({ error: 'Failed to get count' }, 500);
+      console.error('❌ Error fetching subscribers count:', error);
+      
+      // If column doesn't exist
+      if (error.code === '42703' || error.message.includes('column') || error.message.includes('does not exist')) {
+        console.warn('⚠️ Column subscribed_to_newsletter does not exist - returning 0');
+        return c.json({ count: 0, warning: 'Database column not configured' });
+      }
+      
+      return c.json({ error: 'Failed to get count', details: error.message }, 500);
     }
     
     return c.json({ count: count || 0 });
   } catch (error: any) {
     console.error('❌ Error getting subscribers count:', error);
-    return c.json({ error: 'Failed to get count' }, 500);
+    return c.json({ error: 'Failed to get count', details: error.message }, 500);
   }
 });
 
@@ -535,5 +555,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.0 initialized!');
+console.log('✅ Edge Function v2.1.1-FIXED initialized!');
 Deno.serve(app.fetch);

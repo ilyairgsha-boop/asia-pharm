@@ -1,4 +1,4 @@
-// Build: v2.1.0-FULL - Complete API with email & push
+// Build: v2.1.1-FIXED - Fixed OneSignal key name & DB errors
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
