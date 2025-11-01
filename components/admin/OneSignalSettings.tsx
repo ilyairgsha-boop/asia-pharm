@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Alert, AlertDescription } from '../ui/alert';
 import { Bell, Info, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { oneSignalService } from '../../utils/oneSignal';
 
 interface OneSignalSettingsData {
   appId: string;
@@ -72,7 +73,6 @@ export const OneSignalSettings = () => {
         // If enabled and configured, try to initialize OneSignal
         setTimeout(async () => {
           try {
-            const { oneSignalService } = await import('../../utils/oneSignal');
             await oneSignalService.initializeSDK();
             toast.success('✅ OneSignal инициализирован');
           } catch (error) {

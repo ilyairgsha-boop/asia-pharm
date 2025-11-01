@@ -27,6 +27,7 @@ import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-che
 import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
+import { createClient } from './utils/supabase/client';
 import './utils/clearOldCategories'; // Import to make functions available in console
 
 function AppContent() {
@@ -139,7 +140,6 @@ function AppContent() {
       const productId = page.replace('product-', '');
       // Fetch product by ID and open modal
       try {
-        const { createClient } = await import('./utils/supabase/client');
         const supabase = createClient();
         const { data: product } = await supabase
           .from('products')
