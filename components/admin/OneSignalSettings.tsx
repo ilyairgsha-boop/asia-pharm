@@ -36,11 +36,39 @@ export const OneSignalSettings = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isTestMode, setIsTestMode] = useState(false);
+  const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
 
-  // Load settings on mount
+  // Load settings and subscriber count on mount
   useEffect(() => {
     loadSettings();
+    loadSubscriberCount();
   }, []);
+
+  const loadSubscriberCount = async () => {
+    if (!settings.enabled || !settings.appId || !settings.apiKey) {
+      setSubscriberCount(null);
+      return;
+    }
+
+    try {
+      // Get subscriber count from OneSignal API
+      const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Basic ${settings.apiKey}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriberCount(data.players || 0);
+      } else {
+        console.error('Failed to get subscriber count from OneSignal');
+      }
+    } catch (error) {
+      console.error('Error loading OneSignal subscriber count:', error);
+    }
+  };
 
   const loadSettings = () => {
     try {
@@ -108,6 +136,9 @@ export const OneSignalSettings = () => {
       // Trigger settings update event for App.tsx to reinitialize
       window.dispatchEvent(new CustomEvent('oneSignalSettingsUpdated'));
       
+      // Reload subscriber count after saving settings
+      loadSubscriberCount();
+      
       toast.success(t('settingsSaved'));
     } catch (error) {
       console.error('Error saving settings:', error);
@@ -152,7 +183,21 @@ export const OneSignalSettings = () => {
         <Alert className="bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertDescription className="text-green-800">
-            {t('oneSignalConfigured')}
+            <div className="flex items-center justify-between">
+              <span>{t('oneSignalConfigured')}</span>
+              {subscriberCount !== null && (
+                <span className="ml-4">
+                  📱 {t('pushSubscribers')}: <strong>{subscriberCount}</strong>
+                  <button
+                    onClick={loadSubscriberCount}
+                    className="ml-2 text-gray-600 hover:text-gray-800"
+                    title="Обновить"
+                  >
+                    🔄
+                  </button>
+                </span>
+              )}
+            </div>
           </AlertDescription>
         </Alert>
       ) : (

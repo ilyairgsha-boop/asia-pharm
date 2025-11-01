@@ -24,10 +24,11 @@ export const EmailBroadcast = () => {
 
     try {
       const supabase = createClient();
+      // Count users subscribed to newsletter from profiles table
       const { count, error } = await supabase
-        .from('newsletter_subscribers')
+        .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('subscribed', true);
+        .eq('subscribed_to_newsletter', true);
 
       if (error) {
         console.error('Error loading subscriber count:', error);
@@ -68,28 +69,31 @@ export const EmailBroadcast = () => {
     toast.info(`${t('startingBroadcast')} Ожидайте ${timeEstimate}...`);
 
     try {
-      // Получаем подписчиков напрямую из Supabase
-      const supabase = createClient();
-      const { data: subscribers, error: fetchError } = await supabase
-        .from('newsletter_subscribers')
-        .select('email')
-        .eq('subscribed', true);
+      // Send broadcast via Edge Function
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/make-server-a75b5353/api/email/broadcast`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+        },
+        body: JSON.stringify({
+          subject,
+          htmlContent,
+        }),
+      });
 
-      if (fetchError || !subscribers || subscribers.length === 0) {
-        toast.error('Нет подписчиков для рассылки');
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('❌ Broadcast error:', result);
+        toast.error(`${t('broadcastError')}: ${result.error || 'Unknown error'}`);
         setLoading(false);
         return;
       }
 
-      // ВАЖНО: Email рассылка требует настроенного Resend API
-      // Временно показываем информацию
-      toast.warning(`⚠️ Email рассылка требует настройки Resend API. Найдено ${subscribers.length} подписчиков для рассылки.`, { duration: 5000 });
-      
-      console.log('📧 Email broadcast prepared:');
-      console.log('Subject:', subject);
-      console.log('Recipients:', subscribers.length);
-      console.log('Content length:', htmlContent.length);
-      console.log('Subscribers:', subscribers.map(s => s.email));
+      console.log('✅ Broadcast complete:', result);
+      toast.success(`✅ Рассылка завершена! Отправлено: ${result.sent}, Ошибок: ${result.failed}`);
       
       // Очищаем форму
       setSubject('');

@@ -569,8 +569,118 @@ app.delete('/api/kv/delete', requireAdmin, async (c) => {
 });
 
 // ============================================================================
-// OneSignal Push Notifications API Endpoints
+// Email & Push Notifications API Endpoints
 // ============================================================================
+
+// Send email broadcast (Admin only - uses Resend API)
+app.post('/api/email/broadcast', requireAdmin, async (c) => {
+  try {
+    console.log('📧 Email broadcast request received');
+    const { subject, htmlContent } = await c.req.json();
+
+    if (!subject || !htmlContent) {
+      return c.json({ error: 'Subject and content are required' }, 400);
+    }
+
+    // Get all subscribed users with their email and language preference
+    const supabase = getSupabaseAdmin();
+    const { data: subscribers, error } = await supabase
+      .from('profiles')
+      .select('id, email, name, language')
+      .eq('subscribed_to_newsletter', true);
+    
+    if (error) {
+      console.error('Error fetching subscribers:', error);
+      return c.json({ error: 'Failed to fetch subscribers', details: error.message }, 500);
+    }
+    
+    if (!subscribers || subscribers.length === 0) {
+      return c.json({ error: 'No subscribers found' }, 404);
+    }
+    
+    console.log(`📧 Starting newsletter broadcast to ${subscribers.length} subscribers`);
+    console.log(`⏱️ Estimated time: ${Math.ceil(subscribers.length * 0.6)} seconds (0.6s per email)`);
+    
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      return c.json({ error: 'RESEND_API_KEY not configured' }, 500);
+    }
+    
+    // Import email template function
+    const { generateBroadcastEmailHTML } = await import('./email-templates.tsx');
+    
+    let sentCount = 0;
+    let failedCount = 0;
+    
+    // Send emails with delay to avoid rate limiting
+    for (let i = 0; i < subscribers.length; i++) {
+      const subscriber = subscribers[i];
+      try {
+        const userLanguage = (subscriber.language || 'ru') as 'ru' | 'en' | 'zh' | 'vi';
+        const unsubscribeUrl = 'https://asia-pharm.com/profile';
+        
+        // Generate full email with header and footer
+        const fullHtml = generateBroadcastEmailHTML(
+          subject,
+          htmlContent,
+          userLanguage,
+          unsubscribeUrl
+        );
+        
+        // Send email via Resend
+        const response = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${resendApiKey}`
+          },
+          body: JSON.stringify({
+            from: 'Asia Pharm <info@asia-pharm.com>',
+            to: [subscriber.email],
+            subject: subject,
+            html: fullHtml
+          })
+        });
+        
+        if (response.ok) {
+          sentCount++;
+          console.log(`✅ [${i + 1}/${subscribers.length}] Email sent to ${subscriber.email}`);
+        } else {
+          failedCount++;
+          const errorData = await response.text();
+          console.error(`❌ [${i + 1}/${subscribers.length}] Failed to send to ${subscriber.email}:`, errorData);
+          
+          // If rate limited, wait longer before next attempt
+          if (response.status === 429) {
+            console.log('⏳ Rate limit hit, waiting 2 seconds before continuing...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
+        }
+        
+        // Delay to respect Resend rate limit (2 requests/second = 500ms minimum)
+        // Using 600ms to be safe
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+      } catch (emailError) {
+        failedCount++;
+        console.error(`❌ [${i + 1}/${subscribers.length}] Error sending to ${subscriber.email}:`, emailError);
+      }
+    }
+    
+    console.log(`📊 Broadcast complete: ${sentCount} sent, ${failedCount} failed`);
+    
+    return c.json({
+      success: true,
+      sent: sentCount,
+      failed: failedCount,
+      total: subscribers.length
+    });
+    
+  } catch (error: any) {
+    console.error('❌ Error in email broadcast:', error);
+    return c.json({ error: error.message || 'Failed to send broadcast' }, 500);
+  }
+});
 
 // Send push notification (Admin only - uses KV store for credentials)
 app.post('/api/push/send', requireAdmin, async (c) => {
