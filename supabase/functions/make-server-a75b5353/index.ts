@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.7-AUTH-FIX - Fixed OneSignal auth header + detailed logging
-// Build: 2024-11-02 00:45:00 UTC
+// Version: 2.1.8-EMAIL-FINAL - Fixed email template data + OneSignal auth
+// Build: 2024-11-02 01:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.7-AUTH-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.8-EMAIL-FINAL...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.7 - Auth & Logging Fix',
-    version: '2.1.7-AUTH-FIX',
+    message: 'Asia-Pharm API v2.1.8 - Email & Auth Final Fix',
+    version: '2.1.8-EMAIL-FINAL',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -188,7 +188,43 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
     const subject = subjects[language as keyof typeof subjects]?.[status] || subjects.ru[status];
     console.log('📬 Email subject:', subject);
     
-    const htmlMessage = generateOrderEmailHTML(order, status as any, language as any);
+    // Transform order data to match OrderEmailData interface
+    const orderEmailData = {
+      orderId: orderNumber,
+      orderDate: order.created_at,
+      customerName: order.full_name || 'Клиент',
+      status: status as 'pending' | 'processing' | 'shipped' | 'delivered',
+      items: (order.items || []).map((item: any) => ({
+        name: item.name || item.title || 'Товар',
+        quantity: item.quantity || 1,
+        price: item.price || 0,
+        total: (item.price || 0) * (item.quantity || 1),
+        image: item.image,
+        id: item.id
+      })),
+      deliveryMethod: order.shipping_info?.deliveryMethod || 'russian_post',
+      deliveryCost: order.shipping_cost || 0,
+      totalAmount: order.total || 0,
+      shippingAddress: {
+        fullName: order.shipping_info?.fullName || order.full_name || '',
+        address: order.shipping_info?.address || ''
+      },
+      paymentMethod: order.payment_method,
+      promoCode: order.promo_code,
+      promoDiscount: order.promo_discount,
+      loyaltyPointsUsed: order.loyalty_points_used,
+      trackingNumber: order.tracking_number,
+      trackingUrl: order.tracking_url
+    };
+    
+    console.log('📝 Order data prepared:', {
+      orderId: orderEmailData.orderId,
+      itemsCount: orderEmailData.items.length,
+      hasItems: orderEmailData.items.length > 0,
+      firstItem: orderEmailData.items[0]
+    });
+    
+    const htmlMessage = generateOrderEmailHTML(orderEmailData, language as any);
     console.log('✅ HTML generated, length:', htmlMessage.length);
 
     console.log('📤 Sending to Resend API...');
@@ -438,7 +474,10 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       hasApiKey: !!apiKey,
       apiKeyPrefix: apiKey.substring(0, 10) + '...',
       apiKeyStartsWithBasic: apiKey.startsWith('Basic'),
+      apiKeyStartsWithOs: apiKey.startsWith('os_'),
+      apiKeyLength: apiKey.length,
       enabled: settings.enabled,
+      keySource: settings.restApiKey ? 'restApiKey' : 'apiKey',
     });
 
     const notificationData: any = {
@@ -454,7 +493,11 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
 
     // Format Authorization header - add "Basic" only if not already present
     const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
-    console.log('🔑 Authorization header:', authHeader.substring(0, 20) + '...');
+    console.log('🔑 Authorization details:', {
+      originalKeyPrefix: apiKey.substring(0, 15) + '...',
+      authHeaderPrefix: authHeader.substring(0, 20) + '...',
+      addedBasic: !apiKey.startsWith('Basic ')
+    });
 
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
@@ -764,5 +807,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.7-AUTH-FIX initialized!');
+console.log('✅ Edge Function v2.1.8-EMAIL-FINAL initialized!');
 Deno.serve(app.fetch);

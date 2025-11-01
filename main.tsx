@@ -1,4 +1,4 @@
-// Build: v2.1.7-AUTH-FIX - Fixed OneSignal auth header
+// Build: v2.1.8-EMAIL-FINAL - Fixed email template
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

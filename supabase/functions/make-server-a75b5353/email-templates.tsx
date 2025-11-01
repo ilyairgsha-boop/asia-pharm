@@ -214,7 +214,10 @@ interface OrderEmailData {
 }
 
 // Helper function to format currency
-function formatCurrency(amount: number): string {
+function formatCurrency(amount: number | undefined | null): string {
+  if (amount === undefined || amount === null || isNaN(amount)) {
+    return '0 ₽';
+  }
   return `${amount.toLocaleString('ru-RU')} ₽`;
 }
 
