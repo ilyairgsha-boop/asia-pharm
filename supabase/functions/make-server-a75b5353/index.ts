@@ -572,6 +572,113 @@ app.delete('/api/kv/delete', requireAdmin, async (c) => {
 // Email & Push Notifications API Endpoints
 // ============================================================================
 
+// Send order status email (Admin only)
+app.post('/api/email/order-status', requireAdmin, async (c) => {
+  try {
+    console.log('📧 Order status email request received');
+    const { orderId, email, status } = await c.req.json();
+
+    if (!orderId || !email || !status) {
+      return c.json({ error: 'Order ID, email, and status are required' }, 400);
+    }
+
+    // Get order details from database
+    const supabase = getSupabaseAdmin();
+    const { data: order, error: orderError } = await supabase
+      .from('orders')
+      .select('*')
+      .eq('id', orderId)
+      .single();
+
+    if (orderError || !order) {
+      console.error('❌ Order not found:', orderError);
+      return c.json({ error: 'Order not found' }, 404);
+    }
+
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('❌ RESEND_API_KEY not configured');
+      return c.json({ error: 'Email service not configured' }, 500);
+    }
+
+    // Import email template function
+    const { generateOrderEmailHTML } = await import('./email-templates.tsx');
+
+    const orderNumber = order.order_number || order.id.substring(0, 8);
+    const language = order.language || 'ru';
+
+    // Generate email subject
+    const subjects: any = {
+      ru: {
+        pending: `Заказ #${orderNumber} принят - Азия Фарм`,
+        processing: `Заказ #${orderNumber} оплачен - Азия Фарм`,
+        shipped: `Заказ #${orderNumber} отправлен - Азия Фарм`,
+        delivered: `Заказ #${orderNumber} доставлен - Азия Фарм`,
+        cancelled: `Заказ #${orderNumber} отменен - Азия Фарм`
+      },
+      en: {
+        pending: `Order #${orderNumber} received - Asia Pharm`,
+        processing: `Order #${orderNumber} paid - Asia Pharm`,
+        shipped: `Order #${orderNumber} shipped - Asia Pharm`,
+        delivered: `Order #${orderNumber} delivered - Asia Pharm`,
+        cancelled: `Order #${orderNumber} cancelled - Asia Pharm`
+      },
+      zh: {
+        pending: `订单 #${orderNumber} 已接收 - 亚洲药房`,
+        processing: `订单 #${orderNumber} 已付款 - 亚洲药房`,
+        shipped: `订单 #${orderNumber} 已发货 - 亚洲药房`,
+        delivered: `订单 #${orderNumber} 已送达 - 亚洲药房`,
+        cancelled: `订单 #${orderNumber} 已取消 - 亚洲药房`
+      },
+      vi: {
+        pending: `Đơn hàng #${orderNumber} đã nhận - Asia Pharm`,
+        processing: `Đơn hàng #${orderNumber} đã thanh toán - Asia Pharm`,
+        shipped: `Đơn hàng #${orderNumber} đã gửi - Asia Pharm`,
+        delivered: `Đơn hàng #${orderNumber} đã giao - Asia Pharm`,
+        cancelled: `Đơn hàng #${orderNumber} đã hủy - Asia Pharm`
+      }
+    };
+
+    const subject = subjects[language as keyof typeof subjects]?.[status] || subjects.ru[status];
+
+    // Generate HTML email
+    const htmlMessage = generateOrderEmailHTML(order, status as any, language as any);
+
+    // Send email via Resend
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`
+      },
+      body: JSON.stringify({
+        from: 'Asia Pharm <info@asia-pharm.com>',
+        to: [email],
+        subject: subject,
+        html: htmlMessage
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`❌ Resend API error (${response.status}):`, errorData);
+      return c.json({ error: `Failed to send email: ${errorData}` }, 500);
+    }
+
+    const result = await response.json();
+    console.log('✅ Order status email sent:', result.id);
+
+    return c.json({
+      success: true,
+      emailId: result.id
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error sending order status email:', error);
+    return c.json({ error: error.message || 'Failed to send email' }, 500);
+  }
+});
+
 // Send email broadcast (Admin only - uses Resend API)
 app.post('/api/email/broadcast', requireAdmin, async (c) => {
   try {

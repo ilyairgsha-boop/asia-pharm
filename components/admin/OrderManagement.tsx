@@ -115,6 +115,38 @@ export const OrderManagement = () => {
           await awardLoyaltyPoints(orderData);
         }
         
+        // Send email notification about status change
+        if (orderData && orderData.email && accessToken) {
+          try {
+            console.log(`📧 Sending order status email for order ${orderId}, status: ${status}`);
+            const emailResponse = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/make-server-a75b5353/api/email/order-status`,
+              {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${accessToken}`,
+                  'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+                },
+                body: JSON.stringify({
+                  orderId,
+                  email: orderData.email,
+                  status,
+                }),
+              }
+            );
+
+            if (emailResponse.ok) {
+              console.log('✅ Order status email sent successfully');
+            } else {
+              const errorData = await emailResponse.json();
+              console.warn('⚠️ Failed to send order status email:', errorData);
+            }
+          } catch (emailError) {
+            console.warn('⚠️ Email send error (non-critical):', emailError);
+          }
+        }
+        
         await loadOrders();
         toast.success(t('saveSuccess'));
       }

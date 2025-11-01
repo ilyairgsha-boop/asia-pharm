@@ -38,11 +38,17 @@ export const OneSignalSettings = () => {
   const [isTestMode, setIsTestMode] = useState(false);
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
 
-  // Load settings and subscriber count on mount
+  // Load settings on mount
   useEffect(() => {
     loadSettings();
-    loadSubscriberCount();
   }, []);
+
+  // Load subscriber count when settings change
+  useEffect(() => {
+    if (settings.enabled && settings.appId && settings.apiKey) {
+      loadSubscriberCount();
+    }
+  }, [settings.enabled, settings.appId, settings.apiKey]);
 
   const loadSubscriberCount = async () => {
     if (!settings.enabled || !settings.appId || !settings.apiKey) {
@@ -62,6 +68,7 @@ export const OneSignalSettings = () => {
       if (response.ok) {
         const data = await response.json();
         setSubscriberCount(data.players || 0);
+        console.log('✅ OneSignal subscriber count:', data.players || 0);
       } else {
         console.error('Failed to get subscriber count from OneSignal');
       }
