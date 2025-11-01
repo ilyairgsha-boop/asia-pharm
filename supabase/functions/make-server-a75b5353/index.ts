@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.2-PUSH-DEBUG - Full OneSignal response logging + manual subscribe
-// Build: 2024-11-02 02:30:00 UTC
+// Version: 2.2.3-RECIPIENTS-FIX - Get actual recipient count from OneSignal stats
+// Build: 2024-11-02 03:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.2-PUSH-DEBUG...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.3-RECIPIENTS-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.2 - Push Debug & Manual Subscribe',
-    version: '2.2.2-PUSH-DEBUG',
+    message: 'Asia-Pharm API v2.2.3 - Recipients Count Fix',
+    version: '2.2.3-RECIPIENTS-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -482,7 +482,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
 
     const notificationData: any = {
       app_id: settings.appId,
-      included_segments: ['All'],
+      included_segments: ['Subscribed Users'],
       headings: { en: title },
       contents: { en: message },
     };
@@ -529,6 +529,11 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     console.log('📤 Sending to OneSignal API...');
     console.log('App ID:', settings.appId);
     console.log('Notification data:', JSON.stringify(notificationData));
+    console.log('🎯 Targeting:', {
+      segments: notificationData.included_segments,
+      userIds: notificationData.include_player_ids,
+      filters: notificationData.filters,
+    });
     
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
@@ -556,10 +561,47 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     console.log('Recipients:', result.recipients);
     console.log('Errors:', result.errors);
 
+    // OneSignal API doesn't return recipients count in initial response
+    // We need to fetch notification details to get actual recipient count
+    let recipientCount = result.recipients || 0;
+    
+    if (result.id) {
+      console.log('📊 Fetching notification stats for ID:', result.id);
+      try {
+        // Wait a bit for OneSignal to process the notification
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        const statsResponse = await fetch(`https://onesignal.com/api/v1/notifications/${result.id}?app_id=${settings.appId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': authHeader
+          }
+        });
+        
+        if (statsResponse.ok) {
+          const statsData = await statsResponse.json();
+          console.log('📊 Notification stats:');
+          console.log('FULL_STATS:', JSON.stringify(statsData, null, 2));
+          console.log('Successful:', statsData.successful);
+          console.log('Failed:', statsData.failed);
+          console.log('Errored:', statsData.errored);
+          console.log('Converted:', statsData.converted);
+          console.log('Remaining:', statsData.remaining);
+          
+          recipientCount = statsData.successful || statsData.recipients || 0;
+          console.log('✅ Actual recipients:', recipientCount);
+        } else {
+          console.warn('⚠️ Could not fetch notification stats');
+        }
+      } catch (error) {
+        console.warn('⚠️ Error fetching notification stats:', error);
+      }
+    }
+
     return c.json({ 
       success: true, 
       id: result.id,
-      recipients: result.recipients || 0,
+      recipients: recipientCount,
       errors: result.errors
     });
 
@@ -897,5 +939,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.2-PUSH-DEBUG initialized!');
+console.log('✅ Edge Function v2.2.3-RECIPIENTS-FIX initialized!');
 Deno.serve(app.fetch);

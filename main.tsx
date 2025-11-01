@@ -1,4 +1,4 @@
-// Build: v2.2.2-PUSH-DEBUG - Full OneSignal debug + manual subscribe
+// Build: v2.2.3-RECIPIENTS-FIX - Get real recipient count from stats
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
