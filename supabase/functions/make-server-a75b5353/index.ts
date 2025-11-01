@@ -108,12 +108,20 @@ app.get('/', (c) => {
   console.log('Headers:', Object.fromEntries(c.req.raw.headers.entries()));
   return c.json({ 
     status: 'OK', 
-    message: 'Asia-Pharm Store API v2.0',
+    message: 'Asia-Pharm Store API v2.0 - Updated',
     timestamp: new Date().toISOString(),
+    version: '2.0.1',
+    routes: {
+      email: ['/api/email/order-status', '/api/email/broadcast'],
+      push: ['/api/push/send', '/api/push/stats'],
+      kv: ['/api/kv/get', '/api/kv/set', '/api/kv/delete'],
+      translate: ['/api/translate/key', '/api/translate/text', '/api/translate/batch'],
+    },
     env: {
       hasSupabaseUrl: !!Deno.env.get('SUPABASE_URL'),
       hasAnonKey: !!Deno.env.get('SUPABASE_ANON_KEY'),
       hasServiceKey: !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'),
+      hasResendKey: !!Deno.env.get('RESEND_API_KEY'),
     }
   });
 });
@@ -576,7 +584,9 @@ app.delete('/api/kv/delete', requireAdmin, async (c) => {
 app.post('/api/email/order-status', requireAdmin, async (c) => {
   try {
     console.log('📧 Order status email request received');
+    console.log('Request URL:', c.req.url);
     const { orderId, email, status } = await c.req.json();
+    console.log('Email data:', { orderId, email, status });
 
     if (!orderId || !email || !status) {
       return c.json({ error: 'Order ID, email, and status are required' }, 400);
@@ -683,7 +693,9 @@ app.post('/api/email/order-status', requireAdmin, async (c) => {
 app.post('/api/email/broadcast', requireAdmin, async (c) => {
   try {
     console.log('📧 Email broadcast request received');
+    console.log('Request URL:', c.req.url);
     const { subject, htmlContent } = await c.req.json();
+    console.log('Broadcast data:', { subject, contentLength: htmlContent?.length });
 
     if (!subject || !htmlContent) {
       return c.json({ error: 'Subject and content are required' }, 400);
@@ -705,7 +717,7 @@ app.post('/api/email/broadcast', requireAdmin, async (c) => {
       return c.json({ error: 'No subscribers found' }, 404);
     }
     
-    console.log(`📧 Starting newsletter broadcast to ${subscribers.length} subscribers`);
+    console.log(`���� Starting newsletter broadcast to ${subscribers.length} subscribers`);
     console.log(`⏱️ Estimated time: ${Math.ceil(subscribers.length * 0.6)} seconds (0.6s per email)`);
     
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
@@ -789,11 +801,62 @@ app.post('/api/email/broadcast', requireAdmin, async (c) => {
   }
 });
 
+// Get OneSignal app stats (subscriber count)
+app.get('/api/push/stats', requireAdmin, async (c) => {
+  try {
+    console.log('📊 OneSignal stats request received');
+
+    // Get OneSignal credentials from KV store
+    const settings = await kv.get('oneSignalSettings');
+
+    if (!settings) {
+      console.error('❌ OneSignal settings not found in KV store');
+      return c.json({ error: 'OneSignal not configured' }, 500);
+    }
+
+    const settingsObj = typeof settings === 'string' ? JSON.parse(settings) : settings;
+    
+    if (!settingsObj.enabled || !settingsObj.appId || !settingsObj.apiKey) {
+      return c.json({ error: 'OneSignal not enabled or not configured' }, 400);
+    }
+
+    // Get app info from OneSignal API
+    const response = await fetch(`https://onesignal.com/api/v1/apps/${settingsObj.appId}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Basic ${settingsObj.apiKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('❌ OneSignal API error:', errorData);
+      return c.json({ error: 'Failed to get OneSignal stats' }, response.status);
+    }
+
+    const data = await response.json();
+    console.log('✅ OneSignal stats retrieved:', { players: data.players });
+
+    return c.json({
+      success: true,
+      players: data.players || 0,
+      messageable_players: data.messageable_players || 0,
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error getting OneSignal stats:', error);
+    return c.json({ error: error.message || 'Failed to get stats' }, 500);
+  }
+});
+
 // Send push notification (Admin only - uses KV store for credentials)
 app.post('/api/push/send', requireAdmin, async (c) => {
   try {
     console.log('📬 Push notification request received');
+    console.log('Request URL:', c.req.url);
+    console.log('Request method:', c.req.method);
     const { title, message, url, icon, image, data, userIds, segments, tags, language, store } = await c.req.json();
+    console.log('Push data:', { title, message, userIds, segments });
 
     // Get OneSignal credentials from KV store
     const settings = await kv.get('oneSignalSettings');

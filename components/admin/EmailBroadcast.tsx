@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { createClient } from '../../utils/supabase/client';
+import { createClient, getServerUrl, getAnonKey } from '../../utils/supabase/client';
 import { toast } from 'sonner';
 import { Send, Mail, Users, Loader2, Eye } from 'lucide-react';
 
@@ -70,12 +70,13 @@ export const EmailBroadcast = () => {
 
     try {
       // Send broadcast via Edge Function
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/make-server-a75b5353/api/email/broadcast`, {
+      const broadcastUrl = getServerUrl('/api/email/broadcast');
+      const response = await fetch(broadcastUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
-          'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+          'apikey': getAnonKey(),
         },
         body: JSON.stringify({
           subject,

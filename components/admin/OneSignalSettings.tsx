@@ -57,11 +57,21 @@ export const OneSignalSettings = () => {
     }
 
     try {
-      // Get subscriber count from OneSignal API
-      const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
+      // Get subscriber count from Edge Function (avoids CORS issues)
+      const { data: { session } } = await supabase.auth.getSession();
+      const authToken = session?.access_token;
+
+      if (!authToken) {
+        console.warn('⚠️ No auth token available');
+        return;
+      }
+
+      const statsUrl = getServerUrl('/api/push/stats');
+      const response = await fetch(statsUrl, {
         method: 'GET',
         headers: {
-          'Authorization': `Basic ${settings.apiKey}`,
+          'Authorization': `Bearer ${authToken}`,
+          'apikey': getAnonKey(),
         },
       });
 
@@ -70,7 +80,8 @@ export const OneSignalSettings = () => {
         setSubscriberCount(data.players || 0);
         console.log('✅ OneSignal subscriber count:', data.players || 0);
       } else {
-        console.error('Failed to get subscriber count from OneSignal');
+        const errorData = await response.json();
+        console.error('Failed to get subscriber count:', errorData);
       }
     } catch (error) {
       console.error('Error loading OneSignal subscriber count:', error);

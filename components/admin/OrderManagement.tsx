@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { createClient } from '../../utils/supabase/client';
+import { createClient, getServerUrl, getAnonKey } from '../../utils/supabase/client';
 import { Loader2, Send, Eye, X, Trash2 } from 'lucide-react';
 import { getMockOrders } from '../../utils/mockData';
 import { toast } from 'sonner';
@@ -119,28 +119,28 @@ export const OrderManagement = () => {
         if (orderData && orderData.email && accessToken) {
           try {
             console.log(`📧 Sending order status email for order ${orderId}, status: ${status}`);
-            const emailResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/make-server-a75b5353/api/email/order-status`,
-              {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${accessToken}`,
-                  'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-                },
-                body: JSON.stringify({
-                  orderId,
-                  email: orderData.email,
-                  status,
-                }),
-              }
-            );
+            const emailUrl = getServerUrl('/api/email/order-status');
+            const emailResponse = await fetch(emailUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${accessToken}`,
+                'apikey': getAnonKey(),
+              },
+              body: JSON.stringify({
+                orderId,
+                email: orderData.email,
+                status,
+              }),
+            });
 
             if (emailResponse.ok) {
               console.log('✅ Order status email sent successfully');
+              toast.success('📧 Email уведомление отправлено');
             } else {
               const errorData = await emailResponse.json();
               console.warn('⚠️ Failed to send order status email:', errorData);
+              toast.warning('Email не отправлен (настройте Resend API)');
             }
           } catch (emailError) {
             console.warn('⚠️ Email send error (non-critical):', emailError);
