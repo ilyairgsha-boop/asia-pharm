@@ -184,6 +184,8 @@ export class OneSignalService {
     }
     
     console.log('🔧 Initializing OneSignal with App ID:', this.appId);
+    console.log('🔑 App ID length:', this.appId.length);
+    console.log('🔑 App ID format check:', /^[a-f0-9-]{36}$/i.test(this.appId) ? 'Valid UUID' : 'Invalid UUID');
     
     const settings = this.getSettings();
     
@@ -210,6 +212,18 @@ export class OneSignalService {
         this.isInitialized = true;
         console.log('✅ OneSignal initialized with App ID:', this.appId);
         console.log('📱 Auto subscribe enabled:', settings.autoSubscribe || false);
+        
+        // Log subscription status after init
+        window.OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
+          console.log('🔔 Push notifications enabled:', isEnabled);
+          if (isEnabled) {
+            window.OneSignal.getUserId((userId: string) => {
+              console.log('✅ User subscribed with Player ID:', userId);
+              console.log('🎯 To verify: Check OneSignal Dashboard → Audience → All Users');
+              console.log('🔍 Search for this Player ID:', userId);
+            });
+          }
+        });
         
         // If autoSubscribe is enabled, register for push immediately
         if (settings.autoSubscribe) {

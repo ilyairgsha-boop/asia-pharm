@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.1-SUBSCRIBERS - OneSignal auto-subscribe + subscriber count
-// Build: 2024-11-02 02:00:00 UTC
+// Version: 2.2.2-PUSH-DEBUG - Full OneSignal response logging + manual subscribe
+// Build: 2024-11-02 02:30:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.1-SUBSCRIBERS...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.2-PUSH-DEBUG...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.1 - OneSignal Subscribers Fix',
-    version: '2.2.1-SUBSCRIBERS',
+    message: 'Asia-Pharm API v2.2.2 - Push Debug & Manual Subscribe',
+    version: '2.2.2-PUSH-DEBUG',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -549,9 +549,19 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     }
 
     const result = await response.json();
-    console.log('✅ Push notification sent:', result.id);
+    console.log('✅ OneSignal API Response:');
+    console.log('FULL_RESPONSE:', JSON.stringify(result, null, 2));
+    console.log('Response keys:', Object.keys(result));
+    console.log('ID:', result.id);
+    console.log('Recipients:', result.recipients);
+    console.log('Errors:', result.errors);
 
-    return c.json({ success: true, notificationId: result.id, recipients: result.recipients || 0 });
+    return c.json({ 
+      success: true, 
+      id: result.id,
+      recipients: result.recipients || 0,
+      errors: result.errors
+    });
 
   } catch (error: any) {
     console.error('❌ Error sending push:', error);
@@ -632,14 +642,19 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
     }
 
     const appData = await response.json();
+    console.log('✅ OneSignal App Data:');
+    console.log('FULL_APP_DATA:', JSON.stringify(appData, null, 2));
+    console.log('App Data keys:', Object.keys(appData));
+    
     const subscriberCount = appData.players || 0;
-
-    console.log(`✅ OneSignal subscribers: ${subscriberCount}`);
+    console.log(`✅ OneSignal subscribers (players): ${subscriberCount}`);
 
     return c.json({ 
       success: true, 
+      players: subscriberCount,
       count: subscriberCount,
-      appId: settings.appId
+      appId: settings.appId,
+      appName: appData.name
     });
 
   } catch (error: any) {
@@ -882,5 +897,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.1-SUBSCRIBERS initialized!');
+console.log('✅ Edge Function v2.2.2-PUSH-DEBUG initialized!');
 Deno.serve(app.fetch);

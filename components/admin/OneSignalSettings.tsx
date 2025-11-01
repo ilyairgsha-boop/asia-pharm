@@ -174,18 +174,50 @@ export const OneSignalSettings = () => {
   const handleTestNotification = async () => {
     setIsTestMode(true);
     try {
-      // In a real implementation, this would send a test notification
-      toast.info(t('testNotificationSent'));
+      // Check if user is subscribed
+      const isSubscribed = await oneSignalService.isSubscribed();
+      if (!isSubscribed) {
+        toast.warning('Сначала подпишитесь на уведомления');
+        setIsTestMode(false);
+        return;
+      }
       
-      // Simulate test notification
-      setTimeout(() => {
-        toast.success(t('testNotificationDelivered'));
-      }, 2000);
+      // Send test notification
+      const result = await oneSignalService.sendNotification(
+        {
+          title: 'Тестовое уведомление',
+          message: 'Это тестовое push-уведомление от Asia Pharm',
+        },
+        {
+          segments: ['All'],
+        }
+      );
+      
+      if (result) {
+        toast.success(`Уведомление отправлено (получателей: ${result.recipients})`);
+      } else {
+        toast.error('Ошибка отправки уведомления');
+      }
     } catch (error) {
       console.error('Error sending test notification:', error);
       toast.error(t('testNotificationError'));
     } finally {
       setIsTestMode(false);
+    }
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      const userId = await oneSignalService.subscribe();
+      if (userId) {
+        toast.success(`Подписка оформлена! Player ID: ${userId}`);
+        loadSubscriberCount();
+      } else {
+        toast.error('Не удалось подписаться');
+      }
+    } catch (error) {
+      console.error('Error subscribing:', error);
+      toast.error('Ошибка подписки');
     }
   };
 
@@ -401,13 +433,22 @@ export const OneSignalSettings = () => {
             </Button>
             
             {isConfigured && settings.enabled && (
-              <Button
-                onClick={handleTestNotification}
-                disabled={isTestMode}
-                variant="outline"
-              >
-                {isTestMode ? t('sending') : t('sendTestNotification')}
-              </Button>
+              <>
+                <Button
+                  onClick={handleSubscribe}
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-50"
+                >
+                  🔔 Подписаться на уведомления
+                </Button>
+                <Button
+                  onClick={handleTestNotification}
+                  disabled={isTestMode}
+                  variant="outline"
+                >
+                  {isTestMode ? t('sending') : t('sendTestNotification')}
+                </Button>
+              </>
             )}
           </div>
         </CardContent>
