@@ -69,8 +69,8 @@ function AppContent() {
     }
 
     console.log('📦 Project ID: boybkoyidxwrgsayifrd');
-    console.log('🔗 Edge Function: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/server/');
-    console.log('💡 Test Edge Function directly: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/server/test/db');
+    console.log('🔗 Edge Function: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353/');
+    console.log('💡 Test Edge Function directly: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353/test/db');
     
     // Clear old category format (without translations) from localStorage
     clearOldCategories();
