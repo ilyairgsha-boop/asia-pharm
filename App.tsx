@@ -28,6 +28,7 @@ import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
+import { findEdgeFunction } from './utils/supabase/edge-function-finder';
 import './utils/clearOldCategories'; // Import to make functions available in console
 
 function AppContent() {
@@ -98,6 +99,7 @@ function AppContent() {
       (window as any).debugSupabase = {
         getAnonKey,
         getServerUrl,
+        findEdgeFunction,
         testConnection: async () => {
           const url = getServerUrl('');
           const key = getAnonKey();
@@ -127,6 +129,7 @@ function AppContent() {
       console.log('  - window.debugSupabase.getAnonKey()');
       console.log('  - window.debugSupabase.getServerUrl(path)');
       console.log('  - await window.debugSupabase.testConnection()');
+      console.log('  - await window.debugSupabase.findEdgeFunction() // ВАЖНО: найти правильное имя функции');
     }
     
     try {
