@@ -12,7 +12,8 @@ console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Anon Key exists:', !!Deno.env.get('SUPABASE_ANON_KEY'));
 console.log('🔐 Service Role Key exists:', !!Deno.env.get('SUPABASE_SERVICE_ROLE_KEY'));
 
-const app = new Hono();
+// Hono with basePath to handle Supabase Edge Function routing
+const app = new Hono().basePath('/make-server-a75b5353');
 
 // CORS middleware - MUST be first
 app.use('*', cors({

@@ -1,4 +1,4 @@
-// Build: v2.0.2-hotfix - Edge Function URL with trailing slash fix
+// Build: v2.0.3-hotfix - Edge Function basePath added to Hono
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
