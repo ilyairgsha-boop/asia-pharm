@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.1-FIXED - Fixed OneSignal key name and DB error handling
-// Build: 2024-11-01 23:45:00 UTC
+// Version: 2.1.2-DEBUG - Added debug endpoints and better error handling
+// Build: 2024-11-01 23:55:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -86,14 +86,15 @@ app.get('/make-server-a75b5353/', (c) => {
   console.log('✅ Health check called');
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.1 - Fixed Implementation',
-    version: '2.1.1-FIXED',
+    message: 'Asia-Pharm API v2.1.2 - Debug Implementation',
+    version: '2.1.2-DEBUG',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
       push: ['/make-server-a75b5353/api/push/send', '/make-server-a75b5353/api/push/stats'],
       kv: ['/make-server-a75b5353/api/kv/*'],
       translate: ['/make-server-a75b5353/api/translate/*'],
+      debug: ['/make-server-a75b5353/api/debug/db-check', '/make-server-a75b5353/api/debug/onesignal-check'],
     },
     env: {
       hasResendKey: !!Deno.env.get('RESEND_API_KEY'),
@@ -216,6 +217,8 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
 
     const supabase = getSupabaseAdmin();
     
+    console.log('🔍 Querying profiles table for email subscribers...');
+    
     // First check if column exists
     const { data: subscribers, error } = await supabase
       .from('profiles')
@@ -224,19 +227,26 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     
     if (error) {
       console.error('❌ Error fetching subscribers:', error);
-      console.error('Error details:', error.message, error.code, error.details);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      console.error('Error details:', error.details);
+      console.error('Error hint:', error.hint);
       
       // If column doesn't exist, return helpful error
-      if (error.code === '42703' || error.message.includes('column') || error.message.includes('does not exist')) {
+      if (error.code === '42703' || error.message.toLowerCase().includes('column') || error.message.toLowerCase().includes('does not exist')) {
+        console.error('💥 Column subscribed_to_newsletter does NOT exist!');
         return c.json({ 
           error: 'Database not configured',
           details: 'Column subscribed_to_newsletter does not exist. Run SUBSCRIPTIONS_FIX.sql in Supabase Dashboard.',
-          hint: 'ALTER TABLE profiles ADD COLUMN subscribed_to_newsletter BOOLEAN DEFAULT FALSE;'
+          hint: 'ALTER TABLE profiles ADD COLUMN subscribed_to_newsletter BOOLEAN DEFAULT FALSE;',
+          debugUrl: '/make-server-a75b5353/api/debug/db-check'
         }, 500);
       }
       
-      return c.json({ error: 'Failed to fetch subscribers', details: error.message }, 500);
+      return c.json({ error: 'Failed to fetch subscribers', details: error.message, code: error.code }, 500);
     }
+    
+    console.log(`✅ Found ${subscribers?.length || 0} email subscribers`);
     
     if (!subscribers || subscribers.length === 0) {
       return c.json({ success: true, sent: 0, failed: 0, total: 0, message: 'No subscribers found' });
@@ -359,12 +369,25 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       return c.json({ error: 'Title and message required' }, 400);
     }
 
+    console.log('🔍 Loading OneSignal settings from KV store...');
     const settings = await kv.get('oneSignalSettings');
+    console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
 
     if (!settings || !settings.appId || !settings.restApiKey) {
-      console.error('❌ OneSignal not configured');
-      return c.json({ error: 'OneSignal not configured' }, 500);
+      console.error('❌ OneSignal not configured in KV store');
+      console.error('Settings object:', settings);
+      return c.json({ 
+        error: 'OneSignal not configured',
+        details: 'Save OneSignal settings in Admin Panel first',
+        debugUrl: '/make-server-a75b5353/api/debug/onesignal-check'
+      }, 500);
     }
+    
+    console.log('✅ OneSignal configured:', {
+      hasAppId: !!settings.appId,
+      hasRestApiKey: !!settings.restApiKey,
+      enabled: settings.enabled,
+    });
 
     const notificationData: any = {
       app_id: settings.appId,
@@ -408,12 +431,22 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
   try {
     console.log('📊 Push stats request');
 
+    console.log('🔍 Loading OneSignal settings from KV store...');
     const settings = await kv.get('oneSignalSettings');
+    console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
 
     if (!settings || !settings.appId || !settings.restApiKey) {
-      console.error('❌ OneSignal not configured');
-      return c.json({ error: 'OneSignal not configured', count: 0 });
+      console.error('❌ OneSignal not configured in KV store');
+      console.error('Settings object:', settings);
+      return c.json({ 
+        error: 'OneSignal not configured', 
+        players: 0,
+        details: 'Save OneSignal settings in Admin Panel first',
+        debugUrl: '/make-server-a75b5353/api/debug/onesignal-check'
+      });
     }
+    
+    console.log('✅ OneSignal configured, fetching stats from API...');
 
     // Get app info from OneSignal
     const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
@@ -547,6 +580,88 @@ app.notFound((c) => {
   }, 404);
 });
 
+// ============================================================================
+// DEBUG ENDPOINTS - Remove after fixing
+// ============================================================================
+
+// Check database schema
+app.get('/make-server-a75b5353/api/debug/db-check', requireAdmin, async (c) => {
+  try {
+    const supabase = getSupabaseAdmin();
+    
+    // Try to get one profile with all fields
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, email, name, subscribed, subscribed_to_newsletter')
+      .limit(1);
+    
+    if (error) {
+      return c.json({ 
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        message: 'Database query failed - check if columns exist'
+      }, 500);
+    }
+    
+    // Count subscribers
+    const { count: pushCount } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('subscribed', true);
+    
+    const { count: emailCount } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('subscribed_to_newsletter', true);
+    
+    return c.json({
+      success: true,
+      message: 'Database is correctly configured',
+      schema: {
+        hasSubscribedColumn: true,
+        hasSubscribedToNewsletterColumn: true,
+      },
+      stats: {
+        pushSubscribers: pushCount || 0,
+        emailSubscribers: emailCount || 0,
+      },
+      sampleData: data?.[0] || null,
+    });
+  } catch (error: any) {
+    return c.json({ 
+      error: error.message,
+      stack: error.stack,
+    }, 500);
+  }
+});
+
+// Check OneSignal configuration
+app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (c) => {
+  try {
+    // Try to get from KV store
+    const kvSettings = await kv.get('oneSignalSettings');
+    
+    return c.json({
+      success: true,
+      kvStore: {
+        exists: !!kvSettings,
+        data: kvSettings || null,
+      },
+      expected: {
+        fields: ['appId', 'restApiKey', 'enabled'],
+        note: 'Make sure to save settings in Admin Panel → OneSignal Settings'
+      }
+    });
+  } catch (error: any) {
+    return c.json({ 
+      error: error.message,
+      stack: error.stack,
+    }, 500);
+  }
+});
+
 app.onError((err, c) => {
   console.error('❌ Server error:', err);
   return c.json({ 
@@ -555,5 +670,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.1-FIXED initialized!');
+console.log('✅ Edge Function v2.1.2-DEBUG initialized!');
 Deno.serve(app.fetch);

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edge Function Debug Tester</title>
+  <style>
+    body {
+      font-family: monospace;
+      max-width: 1200px;
+      margin: 20px auto;
+      padding: 20px;
+      background: #1a1a1a;
+      color: #00ff00;
+    }
+    .test-section {
+      background: #2a2a2a;
+      border: 2px solid #00ff00;
+      padding: 20px;
+      margin: 20px 0;
+      border-radius: 8px;
+    }
+    button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-family: monospace;
+      font-weight: bold;
+      margin: 5px;
+      border-radius: 4px;
+    }
+    button:hover {
+      background: #00cc00;
+    }
+    .result {
+      background: #000;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #00ff00;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    .error {
+      border-left-color: #ff0000;
+      color: #ff6666;
+    }
+    .success {
+      border-left-color: #00ff00;
+      color: #00ff00;
+    }
+    h1 {
+      color: #00ff00;
+      text-shadow: 0 0 10px #00ff00;
+    }
+    h2 {
+      color: #00ccff;
+    }
+    input {
+      background: #000;
+      color: #00ff00;
+      border: 2px solid #00ff00;
+      padding: 8px;
+      font-family: monospace;
+      width: 100%;
+      margin: 5px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Edge Function Debug Tester v2.1.2</h1>
+  
+  <div class="test-section">
+    <h2>⚙️ Configuration</h2>
+    <label>Supabase URL:</label>
+    <input type="text" id="supabaseUrl" value="https://boybkoyidxwrgsayifrd.supabase.co">
+    <label>Function Name:</label>
+    <input type="text" id="functionName" value="make-server-a75b5353">
+    <label>Auth Token (get from browser console: localStorage.getItem('supabase.auth.token')):</label>
+    <input type="text" id="authToken" placeholder="Paste your JWT token here">
+    <label>Anon Key:</label>
+    <input type="text" id="anonKey" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJveWJrb3lpZHh3cmdzYXlpZnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjkzNjQ3OTksImV4cCI6MjA0NDk0MDc5OX0.pYpfbQy9DXxDKJNhG88YKzljJ3UlR06qPYBPJ3L-iS8">
+  </div>
+
+  <div class="test-section">
+    <h2>1️⃣ Health Check</h2>
+    <button onclick="testHealthCheck()">Run Health Check</button>
+    <div id="healthResult" class="result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>2️⃣ Database Check</h2>
+    <button onclick="testDbCheck()">Check Database Schema</button>
+    <div id="dbResult" class="result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>3️⃣ OneSignal Check</h2>
+    <button onclick="testOneSignalCheck()">Check OneSignal Config</button>
+    <div id="onesignalResult" class="result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>4️⃣ Email Subscribers Count</h2>
+    <button onclick="testEmailCount()">Get Email Subscribers</button>
+    <div id="emailCountResult" class="result"></div>
+  </div>
+
+  <div class="test-section">
+    <h2>5️⃣ Push Stats</h2>
+    <button onclick="testPushStats()">Get Push Stats</button>
+    <div id="pushStatsResult" class="result"></div>
+  </div>
+
+  <script>
+    function getBaseUrl() {
+      const url = document.getElementById('supabaseUrl').value;
+      const func = document.getElementById('functionName').value;
+      return `${url}/functions/v1/${func}`;
+    }
+
+    function getHeaders() {
+      const token = document.getElementById('authToken').value;
+      const anonKey = document.getElementById('anonKey').value;
+      return {
+        'Authorization': `Bearer ${token}`,
+        'apikey': anonKey,
+        'Content-Type': 'application/json',
+      };
+    }
+
+    async function testHealthCheck() {
+      const result = document.getElementById('healthResult');
+      result.textContent = '⏳ Loading...';
+      result.className = 'result';
+      
+      try {
+        const response = await fetch(`${getBaseUrl()}/`, {
+          headers: { 'apikey': document.getElementById('anonKey').value }
+        });
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+        result.className = response.ok ? 'result success' : 'result error';
+      } catch (error) {
+        result.textContent = `ERROR: ${error.message}`;
+        result.className = 'result error';
+      }
+    }
+
+    async function testDbCheck() {
+      const result = document.getElementById('dbResult');
+      result.textContent = '⏳ Loading...';
+      result.className = 'result';
+      
+      try {
+        const response = await fetch(`${getBaseUrl()}/api/debug/db-check`, {
+          headers: getHeaders()
+        });
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+        result.className = response.ok ? 'result success' : 'result error';
+      } catch (error) {
+        result.textContent = `ERROR: ${error.message}`;
+        result.className = 'result error';
+      }
+    }
+
+    async function testOneSignalCheck() {
+      const result = document.getElementById('onesignalResult');
+      result.textContent = '⏳ Loading...';
+      result.className = 'result';
+      
+      try {
+        const response = await fetch(`${getBaseUrl()}/api/debug/onesignal-check`, {
+          headers: getHeaders()
+        });
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+        result.className = response.ok ? 'result success' : 'result error';
+      } catch (error) {
+        result.textContent = `ERROR: ${error.message}`;
+        result.className = 'result error';
+      }
+    }
+
+    async function testEmailCount() {
+      const result = document.getElementById('emailCountResult');
+      result.textContent = '⏳ Loading...';
+      result.className = 'result';
+      
+      try {
+        const response = await fetch(`${getBaseUrl()}/api/email/subscribers-count`, {
+          headers: getHeaders()
+        });
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+        result.className = response.ok ? 'result success' : 'result error';
+      } catch (error) {
+        result.textContent = `ERROR: ${error.message}`;
+        result.className = 'result error';
+      }
+    }
+
+    async function testPushStats() {
+      const result = document.getElementById('pushStatsResult');
+      result.textContent = '⏳ Loading...';
+      result.className = 'result';
+      
+      try {
+        const response = await fetch(`${getBaseUrl()}/api/push/stats`, {
+          headers: getHeaders()
+        });
+        const data = await response.json();
+        result.textContent = JSON.stringify(data, null, 2);
+        result.className = response.ok ? 'result success' : 'result error';
+      } catch (error) {
+        result.textContent = `ERROR: ${error.message}`;
+        result.className = 'result error';
+      }
+    }
+
+    // Auto-fill auth token from localStorage if available
+    window.addEventListener('load', () => {
+      try {
+        const storedAuth = localStorage.getItem('sb-boybkoyidxwrgsayifrd-auth-token');
+        if (storedAuth) {
+          const parsed = JSON.parse(storedAuth);
+          if (parsed?.access_token) {
+            document.getElementById('authToken').value = parsed.access_token;
+          }
+        }
+      } catch (e) {
+        console.log('Could not auto-fill token:', e);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-// Build: v2.1.1-FIXED - Fixed OneSignal key name & DB errors
+// Build: v2.1.2-DEBUG - Added debug endpoints & better logging
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
