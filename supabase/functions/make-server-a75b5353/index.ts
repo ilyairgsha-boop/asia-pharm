@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.1.6-KEY-FIX - Fixed restApiKey compatibility + email logging
-// Build: 2024-11-02 00:35:00 UTC
+// Version: 2.1.7-AUTH-FIX - Fixed OneSignal auth header + detailed logging
+// Build: 2024-11-02 00:45:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.1.6-KEY-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.1.7-AUTH-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.1.6 - Key Compatibility Fix',
-    version: '2.1.6-KEY-FIX',
+    message: 'Asia-Pharm API v2.1.7 - Auth & Logging Fix',
+    version: '2.1.7-AUTH-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -117,12 +117,15 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
   try {
     console.log('📧 Order status email request');
     const { orderId, email, status } = await c.req.json();
+    console.log('Request params:', { orderId, email, status });
 
     if (!orderId || !email || !status) {
+      console.error('❌ Missing required fields:', { orderId, email, status });
       return c.json({ error: 'Missing required fields' }, 400);
     }
 
     const supabase = getSupabaseAdmin();
+    console.log('🔍 Fetching order from database...');
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select('*')
@@ -131,8 +134,10 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
 
     if (orderError || !order) {
       console.error('❌ Order not found:', orderError);
-      return c.json({ error: 'Order not found' }, 404);
+      return c.json({ error: 'Order not found', details: orderError?.message }, 404);
     }
+
+    console.log('✅ Order found:', { id: order.id, email: order.email, order_number: order.order_number });
 
     const resendApiKey = Deno.env.get('RESEND_API_KEY');
     if (!resendApiKey) {
@@ -140,9 +145,14 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
       return c.json({ error: 'Email service not configured' }, 500);
     }
 
+    console.log('✅ Resend API key configured');
+    console.log('📝 Generating email HTML...');
+
     const { generateOrderEmailHTML } = await import('./email-templates.tsx');
     const orderNumber = order.order_number || order.id.substring(0, 8);
     const language = order.language || 'ru';
+    
+    console.log('Email params:', { orderNumber, language, status });
 
     const subjects: any = {
       ru: {
@@ -176,7 +186,19 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
     };
 
     const subject = subjects[language as keyof typeof subjects]?.[status] || subjects.ru[status];
+    console.log('📬 Email subject:', subject);
+    
     const htmlMessage = generateOrderEmailHTML(order, status as any, language as any);
+    console.log('✅ HTML generated, length:', htmlMessage.length);
+
+    console.log('📤 Sending to Resend API...');
+    const emailPayload = {
+      from: 'Азия Фарм <info@asia-pharm.com>',
+      to: [email],
+      subject: subject,
+      html: htmlMessage
+    };
+    console.log('Email payload:', { from: emailPayload.from, to: emailPayload.to, subject: emailPayload.subject, htmlLength: htmlMessage.length });
 
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -184,28 +206,26 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${resendApiKey}`
       },
-      body: JSON.stringify({
-        from: 'Азия Фарм <info@asia-pharm.com>',
-        to: [email],
-        subject: subject,
-        html: htmlMessage
-      })
+      body: JSON.stringify(emailPayload)
     });
+
+    console.log('Resend response status:', response.status);
 
     if (!response.ok) {
       const errorData = await response.text();
       console.error(`❌ Resend API error (${response.status}):`, errorData);
-      return c.json({ error: `Failed to send email: ${errorData}` }, 500);
+      return c.json({ error: `Failed to send email: ${errorData}`, status: response.status }, 500);
     }
 
     const result = await response.json();
-    console.log('✅ Order email sent:', result.id);
+    console.log('✅ Order email sent successfully:', result.id);
 
     return c.json({ success: true, emailId: result.id });
 
   } catch (error: any) {
     console.error('❌ Error sending order email:', error);
-    return c.json({ error: error.message || 'Failed to send email' }, 500);
+    console.error('Error stack:', error.stack);
+    return c.json({ error: error.message || 'Failed to send email', details: error.stack }, 500);
   }
 });
 
@@ -417,6 +437,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       hasAppId: !!settings.appId,
       hasApiKey: !!apiKey,
       apiKeyPrefix: apiKey.substring(0, 10) + '...',
+      apiKeyStartsWithBasic: apiKey.startsWith('Basic'),
       enabled: settings.enabled,
     });
 
@@ -431,11 +452,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.url = url;
     }
 
+    // Format Authorization header - add "Basic" only if not already present
+    const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
+    console.log('🔑 Authorization header:', authHeader.substring(0, 20) + '...');
+
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Basic ${apiKey}`
+        'Authorization': authHeader
       },
       body: JSON.stringify(notificationData)
     });
@@ -493,11 +518,15 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
     
     console.log('✅ OneSignal configured, fetching stats from API...');
 
+    // Format Authorization header - add "Basic" only if not already present
+    const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
+    console.log('🔑 Stats Authorization header:', authHeader.substring(0, 20) + '...');
+
     // Get app info from OneSignal
     const response = await fetch(`https://onesignal.com/api/v1/apps/${settings.appId}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Basic ${apiKey}`
+        'Authorization': authHeader
       }
     });
 
@@ -735,5 +764,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.1.6-KEY-FIX initialized!');
+console.log('✅ Edge Function v2.1.7-AUTH-FIX initialized!');
 Deno.serve(app.fetch);
