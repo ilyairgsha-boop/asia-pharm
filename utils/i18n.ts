@@ -256,8 +256,6 @@ export const translations = {
     edit: 'Редактировать',
     delete: 'Удалить',
     deleting: 'Удаление...',
-    cancel: 'Отмена',
-    close: 'Закрыть',
     stockStatus: 'Наличие',
     category: 'Категория',
     disease: 'Для заболевания',
@@ -334,14 +332,12 @@ export const translations = {
     
     // Profile - Favorites & History
     favorites: 'Избранное',
-    continueShopping: 'Продолжить покупки',
     noFavoritesYet: 'Избранных товаров пока нет',
     removeFavorite: 'Удалить из избранного',
     
     // Loyalty Points History
     bonusPointsHistory: 'История бонусных баллов',
     noBonusHistory: 'История начислений пока пуста',
-    orderDate: 'Дата заказа',
     creditedDate: 'Дата начисления',
     pointsCredited: 'Начислено баллов',
     pointsSpent: 'Списано баллов',
@@ -904,8 +900,6 @@ export const translations = {
     marketingNotifications: 'Рекламные уведомления',
     marketingNotificationsDescription: 'Разрешить отправку рекламных и промо уведомлений',
     optional: 'опционально',
-    note: 'Примечание',
-    saveSettings: 'Сохранить настройки',
     sendTestNotification: 'Отправить тестовое уведомление',
     sending: 'Отправка...',
     statistics: 'Статистика',
@@ -1229,8 +1223,6 @@ export const translations = {
     edit: 'Edit',
     delete: 'Delete',
     deleting: 'Deleting...',
-    cancel: 'Cancel',
-    close: 'Close',
     stockStatus: 'In Stock',
     category: 'Category',
     disease: 'Condition',
@@ -1307,14 +1299,12 @@ export const translations = {
     
     // Profile - Favorites & History
     favorites: 'Favorites',
-    continueShopping: 'Continue Shopping',
     noFavoritesYet: 'No favorites yet',
     removeFavorite: 'Remove from favorites',
     
     // Loyalty Points History
     bonusPointsHistory: 'Bonus Points History',
     noBonusHistory: 'No bonus history yet',
-    orderDate: 'Order Date',
     creditedDate: 'Credited Date',
     pointsCredited: 'Points Credited',
     pointsSpent: 'Points Spent',
@@ -1865,7 +1855,6 @@ export const translations = {
     orderStatusNotifications: 'Order Status Notifications',
     orderStatusNotificationsDescription: 'Automatically notify customers about order status changes',
     marketingNotificationsDescription: 'Allow sending marketing and promotional notifications',
-    saveSettings: 'Save Settings',
     sendTestNotification: 'Send Test Notification',
     sending: 'Sending...',
     statistics: 'Statistics',
@@ -2188,8 +2177,6 @@ export const translations = {
     edit: '编辑',
     delete: '删除',
     deleting: '删除中...',
-    cancel: '取消',
-    close: '关闭',
     stockStatus: '库存',
     category: '类别',
     disease: '疾病',
@@ -2266,14 +2253,12 @@ export const translations = {
     
     // Profile - Favorites & History
     favorites: '收藏',
-    continueShopping: '继续购物',
     noFavoritesYet: '暂无收藏',
     removeFavorite: '从收藏中移除',
     
     // Loyalty Points History
     bonusPointsHistory: '奖励积分历史',
     noBonusHistory: '暂无积分历史',
-    orderDate: '订单日期',
     creditedDate: '到账日期',
     pointsCredited: '积分到账',
     pointsSpent: '积分消费',
@@ -2826,7 +2811,6 @@ export const translations = {
     orderStatusNotifications: '订单状态通知',
     orderStatusNotificationsDescription: '自动通知客户订单状态变化',
     marketingNotificationsDescription: '允许发送营销和促销通知',
-    saveSettings: '保存设置',
     sendTestNotification: '发送测试通知',
     sending: '发送中...',
     statistics: '统计',
@@ -3128,8 +3112,6 @@ export const translations = {
     edit: 'Chỉnh sửa',
     delete: 'Xóa',
     deleting: 'Đang xóa...',
-    cancel: 'Hủy',
-    close: 'Đóng',
     stockStatus: 'Tình trạng kho',
     category: 'Danh mục',
     disease: 'Bệnh',
@@ -3205,14 +3187,12 @@ export const translations = {
     toTrackYourOrder: 'để theo dõi đơn hàng của bạn',
     
     // Profile - Favorites & History
-    continueShopping: 'Tiếp tục mua sắm',
     noFavoritesYet: 'Chưa có yêu thích',
     removeFavorite: 'Xóa khỏi yêu thích',
     
     // Loyalty Points History
     bonusPointsHistory: 'Lịch sử điểm thưởng',
     noBonusHistory: 'Chưa có lịch sử điểm',
-    orderDate: 'Ngày đặt hàng',
     creditedDate: 'Ngày ghi có',
     pointsCredited: 'Điểm đã nhận',
     pointsSpent: 'Điểm đã chi',
@@ -3787,7 +3767,6 @@ export const translations = {
     orderStatusNotifications: 'Thông báo trạng thái đơn hàng',
     orderStatusNotificationsDescription: 'Tự động thông báo cho khách hàng về thay đổi trạng thái đơn hàng',
     marketingNotificationsDescription: 'Cho phép gửi thông báo tiếp thị và khuyến mãi',
-    saveSettings: 'Lưu cài đặt',
     sendTestNotification: 'Gửi thông báo thử nghiệm',
     sending: 'Đang gửi...',
     statistics: 'Thống kê',
