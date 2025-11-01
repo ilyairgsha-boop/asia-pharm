@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_model": "asia_pharm_api",
+  "name_for_human": "Asia Pharm API",
+  "description_for_model": "API for Asia Pharm online store",
+  "description_for_human": "Manage products and orders for Asia Pharm store",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353"
+  },
+  "logo_url": "https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353/logo.png",
+  "contact_email": "support@asiapharm.com",
+  "legal_info_url": "https://asiapharm.com/legal"
+}
