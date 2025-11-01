@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Bell, Info, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { oneSignalService } from '../../utils/oneSignal';
+import { getServerUrl } from '../../utils/supabase/client';
 
 interface OneSignalSettingsData {
   appId: string;
@@ -58,6 +59,25 @@ export const OneSignalSettings = () => {
     try {
       // Save to localStorage (always save, even if disabled)
       localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
+      
+      // Sync to KV store via Edge Function (so push notifications work)
+      try {
+        const syncUrl = getServerUrl('/api/kv/set');
+        await fetch(syncUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            key: 'oneSignalSettings',
+            value: settings,
+          }),
+        });
+        console.log('✅ OneSignal settings synced to KV store');
+      } catch (kvError) {
+        console.warn('⚠️ Failed to sync to KV store:', kvError);
+        // Don't fail the save operation if KV sync fails
+      }
       
       // Trigger settings update event
       window.dispatchEvent(new CustomEvent('oneSignalSettingsUpdated'));

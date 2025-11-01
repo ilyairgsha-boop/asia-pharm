@@ -148,6 +148,13 @@ export class OneSignalService {
   private async initializeOneSignal(): Promise<void> {
     console.log('🔧 Initializing OneSignal with App ID:', this.appId);
     
+    // Check if OneSignal is already initialized
+    if (window.OneSignal && window.OneSignal.initialized) {
+      console.log('⚠️ OneSignal already initialized, skipping...');
+      this.isInitialized = true;
+      return Promise.resolve();
+    }
+    
     return new Promise<void>((resolve) => {
       window.OneSignal = window.OneSignal || [];
       window.OneSignal.push(() => {
@@ -240,11 +247,12 @@ export class OneSignalService {
       const url = getServerUrl('/api/push/send');
       console.log('📡 Calling Edge Function URL:', url);
       
+      // Note: Edge Function doesn't require auth for push notifications
+      // It uses settings stored in KV store instead
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': getAnonKey(),
         },
         body: JSON.stringify({
           title: data.title,
@@ -265,7 +273,8 @@ export class OneSignalService {
       
       if (!response.ok) {
         console.error('❌ Edge Function error:', result);
-        throw new Error(`Edge Function error: ${result.error || response.statusText}`);
+        const errorMessage = result.message || result.error || response.statusText;
+        throw new Error(`Edge Function error: ${errorMessage}`);
       }
 
       console.log('✅ Notification sent successfully:', {

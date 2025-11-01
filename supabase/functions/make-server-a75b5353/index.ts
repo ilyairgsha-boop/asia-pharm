@@ -495,9 +495,10 @@ app.post('/api/translate/batch', requireAdmin, async (c) => {
 // OneSignal Push Notifications API Endpoints
 // ============================================================================
 
-// Send push notification
+// Send push notification (Public endpoint - uses KV store for credentials)
 app.post('/api/push/send', async (c) => {
   try {
+    console.log('📬 Push notification request received');
     const { title, message, url, icon, image, data, userIds, segments, tags, language, store } = await c.req.json();
 
     // Get OneSignal credentials from KV store
@@ -505,13 +506,21 @@ app.post('/api/push/send', async (c) => {
 
     if (!settings) {
       console.error('❌ OneSignal settings not found in KV store');
-      return c.json({ error: 'OneSignal not configured' }, 500);
+      return c.json({ code: 500, message: 'OneSignal not configured. Please configure OneSignal in admin settings.' }, 500);
     }
 
     const settingsObj = typeof settings === 'string' ? JSON.parse(settings) : settings;
     
     if (!settingsObj.enabled || !settingsObj.appId || !settingsObj.apiKey) {
-      return c.json({ error: 'OneSignal not enabled or not configured' }, 400);
+      console.error('❌ OneSignal not enabled or credentials missing:', {
+        enabled: settingsObj.enabled,
+        hasAppId: !!settingsObj.appId,
+        hasApiKey: !!settingsObj.apiKey,
+      });
+      return c.json({ 
+        code: 400, 
+        message: 'OneSignal not enabled or not configured. Please enable and configure OneSignal in admin settings.' 
+      }, 400);
     }
 
     // Build OneSignal notification payload
