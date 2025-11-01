@@ -44,7 +44,7 @@ export const createClient = () => {
       },
     });
     
-    console.log('✅ Supabase client initialized [v2.0.1-hotfix]', {
+    console.log('✅ Supabase client initialized [v2.0.2-hotfix]', {
       url: supabaseUrl,
       hasKey: !!supabaseAnonKey,
       keyPrefix: supabaseAnonKey.substring(0, 20) + '...',
@@ -59,7 +59,13 @@ export const createClient = () => {
 export const getServerUrl = (route: string) => {
   const projectId = 'boybkoyidxwrgsayifrd';
   // Use make-server-a75b5353 function with routes
-  return `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353${route}`;
+  // ВАЖНО: Для пустой строки добавляем /, иначе Hono получит /make-server-a75b5353 вместо /
+  if (!route || route === '') {
+    return `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353/`;
+  }
+  // Для остальных маршрутов добавляем / в начало если его нет
+  const normalizedRoute = route.startsWith('/') ? route : `/${route}`;
+  return `https://${projectId}.supabase.co/functions/v1/make-server-a75b5353${normalizedRoute}`;
 };
 
 export const getAnonKey = () => {

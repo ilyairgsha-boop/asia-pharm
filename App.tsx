@@ -51,7 +51,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.0.1-hotfix');
+    console.log('🚀 Asia Pharm - Starting application... v2.0.2-hotfix');
     
     if (MOCK_MODE) {
       console.log('');
@@ -116,6 +116,40 @@ function AppContent() {
             console.log('✅ Status:', response.status);
             console.log('✅ Response:', data);
             return data;
+          } catch (error) {
+            console.error('❌ Error:', error);
+            throw error;
+          }
+        },
+        testDirect: async () => {
+          const url = 'https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353';
+          const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJveWJrb3lpZHh3cmdzYXlpZnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NDI3ODEsImV4cCI6MjA3NzQxODc4MX0.1R7AMGegpzlJL45AaeT2BJHQi4-Oswe1tMcAYXK8e2Y';
+          
+          console.log('🧪 Direct Test (hardcoded URL)...');
+          console.log('URL:', url);
+          
+          try {
+            const response = await fetch(url, {
+              headers: {
+                'Authorization': `Bearer ${key}`,
+                'apikey': key,
+              }
+            });
+            
+            console.log('📡 Status:', response.status);
+            console.log('📡 Headers:', Object.fromEntries(response.headers.entries()));
+            
+            const text = await response.text();
+            console.log('📄 Raw response:', text);
+            
+            try {
+              const data = JSON.parse(text);
+              console.log('✅ Parsed JSON:', data);
+              return data;
+            } catch {
+              console.log('⚠️ Response is not JSON');
+              return { raw: text };
+            }
           } catch (error) {
             console.error('❌ Error:', error);
             throw error;
