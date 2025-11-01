@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
 import { CheckCircle2, XCircle, Loader2, RefreshCw } from 'lucide-react';
-import { getServerUrl } from '../utils/supabase/client';
+import { getServerUrl, getAnonKey } from '../utils/supabase/client';
 
 interface EdgeFunctionInfo {
   status?: string;
@@ -29,6 +29,7 @@ export const EdgeFunctionStatus = () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'apikey': getAnonKey(),
         },
       });
 

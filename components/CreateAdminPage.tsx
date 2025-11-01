@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { getServerUrl } from '../utils/supabase/client';
-import { publicAnonKey } from '../utils/supabase/info';
+import { getServerUrl, getAnonKey } from '../utils/supabase/client';
 
 export const CreateAdminPage = ({ onBack }: { onBack: () => void }) => {
   const [email, setEmail] = useState('');
@@ -23,7 +22,7 @@ export const CreateAdminPage = ({ onBack }: { onBack: () => void }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${publicAnonKey}`,
+          'apikey': getAnonKey(),
         },
         body: JSON.stringify({ email, password, name }),
       });
