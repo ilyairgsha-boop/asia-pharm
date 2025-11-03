@@ -122,9 +122,22 @@ const requireAdmin = async (c: any, next: any) => {
     }, 401);
   }
   
-  const supabase = getSupabaseAdmin();
+  // Create a client with the user's token to verify it
+  // IMPORTANT: Use anon key + user token, NOT service role key
   console.log('🔍 Verifying token with Supabase...');
-  const { data: { user }, error } = await supabase.auth.getUser(token);
+  const supabaseWithToken = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    {
+      global: {
+        headers: {
+          Authorization: authHeader, // Pass the full "Bearer <token>" header
+        },
+      },
+    }
+  );
+  
+  const { data: { user }, error } = await supabaseWithToken.auth.getUser();
 
   if (error) {
     console.error('❌ Token verification error:', error.message);
@@ -147,6 +160,8 @@ const requireAdmin = async (c: any, next: any) => {
   console.log('✅ User authenticated:', user.id, user.email);
   console.log('🔍 Checking admin status in profiles table...');
 
+  // Use admin client to check profile
+  const supabase = getSupabaseAdmin();
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_admin, email, name')
