@@ -94,29 +94,96 @@ const getOneSignalSettings = async (): Promise<{ settings: OneSignalSettings | n
 
 // Auth middleware
 const requireAdmin = async (c: any, next: any) => {
+  console.log('🔐 requireAdmin middleware called');
+  console.log('📍 Path:', c.req.path);
+  console.log('📍 Method:', c.req.method);
+  
   const authHeader = c.req.header('Authorization');
+  console.log('🔑 Authorization header:', authHeader ? `Present (${authHeader.substring(0, 20)}...)` : 'MISSING ❌');
+  
   if (!authHeader) {
-    return c.json({ error: 'Unauthorized' }, 401);
+    console.error('❌ No Authorization header provided');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'No Authorization header',
+      hint: 'Include Authorization: Bearer <token> header'
+    }, 401);
   }
 
   const token = authHeader.split(' ')[1];
+  console.log('🎫 Token extracted:', token ? `Yes (${token.substring(0, 20)}...)` : 'NO ❌');
+  
+  if (!token) {
+    console.error('❌ Authorization header malformed (no token after Bearer)');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'Malformed Authorization header',
+      hint: 'Format: Authorization: Bearer <token>'
+    }, 401);
+  }
+  
   const supabase = getSupabaseAdmin();
+  console.log('🔍 Verifying token with Supabase...');
   const { data: { user }, error } = await supabase.auth.getUser(token);
 
-  if (error || !user) {
-    return c.json({ error: 'Unauthorized' }, 401);
+  if (error) {
+    console.error('❌ Token verification error:', error.message);
+    console.error('Error details:', error);
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'Invalid or expired token',
+      authError: error.message
+    }, 401);
   }
+  
+  if (!user) {
+    console.error('❌ No user found for token');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'No user found for provided token'
+    }, 401);
+  }
+  
+  console.log('✅ User authenticated:', user.id, user.email);
+  console.log('🔍 Checking admin status in profiles table...');
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
-    .select('is_admin')
+    .select('is_admin, email, name')
     .eq('id', user.id)
     .maybeSingle();
 
-  if (!profile?.is_admin) {
-    return c.json({ error: 'Admin access required' }, 403);
+  if (profileError) {
+    console.error('❌ Error fetching profile:', profileError.message);
+    return c.json({ 
+      error: 'Database error',
+      details: profileError.message
+    }, 500);
   }
+  
+  if (!profile) {
+    console.error('❌ No profile found for user:', user.id);
+    return c.json({ 
+      error: 'Forbidden',
+      details: 'No profile found. Please create a profile first.'
+    }, 403);
+  }
+  
+  console.log('👤 Profile found:', {
+    email: profile.email,
+    name: profile.name,
+    is_admin: profile.is_admin
+  });
 
+  if (!profile.is_admin) {
+    console.error('❌ User is not admin:', user.email);
+    return c.json({ 
+      error: 'Admin access required',
+      details: 'Your account does not have admin privileges'
+    }, 403);
+  }
+  
+  console.log('✅ Admin access granted for:', user.email);
   c.set('user', user);
   await next();
 };
