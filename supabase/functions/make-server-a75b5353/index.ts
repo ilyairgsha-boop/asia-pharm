@@ -579,6 +579,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     const { title, message, url, icon, image, data, userIds, segments, tags, language, store } = body;
 
     console.log('📥 Request body:', JSON.stringify(body, null, 2));
+    console.log('📦 Parsed segments:', segments, 'Type:', typeof segments, 'IsArray:', Array.isArray(segments));
 
     if (!title || !message) {
       return c.json({ error: 'Title and message required' }, 400);
@@ -645,9 +646,11 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       console.log('🎯 Targeting by tags:', tags);
     } else {
       // Default to "All" segment which includes all subscribed users including test users
-      const targetSegments = segments && segments.length > 0 ? segments : ['All'];
+      // Check if segments is provided and not empty
+      const hasSegments = segments && Array.isArray(segments) && segments.length > 0;
+      const targetSegments = hasSegments ? segments : ['All'];
       notificationData.included_segments = targetSegments;
-      console.log('🎯 Targeting segments:', targetSegments);
+      console.log('🎯 Targeting segments:', targetSegments, hasSegments ? '(from request)' : '(default All)');
     }
 
     if (url) {

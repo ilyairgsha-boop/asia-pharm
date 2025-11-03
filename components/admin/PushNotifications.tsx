@@ -284,6 +284,19 @@ export const PushNotifications = () => {
       // Prepare targeting options
       const options: any = {};
       
+      // Map UI segment names to OneSignal segment names
+      const segmentMap: Record<string, string> = {
+        'all': 'All',
+        'subscribed': 'Subscribed Users',
+        'active': 'Active Users',
+        'inactive': 'Inactive Users',
+      };
+      
+      // Always include segments - default to "All" to target all subscribers
+      const oneSignalSegment = segmentMap[targetSegment] || 'All';
+      options.segments = [oneSignalSegment];
+      console.log(`📍 Segment mapping: ${targetSegment} -> ${oneSignalSegment}`);
+      
       if (targetLanguage !== 'all') {
         options.language = targetLanguage;
       }
@@ -291,6 +304,8 @@ export const PushNotifications = () => {
       if (targetStore !== 'all') {
         options.store = targetStore;
       }
+
+      console.log('📤 Sending notification with options:', options);
 
       // Send notification
       const result = await oneSignalService.sendNotification(notificationData, options);
