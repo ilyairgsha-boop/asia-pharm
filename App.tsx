@@ -51,7 +51,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.2.6-ONESIGNAL-V3');
+    console.log('🚀 Asia Pharm - Starting application... v2.2.7-ONESIGNAL-FIX');
     
     if (MOCK_MODE) {
       console.log('');

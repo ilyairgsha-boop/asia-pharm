@@ -1,4 +1,4 @@
-// Build: v2.2.6-ONESIGNAL-V3 - OneSignal v3 API methods
+// Build: v2.2.7-ONESIGNAL-FIX - OneSignal SDK compatibility fix
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
