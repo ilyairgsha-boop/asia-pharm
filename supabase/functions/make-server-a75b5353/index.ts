@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.8-SETTINGS-SYNC - Settings synced across all devices
-// Build: 2024-11-03 17:00:00 UTC
+// Version: 2.2.9-SETTINGS-FIX - OneSignal settings from Supabase settings table
+// Build: 2024-11-03 18:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.8-SETTINGS-SYNC...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.9-SETTINGS-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -30,6 +30,66 @@ const getSupabaseClient = () => {
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!
   );
+};
+
+// ============================================================================
+// Settings Helper - Read from settings table with fallback to KV store
+// ============================================================================
+
+interface OneSignalSettings {
+  appId: string;
+  restApiKey?: string;
+  apiKey?: string;
+  enabled: boolean;
+}
+
+/**
+ * Get OneSignal settings from settings table (preferred) or KV store (fallback)
+ * @returns OneSignal settings or null if not configured
+ */
+const getOneSignalSettings = async (): Promise<{ settings: OneSignalSettings | null; source: 'settings_table' | 'kv_store' | 'not_found' }> => {
+  const supabase = getSupabaseAdmin();
+  
+  console.log('🔍 Attempting to load OneSignal settings from settings table...');
+  
+  // Try settings table first
+  try {
+    const { data, error } = await supabase
+      .from('settings')
+      .select('value')
+      .eq('key', 'oneSignal')
+      .maybeSingle();
+    
+    if (!error && data?.value) {
+      console.log('✅ Loaded OneSignal settings from settings table');
+      const settings = data.value as OneSignalSettings;
+      return { settings, source: 'settings_table' };
+    }
+    
+    if (error) {
+      console.warn('⚠️ Error reading from settings table:', error.message);
+    } else {
+      console.warn('⚠️ No OneSignal settings in settings table');
+    }
+  } catch (e) {
+    console.warn('⚠️ Exception reading from settings table:', e);
+  }
+  
+  // Fallback to KV store
+  console.log('🔍 Fallback: Loading OneSignal settings from KV store...');
+  try {
+    const kvSettings = await kv.get('oneSignalSettings');
+    if (kvSettings) {
+      console.log('✅ Loaded OneSignal settings from KV store (fallback)');
+      return { settings: kvSettings as OneSignalSettings, source: 'kv_store' };
+    }
+    console.warn('⚠️ No OneSignal settings in KV store');
+  } catch (e) {
+    console.warn('⚠️ Exception reading from KV store:', e);
+  }
+  
+  console.error('❌ OneSignal settings not found in settings table or KV store');
+  return { settings: null, source: 'not_found' };
 };
 
 // Auth middleware
@@ -89,8 +149,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.8 - Settings Sync',
-    version: '2.2.8-SETTINGS-SYNC',
+    message: 'Asia-Pharm API v2.2.9 - OneSignal Settings Fix',
+    version: '2.2.9-SETTINGS-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -442,19 +502,20 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       return c.json({ error: 'Title and message required' }, 400);
     }
 
-    console.log('🔍 Loading OneSignal settings from KV store...');
-    const settings = await kv.get('oneSignalSettings');
-    console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
+    const { settings, source } = await getOneSignalSettings();
+    console.log('OneSignal settings loaded from:', source);
     
     // Support both old (apiKey) and new (restApiKey) format
     const apiKey = settings?.restApiKey || settings?.apiKey;
 
     if (!settings || !settings.appId || !apiKey) {
-      console.error('❌ OneSignal not configured in KV store');
+      console.error('❌ OneSignal not configured');
       console.error('Settings object:', settings);
+      console.error('Checked sources: settings table, KV store');
       return c.json({ 
         error: 'OneSignal not configured',
         details: 'Save OneSignal settings in Admin Panel first',
+        hint: 'Go to Admin Panel → OneSignal Settings and save your App ID and REST API Key',
         debugUrl: '/make-server-a75b5353/api/debug/onesignal-check'
       }, 500);
     }
@@ -678,20 +739,21 @@ app.get('/make-server-a75b5353/api/push/stats', requireAdmin, async (c) => {
   try {
     console.log('📊 Push stats request');
 
-    console.log('🔍 Loading OneSignal settings from KV store...');
-    const settings = await kv.get('oneSignalSettings');
-    console.log('OneSignal settings:', settings ? 'Found' : 'Not found');
+    const { settings, source } = await getOneSignalSettings();
+    console.log('OneSignal settings loaded from:', source);
     
     // Support both old (apiKey) and new (restApiKey) format
     const apiKey = settings?.restApiKey || settings?.apiKey;
 
     if (!settings || !settings.appId || !apiKey) {
-      console.error('❌ OneSignal not configured in KV store');
+      console.error('❌ OneSignal not configured');
       console.error('Settings object:', settings);
+      console.error('Checked sources: settings table, KV store');
       return c.json({ 
         error: 'OneSignal not configured', 
         players: 0,
         details: 'Save OneSignal settings in Admin Panel first',
+        hint: 'Go to Admin Panel → OneSignal Settings and save your App ID and REST API Key',
         debugUrl: '/make-server-a75b5353/api/debug/onesignal-check'
       });
     }
@@ -928,12 +990,29 @@ app.get('/make-server-a75b5353/api/debug/db-check', requireAdmin, async (c) => {
 // Check OneSignal configuration
 app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (c) => {
   try {
-    // Try to get from KV store
+    // Get settings using new unified function
+    const { settings, source } = await getOneSignalSettings();
+    
+    // Also check KV store separately for debugging
     const kvSettings = await kv.get('oneSignalSettings');
     
+    // Check settings table separately for debugging
+    const supabase = getSupabaseAdmin();
+    let settingsTableData = null;
+    try {
+      const { data } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', 'oneSignal')
+        .maybeSingle();
+      settingsTableData = data?.value;
+    } catch (e) {
+      console.warn('Error checking settings table:', e);
+    }
+    
     // Check which key is available
-    const apiKey = kvSettings?.restApiKey || kvSettings?.apiKey;
-    const keyType = kvSettings?.restApiKey ? 'restApiKey (new)' : kvSettings?.apiKey ? 'apiKey (old)' : 'none';
+    const apiKey = settings?.restApiKey || settings?.apiKey;
+    const keyType = settings?.restApiKey ? 'restApiKey (new)' : settings?.apiKey ? 'apiKey (old)' : 'none';
     
     // Detect if wrong key type
     let keyWarning = null;
@@ -963,15 +1042,16 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
     
     return c.json({
       success: true,
-      kvStore: {
-        exists: !!kvSettings,
-        configured: !!(kvSettings?.appId && apiKey),
+      loadedFrom: source,
+      currentSettings: {
+        exists: !!settings,
+        configured: !!(settings?.appId && apiKey),
         keyType: keyType,
-        hasAppId: !!kvSettings?.appId,
+        hasAppId: !!settings?.appId,
         hasApiKey: !!apiKey,
-        enabled: kvSettings?.enabled || false,
+        enabled: settings?.enabled || false,
         // Show partial key for verification
-        appIdPrefix: kvSettings?.appId ? kvSettings.appId.substring(0, 8) + '...' : null,
+        appIdPrefix: settings?.appId ? settings.appId.substring(0, 8) + '...' : null,
         apiKeyPrefix: apiKey ? apiKey.substring(0, 15) + '...' : null,
         apiKeySuffix: apiKey ? '...' + apiKey.substring(apiKey.length - 5) : null,
         isUserAuthKey: apiKey ? apiKey.startsWith('os_v2_org_') : false,
@@ -979,10 +1059,32 @@ app.get('/make-server-a75b5353/api/debug/onesignal-check', requireAdmin, async (
         warning: keyWarning,
         fullKey: apiKey, // FOR DEBUG ONLY - REMOVE IN PRODUCTION!
       },
-      note: keyWarning || 'Both apiKey and restApiKey are supported. Save settings in Admin Panel if not configured.',
+      debug: {
+        settingsTable: {
+          exists: !!settingsTableData,
+          data: settingsTableData ? {
+            hasAppId: !!(settingsTableData as any)?.appId,
+            hasRestApiKey: !!(settingsTableData as any)?.restApiKey,
+            appIdPrefix: (settingsTableData as any)?.appId?.substring(0, 8) + '...' || null,
+          } : null,
+        },
+        kvStore: {
+          exists: !!kvSettings,
+          data: kvSettings ? {
+            hasAppId: !!kvSettings.appId,
+            hasRestApiKey: !!kvSettings.restApiKey,
+            hasApiKey: !!kvSettings.apiKey,
+            appIdPrefix: kvSettings.appId?.substring(0, 8) + '...' || null,
+          } : null,
+        },
+      },
+      note: keyWarning || 'Settings loaded successfully. Save settings in Admin Panel if not configured.',
       help: {
         wrongKey: keyWarning ? true : false,
         solution: keyWarning ? 'Go to OneSignal Dashboard → Settings → Keys & IDs → Copy REST API KEY (NOT User Auth Key)' : null,
+        migration: source === 'kv_store' ? 'Settings loaded from KV store. They will be migrated to settings table on next save.' : 
+                   source === 'settings_table' ? 'Settings loaded from settings table (preferred).' :
+                   'No settings found. Configure in Admin Panel → OneSignal Settings.'
       }
     });
   } catch (error: any) {
@@ -1001,5 +1103,6 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.8-SETTINGS-SYNC initialized!');
+console.log('✅ Edge Function v2.2.9-SETTINGS-FIX initialized!');
+console.log('📌 OneSignal settings will be loaded from settings table (preferred) or KV store (fallback)');
 Deno.serve(app.fetch);
