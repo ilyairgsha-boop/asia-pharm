@@ -347,12 +347,26 @@ export class OneSignalService {
         }),
       });
 
+      console.log('📥 Edge Function response status:', response.status);
+      console.log('📥 Edge Function response ok:', response.ok);
+      
       const result = await response.json();
+      console.log('📥 Edge Function response body:', result);
       
       if (!response.ok) {
         console.error('❌ Edge Function error:', result);
         const errorMessage = result.message || result.error || response.statusText;
+        console.error('❌ Error message:', errorMessage);
+        console.error('❌ Full error details:', JSON.stringify(result, null, 2));
         throw new Error(`Edge Function error: ${errorMessage}`);
+      }
+
+      // Check if result has error even with 200 status
+      if (result.error) {
+        console.error('❌ OneSignal error in response:', result.error);
+        console.error('❌ Error details:', result.details);
+        console.error('❌ Full error:', JSON.stringify(result, null, 2));
+        throw new Error(`OneSignal error: ${result.error}`);
       }
 
       console.log('✅ Notification sent successfully:', {
@@ -361,8 +375,8 @@ export class OneSignalService {
       });
       
       return {
-        id: result.id,
-        recipients: result.recipients,
+        id: result.id || '',
+        recipients: result.recipients || 0,
       };
     } catch (error) {
       console.error('❌ Error sending notification:', error);

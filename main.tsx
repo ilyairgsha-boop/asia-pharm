@@ -1,4 +1,4 @@
-// Build: v2.2.3-RECIPIENTS-FIX - Get real recipient count from stats
+// Build: v2.2.4-ERROR-HANDLING - Better error handling
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

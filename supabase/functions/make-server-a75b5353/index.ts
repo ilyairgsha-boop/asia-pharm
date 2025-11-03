@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.3-RECIPIENTS-FIX - Get actual recipient count from OneSignal stats
-// Build: 2024-11-02 03:00:00 UTC
+// Version: 2.2.4-ERROR-HANDLING - Better error handling and request params support
+// Build: 2024-11-02 03:30:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.3-RECIPIENTS-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.4-ERROR-HANDLING...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.3 - Recipients Count Fix',
-    version: '2.2.3-RECIPIENTS-FIX',
+    message: 'Asia-Pharm API v2.2.4 - Error Handling & Params',
+    version: '2.2.4-ERROR-HANDLING',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -433,7 +433,10 @@ app.get('/make-server-a75b5353/api/email/subscribers-count', requireAdmin, async
 app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
   try {
     console.log('📱 Push notification request');
-    const { title, message, url } = await c.req.json();
+    const body = await c.req.json();
+    const { title, message, url, icon, image, data, userIds, segments, tags, language, store } = body;
+
+    console.log('📥 Request body:', JSON.stringify(body, null, 2));
 
     if (!title || !message) {
       return c.json({ error: 'Title and message required' }, 400);
@@ -482,13 +485,43 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
 
     const notificationData: any = {
       app_id: settings.appId,
-      included_segments: ['Subscribed Users'],
       headings: { en: title },
       contents: { en: message },
     };
 
+    // Add targeting - priority: userIds > tags > segments (default to Subscribed Users)
+    if (userIds && userIds.length > 0) {
+      notificationData.include_player_ids = userIds;
+      console.log('🎯 Targeting specific users:', userIds.length);
+    } else if (tags && Object.keys(tags).length > 0) {
+      const filters: any[] = [];
+      Object.entries(tags).forEach(([key, value]) => {
+        filters.push({ field: 'tag', key, relation: '=', value });
+      });
+      notificationData.filters = filters;
+      console.log('🎯 Targeting by tags:', tags);
+    } else {
+      // Default to segments (or use provided segments)
+      const targetSegments = segments && segments.length > 0 ? segments : ['Subscribed Users'];
+      notificationData.included_segments = targetSegments;
+      console.log('🎯 Targeting segments:', targetSegments);
+    }
+
     if (url) {
       notificationData.url = url;
+    }
+
+    if (icon) {
+      notificationData.small_icon = icon;
+      notificationData.large_icon = icon;
+    }
+
+    if (image) {
+      notificationData.big_picture = image;
+    }
+
+    if (data) {
+      notificationData.data = data;
     }
 
     // CRITICAL DEBUG: Log the EXACT key before formatting
@@ -561,6 +594,29 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
     console.log('Recipients:', result.recipients);
     console.log('Errors:', result.errors);
 
+    // Check for errors even with 200 status
+    if (result.errors && result.errors.length > 0) {
+      console.error('❌ OneSignal returned errors:', result.errors);
+      return c.json({
+        error: 'OneSignal API returned errors',
+        details: result.errors,
+        id: result.id || '',
+        recipients: 0,
+        success: false
+      }, 500);
+    }
+
+    if (!result.id) {
+      console.error('❌ OneSignal did not return notification ID');
+      return c.json({
+        error: 'No notification ID returned',
+        details: 'OneSignal API did not return a notification ID. Check your API key and app configuration.',
+        id: '',
+        recipients: 0,
+        success: false
+      }, 500);
+    }
+
     // OneSignal API doesn't return recipients count in initial response
     // We need to fetch notification details to get actual recipient count
     let recipientCount = result.recipients || 0;
@@ -607,7 +663,13 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
 
   } catch (error: any) {
     console.error('❌ Error sending push:', error);
-    return c.json({ error: error.message || 'Failed to send notification' }, 500);
+    console.error('❌ Error stack:', error.stack);
+    return c.json({ 
+      error: error.message || 'Failed to send notification',
+      id: '',
+      recipients: 0,
+      success: false
+    }, 500);
   }
 });
 
@@ -939,5 +1001,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.3-RECIPIENTS-FIX initialized!');
+console.log('✅ Edge Function v2.2.4-ERROR-HANDLING initialized!');
 Deno.serve(app.fetch);
