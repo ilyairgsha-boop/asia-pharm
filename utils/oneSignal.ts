@@ -183,63 +183,57 @@ export class OneSignalService {
       return Promise.resolve();
     }
     
-    console.log('🔧 Initializing OneSignal v3 with App ID:', this.appId);
+    console.log('🔧 Initializing OneSignal with App ID:', this.appId);
     console.log('🔑 App ID length:', this.appId.length);
     console.log('🔑 App ID format check:', /^[a-f0-9-]{36}$/i.test(this.appId) ? 'Valid UUID' : 'Invalid UUID');
     
     const settings = this.getSettings();
     
-    try {
-      // NEW OneSignal v3 API - direct init, no push() needed
-      await window.OneSignal.init({
-        appId: this.appId,
-        allowLocalhostAsSecureOrigin: true,
-        
-        // Don't show any prompts automatically
-        // User must click "Subscribe" button
-        promptOptions: {
-          slidedown: {
-            enabled: false,
-            autoPrompt: false,
-          }
-        },
-        
-        // Don't auto-subscribe
-        autoRegister: false,
-        autoResubscribe: true,
-      });
+    return new Promise<void>((resolve, reject) => {
+      // Use array-based API for compatibility
+      window.OneSignal = window.OneSignal || [];
       
-      this.isInitialized = true;
-      console.log('✅ OneSignal v3 initialized with App ID:', this.appId);
-      
-      // Log subscription status after init
-      try {
-        const permission = await window.OneSignal.Notifications.permission;
-        const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
-        const playerId = await window.OneSignal.User.PushSubscription.id;
+      window.OneSignal.push(() => {
+        console.log('📱 OneSignal push callback called');
         
-        console.log('📊 OneSignal Status:', {
-          permission,
-          optedIn: isOptedIn,
-          playerId: playerId || 'Not subscribed',
-          subscribed: permission && isOptedIn
-        });
-        
-        if (permission && isOptedIn && playerId) {
-          console.log('✅ User already subscribed with Player ID:', playerId);
-          console.log('🎯 To verify: Check OneSignal Dashboard → Audience → All Users');
-          console.log('🔍 Search for this Player ID:', playerId);
-        } else {
-          console.log('ℹ️ User not subscribed yet. Click "Subscribe to Push Notifications" button.');
+        try {
+          window.OneSignal.init({
+            appId: this.appId,
+            allowLocalhostAsSecureOrigin: true,
+            notifyButton: {
+              enable: false,
+            },
+            // Don't auto-subscribe - user must click button
+            autoRegister: false,
+            autoResubscribe: true,
+          });
+          
+          this.isInitialized = true;
+          console.log('✅ OneSignal initialized with App ID:', this.appId);
+          
+          // Wait a bit for SDK to fully initialize
+          setTimeout(() => {
+            // Check subscription status
+            window.OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
+              console.log('🔔 Push notifications enabled:', isEnabled);
+              if (isEnabled) {
+                window.OneSignal.getUserId((userId: string) => {
+                  console.log('✅ User subscribed with Player ID:', userId);
+                });
+              } else {
+                console.log('ℹ️ User not subscribed yet.');
+              }
+            });
+            
+            resolve();
+          }, 500);
+          
+        } catch (error) {
+          console.error('❌ Error in OneSignal init:', error);
+          reject(error);
         }
-      } catch (statusError) {
-        console.warn('⚠️ Could not check subscription status:', statusError);
-      }
-      
-    } catch (error) {
-      console.error('❌ Error initializing OneSignal:', error);
-      throw error;
-    }
+      });
+    });
   }
 
   /**
@@ -253,18 +247,25 @@ export class OneSignalService {
     try {
       console.log('🔔 Requesting push notification permission...');
       
-      // New OneSignal API - use Notifications namespace
-      await window.OneSignal.Notifications.requestPermission();
-      
-      console.log('✅ Permission granted, getting user ID...');
-      
-      // Wait a bit for OneSignal to register
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const userId = await window.OneSignal.User.PushSubscription.id;
-      console.log('✅ User subscribed with ID:', userId);
-      
-      return userId;
+      return new Promise<string | null>((resolve) => {
+        window.OneSignal.push(() => {
+          // Show the native browser prompt
+          window.OneSignal.registerForPushNotifications();
+          
+          // Wait for registration to complete
+          setTimeout(() => {
+            window.OneSignal.getUserId((userId: string) => {
+              if (userId) {
+                console.log('✅ User subscribed with ID:', userId);
+                resolve(userId);
+              } else {
+                console.log('⚠️ Subscription initiated but no ID yet. Try again in a moment.');
+                resolve(null);
+              }
+            });
+          }, 1000);
+        });
+      });
     } catch (error) {
       console.error('❌ Error subscribing to push notifications:', error);
       return null;
@@ -280,10 +281,14 @@ export class OneSignalService {
     }
 
     try {
-      // New OneSignal API
-      const userId = await window.OneSignal.User.PushSubscription.id;
-      console.log('📱 Current Player ID:', userId);
-      return userId;
+      return new Promise<string | null>((resolve) => {
+        window.OneSignal.push(() => {
+          window.OneSignal.getUserId((userId: string) => {
+            console.log('📱 Current Player ID:', userId || 'Not subscribed');
+            resolve(userId || null);
+          });
+        });
+      });
     } catch (error) {
       console.error('❌ Error getting user ID:', error);
       return null;
@@ -299,17 +304,14 @@ export class OneSignalService {
     }
 
     try {
-      // New OneSignal API - check permission state
-      const permission = await window.OneSignal.Notifications.permission;
-      const isOptedIn = window.OneSignal.User.PushSubscription.optedIn;
-      
-      console.log('🔍 Subscription check:', {
-        permission,
-        optedIn: isOptedIn,
-        subscribed: permission && isOptedIn
+      return new Promise<boolean>((resolve) => {
+        window.OneSignal.push(() => {
+          window.OneSignal.isPushNotificationsEnabled((isEnabled: boolean) => {
+            console.log('🔍 Subscription check:', isEnabled);
+            resolve(isEnabled);
+          });
+        });
       });
-      
-      return permission && isOptedIn;
     } catch (error) {
       console.error('❌ Error checking subscription status:', error);
       return false;
@@ -453,9 +455,10 @@ export class OneSignalService {
     }
 
     try {
-      // New OneSignal API - use User.addTags
-      await window.OneSignal.User.addTags(tags);
-      console.log('✅ Tags added:', tags);
+      window.OneSignal.push(() => {
+        window.OneSignal.sendTags(tags);
+        console.log('✅ Tags added:', tags);
+      });
     } catch (error) {
       console.error('❌ Error tagging user:', error);
     }
@@ -470,9 +473,10 @@ export class OneSignalService {
     }
 
     try {
-      // New OneSignal API - use User.removeTags
-      await window.OneSignal.User.removeTags(tagKeys);
-      console.log('✅ Tags removed:', tagKeys);
+      window.OneSignal.push(() => {
+        window.OneSignal.deleteTags(tagKeys);
+        console.log('✅ Tags removed:', tagKeys);
+      });
     } catch (error) {
       console.error('❌ Error deleting tags:', error);
     }
