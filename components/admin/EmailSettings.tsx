@@ -28,24 +28,48 @@ export const EmailSettings = () => {
   }, []);
 
   const loadSettings = async () => {
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
-    
     try {
+      console.log('📥 Loading email settings...');
       const supabase = createClient();
+      
+      // 1️⃣ Try to load from settings table (primary source)
       const { data, error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .select('value')
-        .eq('key', 'setting:email')
+        .eq('key', 'email')
         .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error loading email settings:', error);
-      } else if (data?.value) {
+      if (data && !error) {
         setSettings(data.value);
-        console.log('✅ Email settings loaded');
+        console.log('✅ Email settings loaded from Supabase');
+      } else if (error) {
+        console.warn('⚠️ Error loading email settings:', error);
+        
+        // 2️⃣ Fallback to kv_store (for backward compatibility)
+        try {
+          const { data: kvData } = await supabase
+            .from('kv_store_a75b5353')
+            .select('value')
+            .eq('key', 'setting:email')
+            .maybeSingle();
+          
+          if (kvData?.value) {
+            setSettings(kvData.value);
+            console.log('📦 Email settings loaded from KV store (fallback)');
+            
+            // Migrate to settings table
+            await supabase
+              .from('settings')
+              .upsert({
+                key: 'email',
+                value: kvData.value,
+                updated_at: new Date().toISOString()
+              });
+            console.log('✅ Migrated email settings to settings table');
+          }
+        } catch (kvError) {
+          console.warn('⚠️ Failed to load from KV store:', kvError);
+        }
       } else {
         console.log('ℹ️ No saved email settings, using defaults');
       }
@@ -61,23 +85,41 @@ export const EmailSettings = () => {
     
     setSaving(true);
     try {
+      console.log('💾 Saving email settings:', settings);
       const supabase = createClient();
+      
+      // 1️⃣ Save to settings table (primary storage)
       const { error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .upsert({
-          key: 'setting:email',
+          key: 'email',
           value: settings,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'key'
         });
 
       if (error) {
         console.error('❌ Failed to save settings:', error);
         toast.error(t('saveError') || 'Failed to save settings');
       } else {
-        toast.success(t('saveSuccess'));
-        console.log('✅ Email settings saved:', settings);
+        console.log('✅ Email settings saved to Supabase');
+        
+        // 2️⃣ Also save to KV store for backward compatibility
+        try {
+          await supabase
+            .from('kv_store_a75b5353')
+            .upsert({
+              key: 'setting:email',
+              value: settings,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'key'
+            });
+          console.log('✅ Email settings synced to KV store');
+        } catch (kvError) {
+          console.warn('⚠️ Failed to sync to KV store:', kvError);
+        }
+        
+        toast.success((t('saveSuccess') || 'Saved') + ' ✅ Доступно на всех устройствах');
       }
     } catch (error) {
       console.error('❌ Error saving email settings:', error);

@@ -21,21 +21,48 @@ export const PaymentSettings = () => {
   }, []);
 
   const loadSettings = async () => {
-    if (!accessToken) return;
-    
     try {
+      console.log('📥 Loading payment settings...');
       const supabase = createClient();
+      
+      // 1️⃣ Try to load from settings table (primary source)
       const { data, error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .select('value')
-        .eq('key', 'setting:payment')
+        .eq('key', 'payment')
         .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error loading payment settings:', error);
-      } else if (data?.value) {
+      if (data && !error) {
         setSettings(data.value);
-        console.log('✅ Payment settings loaded');
+        console.log('✅ Payment settings loaded from Supabase');
+      } else if (error) {
+        console.warn('⚠️ Error loading payment settings:', error);
+        
+        // 2️⃣ Fallback to kv_store (for backward compatibility)
+        try {
+          const { data: kvData } = await supabase
+            .from('kv_store_a75b5353')
+            .select('value')
+            .eq('key', 'setting:payment')
+            .maybeSingle();
+          
+          if (kvData?.value) {
+            setSettings(kvData.value);
+            console.log('📦 Payment settings loaded from KV store (fallback)');
+            
+            // Migrate to settings table
+            await supabase
+              .from('settings')
+              .upsert({
+                key: 'payment',
+                value: kvData.value,
+                updated_at: new Date().toISOString()
+              });
+            console.log('✅ Migrated payment settings to settings table');
+          }
+        } catch (kvError) {
+          console.warn('⚠️ Failed to load from KV store:', kvError);
+        }
       } else {
         console.log('ℹ️ No saved payment settings, using defaults');
       }
@@ -51,23 +78,41 @@ export const PaymentSettings = () => {
     
     setSaving(true);
     try {
+      console.log('💾 Saving payment settings:', settings);
       const supabase = createClient();
+      
+      // 1️⃣ Save to settings table (primary storage)
       const { error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .upsert({
-          key: 'setting:payment',
+          key: 'payment',
           value: settings,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'key'
         });
 
       if (error) {
         console.error('❌ Failed to save settings:', error);
         toast.error(t('saveFailed') || 'Failed to save settings');
       } else {
-        toast.success(t('saveSuccess'));
-        console.log('✅ Payment settings saved:', settings);
+        console.log('✅ Payment settings saved to Supabase');
+        
+        // 2️⃣ Also save to KV store for backward compatibility
+        try {
+          await supabase
+            .from('kv_store_a75b5353')
+            .upsert({
+              key: 'setting:payment',
+              value: settings,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'key'
+            });
+          console.log('✅ Payment settings synced to KV store');
+        } catch (kvError) {
+          console.warn('⚠️ Failed to sync to KV store:', kvError);
+        }
+        
+        toast.success((t('saveSuccess') || 'Saved') + ' ✅ Доступно на всех устройствах');
       }
     } catch (error) {
       console.error('❌ Error saving payment settings:', error);

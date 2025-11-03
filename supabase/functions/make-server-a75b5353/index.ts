@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.7-ONESIGNAL-FIX - Fix OneSignal SDK compatibility issues
-// Build: 2024-11-03 16:30:00 UTC
+// Version: 2.2.8-SETTINGS-SYNC - Settings synced across all devices
+// Build: 2024-11-03 17:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.7-ONESIGNAL-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.8-SETTINGS-SYNC...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.7 - OneSignal SDK Fix',
-    version: '2.2.7-ONESIGNAL-FIX',
+    message: 'Asia-Pharm API v2.2.8 - Settings Sync',
+    version: '2.2.8-SETTINGS-SYNC',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -1001,5 +1001,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.7-ONESIGNAL-FIX initialized!');
+console.log('✅ Edge Function v2.2.8-SETTINGS-SYNC initialized!');
 Deno.serve(app.fetch);

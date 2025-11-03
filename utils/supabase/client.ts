@@ -44,7 +44,7 @@ export const createClient = () => {
       },
     });
     
-    console.log('✅ Supabase client initialized [v2.2.7-ONESIGNAL-FIX]', {
+    console.log('✅ Supabase client initialized [v2.2.8-SETTINGS-SYNC]', {
       url: supabaseUrl,
       hasKey: !!supabaseAnonKey,
       keyPrefix: supabaseAnonKey.substring(0, 20) + '...',

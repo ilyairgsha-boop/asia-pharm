@@ -88,20 +88,68 @@ export const OneSignalSettings = () => {
     }
   };
 
-  const loadSettings = () => {
+  const loadSettings = async () => {
     try {
+      console.log('📥 Loading OneSignal settings...');
+      
+      // 1️⃣ Try to load from Supabase (primary source)
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'oneSignal')
+          .single();
+        
+        if (data && !error) {
+          console.log('✅ Loaded OneSignal settings from Supabase');
+          const parsed = data.value as OneSignalSettingsData;
+          
+          // Migrate old apiKey to restApiKey
+          if ((parsed as any).apiKey && !parsed.restApiKey) {
+            parsed.restApiKey = (parsed as any).apiKey;
+            delete (parsed as any).apiKey;
+          }
+          
+          setSettings({ ...settings, ...parsed });
+          
+          // Sync to localStorage for offline access
+          localStorage.setItem('oneSignalSettings', JSON.stringify(parsed));
+          return;
+        }
+      } catch (dbError) {
+        console.warn('⚠️ Failed to load from Supabase, trying localStorage:', dbError);
+      }
+      
+      // 2️⃣ Fallback to localStorage (for backward compatibility)
       const stored = localStorage.getItem('oneSignalSettings');
       if (stored) {
+        console.log('📦 Loaded OneSignal settings from localStorage');
         const parsed = JSON.parse(stored);
+        
         // Migrate old apiKey to restApiKey
         if (parsed.apiKey && !parsed.restApiKey) {
           parsed.restApiKey = parsed.apiKey;
           delete parsed.apiKey;
         }
+        
         setSettings({ ...settings, ...parsed });
+        
+        // Migrate to Supabase for future use
+        try {
+          await supabase
+            .from('settings')
+            .upsert({
+              key: 'oneSignal',
+              value: parsed,
+              updated_at: new Date().toISOString()
+            });
+          console.log('✅ Migrated localStorage settings to Supabase');
+        } catch (migrateError) {
+          console.warn('⚠️ Failed to migrate to Supabase:', migrateError);
+        }
       }
     } catch (error) {
-      console.error('Error loading OneSignal settings:', error);
+      console.error('❌ Error loading OneSignal settings:', error);
     }
   };
 
@@ -115,45 +163,68 @@ export const OneSignalSettings = () => {
         return;
       }
 
-      // Save to localStorage (always save, even if disabled)
-      localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
+      console.log('💾 Saving OneSignal settings...');
       
-      // Sync to KV store via Edge Function (so push notifications work server-side)
+      // 1️⃣ Save to Supabase (primary storage - syncs across devices)
       try {
-        // Get auth token and anon key for Edge Function
+        const { error } = await supabase
+          .from('settings')
+          .upsert({
+            key: 'oneSignal',
+            value: settings,
+            updated_at: new Date().toISOString()
+          });
+        
+        if (error) {
+          console.error('❌ Failed to save to Supabase:', error);
+          toast.error('Ошибка сохранения в базу данных: ' + error.message);
+          setIsSaving(false);
+          return;
+        }
+        
+        console.log('✅ OneSignal settings saved to Supabase');
+      } catch (dbError) {
+        console.error('❌ Database error:', dbError);
+        toast.error('Ошибка подключения к базе данных');
+        setIsSaving(false);
+        return;
+      }
+      
+      // 2️⃣ Sync to localStorage (for offline access)
+      localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
+      console.log('✅ OneSignal settings synced to localStorage');
+      
+      // 3️⃣ Sync to KV store via Edge Function (for server-side push notifications)
+      try {
         const { data: { session } } = await supabase.auth.getSession();
         const authToken = session?.access_token;
         
         if (!authToken) {
           console.warn('⚠️ No auth token available, skipping KV sync');
-          toast.warning('Настройки сохранены локально, но требуется авторизация для синхронизации с сервером');
-          return;
-        }
-        
-        const syncUrl = getServerUrl('/api/kv/set');
-        const response = await fetch(syncUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`,
-            'apikey': getAnonKey(),
-          },
-          body: JSON.stringify({
-            key: 'oneSignalSettings',
-            value: settings,
-          }),
-        });
-        
-        if (response.ok) {
-          console.log('✅ OneSignal settings synced to KV store');
         } else {
-          const errorData = await response.json();
-          console.warn('⚠️ Failed to sync to KV store:', errorData);
-          toast.warning('Настройки сохранены локально, но не синхронизированы с сервером');
+          const syncUrl = getServerUrl('/api/kv/set');
+          const response = await fetch(syncUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`,
+              'apikey': getAnonKey(),
+            },
+            body: JSON.stringify({
+              key: 'oneSignalSettings',
+              value: settings,
+            }),
+          });
+          
+          if (response.ok) {
+            console.log('✅ OneSignal settings synced to KV store');
+          } else {
+            const errorData = await response.json();
+            console.warn('⚠️ Failed to sync to KV store:', errorData);
+          }
         }
       } catch (kvError) {
         console.warn('⚠️ Failed to sync to KV store:', kvError);
-        toast.warning('Настройки сохранены локально, но не синхронизированы с сервером');
       }
       
       // Trigger settings update event for App.tsx to reinitialize
@@ -162,9 +233,9 @@ export const OneSignalSettings = () => {
       // Reload subscriber count after saving settings
       loadSubscriberCount();
       
-      toast.success(t('settingsSaved'));
+      toast.success(t('settingsSaved') + ' ✅ Доступно на всех устройствах');
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('❌ Error saving settings:', error);
       toast.error(t('saveError'));
     } finally {
       setIsSaving(false);

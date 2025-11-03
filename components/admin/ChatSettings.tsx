@@ -21,24 +21,48 @@ export const ChatSettings = () => {
   }, []);
 
   const loadSettings = async () => {
-    if (!accessToken) {
-      setLoading(false);
-      return;
-    }
-    
     try {
+      console.log('📥 Loading chat settings...');
       const supabase = createClient();
+      
+      // 1️⃣ Try to load from settings table (primary source)
       const { data, error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .select('value')
-        .eq('key', 'setting:chat')
+        .eq('key', 'chat')
         .maybeSingle();
 
-      if (error) {
-        console.error('❌ Error loading chat settings:', error);
-      } else if (data?.value) {
+      if (data && !error) {
         setSettings(data.value);
-        console.log('✅ Chat settings loaded');
+        console.log('✅ Chat settings loaded from Supabase');
+      } else if (error) {
+        console.warn('⚠️ Error loading chat settings:', error);
+        
+        // 2️⃣ Fallback to kv_store (for backward compatibility)
+        try {
+          const { data: kvData } = await supabase
+            .from('kv_store_a75b5353')
+            .select('value')
+            .eq('key', 'setting:chat')
+            .maybeSingle();
+          
+          if (kvData?.value) {
+            setSettings(kvData.value);
+            console.log('📦 Chat settings loaded from KV store (fallback)');
+            
+            // Migrate to settings table
+            await supabase
+              .from('settings')
+              .upsert({
+                key: 'chat',
+                value: kvData.value,
+                updated_at: new Date().toISOString()
+              });
+            console.log('✅ Migrated chat settings to settings table');
+          }
+        } catch (kvError) {
+          console.warn('⚠️ Failed to load from KV store:', kvError);
+        }
       } else {
         console.log('ℹ️ No saved chat settings, using defaults');
       }
@@ -57,22 +81,39 @@ export const ChatSettings = () => {
       console.log('💾 Saving chat settings:', settings);
       
       const supabase = createClient();
+      
+      // 1️⃣ Save to settings table (primary storage)
       const { error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .upsert({
-          key: 'setting:chat',
+          key: 'chat',
           value: settings,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'key'
         });
 
       if (error) {
         console.error('❌ Failed to save settings:', error);
         toast.error(t('saveError') || 'Failed to save settings');
       } else {
-        toast.success(t('saveSuccess'));
-        console.log('✅ Chat settings saved successfully:', settings);
+        console.log('✅ Chat settings saved to Supabase');
+        
+        // 2️⃣ Also save to KV store for backward compatibility
+        try {
+          await supabase
+            .from('kv_store_a75b5353')
+            .upsert({
+              key: 'setting:chat',
+              value: settings,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'key'
+            });
+          console.log('✅ Chat settings synced to KV store');
+        } catch (kvError) {
+          console.warn('⚠️ Failed to sync to KV store:', kvError);
+        }
+        
+        toast.success((t('saveSuccess') || 'Saved') + ' ✅ Доступно на всех устройствах');
       }
     } catch (error) {
       console.error('❌ Error saving chat settings:', error);

@@ -1,4 +1,4 @@
-// Build: v2.2.7-ONESIGNAL-FIX - OneSignal SDK compatibility fix
+// Build: v2.2.8-SETTINGS-SYNC - Settings synced across all devices
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

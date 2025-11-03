@@ -57,20 +57,50 @@ export const SEOSettings = () => {
   const loadSettings = async () => {
     try {
       setIsLoading(true);
+      console.log('📥 Loading SEO settings...');
       const supabase = createClient();
+      
+      // 1️⃣ Try to load from settings table (primary source)
       const { data, error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .select('value')
-        .eq('key', 'setting:seo')
+        .eq('key', 'seo')
         .maybeSingle();
 
-      if (error) {
-        console.error('Failed to load SEO settings:', error);
-      } else if (data?.value) {
+      if (data && !error) {
         setSettings(data.value);
+        console.log('✅ SEO settings loaded from Supabase');
+      } else if (error) {
+        console.warn('⚠️ Error loading SEO settings:', error);
+        
+        // 2️⃣ Fallback to kv_store (for backward compatibility)
+        try {
+          const { data: kvData } = await supabase
+            .from('kv_store_a75b5353')
+            .select('value')
+            .eq('key', 'setting:seo')
+            .maybeSingle();
+          
+          if (kvData?.value) {
+            setSettings(kvData.value);
+            console.log('📦 SEO settings loaded from KV store (fallback)');
+            
+            // Migrate to settings table
+            await supabase
+              .from('settings')
+              .upsert({
+                key: 'seo',
+                value: kvData.value,
+                updated_at: new Date().toISOString()
+              });
+            console.log('✅ Migrated SEO settings to settings table');
+          }
+        } catch (kvError) {
+          console.warn('⚠️ Failed to load from KV store:', kvError);
+        }
       }
     } catch (error) {
-      console.error('Failed to load SEO settings:', error);
+      console.error('❌ Failed to load SEO settings:', error);
     } finally {
       setIsLoading(false);
     }
@@ -80,24 +110,43 @@ export const SEOSettings = () => {
     try {
       setIsSaving(true);
       setMessage('');
+      console.log('💾 Saving SEO settings:', settings);
 
       const supabase = createClient();
+      
+      // 1️⃣ Save to settings table (primary storage)
       const { error } = await supabase
-        .from('kv_store_a75b5353')
+        .from('settings')
         .upsert({
-          key: 'setting:seo',
+          key: 'seo',
           value: settings,
           updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'key'
         });
 
       if (error) {
-        console.error('Failed to save SEO settings:', error);
+        console.error('❌ Failed to save SEO settings:', error);
         toast.error(t('seoSaveError'));
         setMessage(t('seoSaveError'));
       } else {
-        toast.success(t('seoSaved'));
+        console.log('✅ SEO settings saved to Supabase');
+        
+        // 2️⃣ Also save to KV store for backward compatibility
+        try {
+          await supabase
+            .from('kv_store_a75b5353')
+            .upsert({
+              key: 'setting:seo',
+              value: settings,
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'key'
+            });
+          console.log('✅ SEO settings synced to KV store');
+        } catch (kvError) {
+          console.warn('⚠️ Failed to sync to KV store:', kvError);
+        }
+        
+        toast.success((t('seoSaved') || 'Saved') + ' ✅ Доступно на всех устройствах');
         setMessage(t('seoSaved'));
         setTimeout(() => setMessage(''), 3000);
       }
