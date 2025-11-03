@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.2.4-ERROR-HANDLING - Better error handling and request params support
-// Build: 2024-11-02 03:30:00 UTC
+// Version: 2.2.5-TEST-TO-ME - Send test notifications to current user + fix "All" segment
+// Build: 2024-11-03 15:30:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.4-ERROR-HANDLING...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.2.5-TEST-TO-ME...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -89,8 +89,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.2.4 - Error Handling & Params',
-    version: '2.2.4-ERROR-HANDLING',
+    message: 'Asia-Pharm API v2.2.5 - Test to Me + All Segment',
+    version: '2.2.5-TEST-TO-ME',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -489,7 +489,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       contents: { en: message },
     };
 
-    // Add targeting - priority: userIds > tags > segments (default to Subscribed Users)
+    // Add targeting - priority: userIds > tags > segments (default to All)
     if (userIds && userIds.length > 0) {
       notificationData.include_player_ids = userIds;
       console.log('🎯 Targeting specific users:', userIds.length);
@@ -501,8 +501,8 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.filters = filters;
       console.log('🎯 Targeting by tags:', tags);
     } else {
-      // Default to segments (or use provided segments)
-      const targetSegments = segments && segments.length > 0 ? segments : ['Subscribed Users'];
+      // Default to "All" segment which includes all subscribed users including test users
+      const targetSegments = segments && segments.length > 0 ? segments : ['All'];
       notificationData.included_segments = targetSegments;
       console.log('🎯 Targeting segments:', targetSegments);
     }
@@ -1001,5 +1001,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-console.log('✅ Edge Function v2.2.4-ERROR-HANDLING initialized!');
+console.log('✅ Edge Function v2.2.5-TEST-TO-ME initialized!');
 Deno.serve(app.fetch);

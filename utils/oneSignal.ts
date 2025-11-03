@@ -385,6 +385,38 @@ export class OneSignalService {
   }
 
   /**
+   * Send notification to current user (test notification)
+   */
+  async sendToCurrentUser(data: {
+    title: string;
+    message: string;
+    url?: string;
+    icon?: string;
+    image?: string;
+    data?: any;
+  }): Promise<{ id: string; recipients: number } | null> {
+    try {
+      // Get current user's Player ID
+      const playerId = await this.getUserId();
+      
+      if (!playerId) {
+        console.error('❌ Cannot send: User is not subscribed or Player ID not found');
+        throw new Error('You must be subscribed to receive test notifications. Please subscribe first.');
+      }
+
+      console.log('📤 Sending test notification to current user:', playerId);
+
+      // Send to specific user ID
+      return await this.sendNotification(data, {
+        userIds: [playerId]
+      });
+    } catch (error) {
+      console.error('❌ Error sending test notification:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Tag user with custom data
    */
   async tagUser(tags: Record<string, string>): Promise<void> {

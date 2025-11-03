@@ -1,4 +1,4 @@
-// Build: v2.2.4-ERROR-HANDLING - Better error handling
+// Build: v2.2.5-TEST-TO-ME - Test notifications to current user
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';

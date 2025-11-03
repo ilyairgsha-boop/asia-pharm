@@ -205,6 +205,58 @@ export const PushNotifications = () => {
     toast.success(t('templateLoaded'));
   };
 
+  const handleSendTestToMe = async () => {
+    // Validation
+    if (!title[currentLanguage] || !message[currentLanguage]) {
+      toast.error(t('fillRequiredFields'));
+      return;
+    }
+
+    if (!isConfigured) {
+      toast.error(t('oneSignalNotConfigured'));
+      return;
+    }
+
+    setIsSending(true);
+
+    try {
+      // Check if user is subscribed
+      const isSubscribed = await oneSignalService.isSubscribed();
+      const playerId = await oneSignalService.getUserId();
+      
+      if (!isSubscribed || !playerId) {
+        toast.error('You must be subscribed to receive test notifications. Please enable notifications first.');
+        setIsSending(false);
+        return;
+      }
+
+      console.log('🧪 Sending test notification to Player ID:', playerId);
+
+      // Prepare notification data
+      const notificationData = {
+        title: title[currentLanguage],
+        message: message[currentLanguage],
+        url: url || undefined,
+        icon: icon || undefined,
+        image: image || undefined,
+      };
+
+      // Send to current user
+      const result = await oneSignalService.sendToCurrentUser(notificationData);
+
+      if (result && result.id) {
+        toast.success(`✅ Test notification sent! Check your browser. (ID: ${result.id.substring(0, 8)}...)`);
+      } else {
+        toast.error('Failed to send test notification. Check console for details.');
+      }
+    } catch (error: any) {
+      console.error('Error sending test notification:', error);
+      toast.error(error.message || 'Failed to send test notification');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
   const handleSendNotification = async () => {
     // Validation
     if (!title[currentLanguage] || !message[currentLanguage]) {
@@ -510,6 +562,15 @@ export const PushNotifications = () => {
           </Card>
 
           <div className="flex gap-3">
+            <Button
+              onClick={handleSendTestToMe}
+              disabled={isSending}
+              variant="outline"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            >
+              <Bell className="w-4 h-4 mr-2" />
+              {isSending ? t('sending') : '🧪 Test - Send to Me'}
+            </Button>
             <Button
               onClick={handleSendNotification}
               disabled={isSending}
