@@ -1,4 +1,4 @@
-// Build: v2.2.5-TEST-TO-ME - Test notifications to current user
+// Build: v2.2.6-ONESIGNAL-V3 - OneSignal v3 API methods
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
