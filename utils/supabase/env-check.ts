@@ -19,26 +19,22 @@ export function checkEnvironmentVariables(): EnvCheckResult {
     
     // Check SUPABASE_URL
     if (!supabaseUrl) {
-      warnings.push('✅ Using default SUPABASE_URL from info.tsx (expected in Figma Make environment)');
+      // Using default from info.tsx - this is expected and correct in Figma Make
+      // No warning needed
     } else if (!supabaseUrl.startsWith('https://')) {
       errors.push('VITE_SUPABASE_URL must start with https://');
     }
 
     // Check SUPABASE_ANON_KEY
     if (!supabaseKey) {
-      warnings.push('✅ Using default SUPABASE_ANON_KEY from info.tsx (expected in Figma Make environment)');
+      // Using default from info.tsx - this is expected and correct in Figma Make
+      // No warning needed
     } else if (supabaseKey.length < 100) {
       errors.push('VITE_SUPABASE_ANON_KEY appears to be invalid (too short)');
     }
-
-    // Check if using default/hardcoded values
-    const defaultUrl = 'https://boybkoyidxwrgsayifrd.supabase.co';
-    if (supabaseUrl === defaultUrl) {
-      warnings.push('✅ Using project boybkoyidxwrgsayifrd - configuration is correct');
-    }
   } catch (error) {
     // If import.meta.env is not available, that's OK - we're using info.tsx
-    warnings.push('✅ Using values from info.tsx - this is the correct configuration for Figma Make');
+    // This is the correct configuration for Figma Make - no warning needed
   }
 
   return {

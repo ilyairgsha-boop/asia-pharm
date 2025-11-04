@@ -114,6 +114,24 @@ export class OneSignalService {
   }
 
   /**
+   * Get OneSignal SDK instance
+   */
+  private async getOneSignal(): Promise<any> {
+    // Wait for SDK to be available
+    let attempts = 0;
+    while (!window.OneSignal && attempts < 50) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+      attempts++;
+    }
+    
+    if (!window.OneSignal) {
+      throw new Error('OneSignal SDK not loaded after 5 seconds');
+    }
+    
+    return window.OneSignal;
+  }
+
+  /**
    * Initialize OneSignal SDK v16+ in browser
    */
   async initializeSDK(): Promise<void> {
@@ -125,16 +143,7 @@ export class OneSignalService {
       return;
     }
 
-    // Check if OneSignal is already initialized
-    if (window.OneSignalDeferred) {
-      console.log('✅ OneSignal SDK v16 already loaded');
-      if (!this.isInitialized) {
-        await this.initializeOneSignal();
-      }
-      return;
-    }
-
-    // If already initialized in our service, skip
+    // If already initialized, skip
     if (this.isInitialized) {
       console.log('✅ OneSignal already initialized in service, skipping');
       return;
@@ -158,23 +167,22 @@ export class OneSignalService {
             await this.initializeOneSignal();
             resolve();
           } catch (error) {
+            console.error('❌ Failed to initialize OneSignal:', error);
             reject(error);
           }
         };
         script.onerror = () => {
+          console.error('❌ Failed to load OneSignal SDK v16 script');
           reject(new Error('Failed to load OneSignal SDK v16'));
         };
       });
     } else {
       // Script already loaded
       console.log('📝 OneSignal SDK script already loaded');
-      if (!this.isInitialized && window.OneSignalDeferred) {
-        // Not yet initialized, initialize now
+      if (!this.isInitialized) {
         await this.initializeOneSignal();
       } else {
-        // Already initialized
         console.log('✅ OneSignal SDK already initialized');
-        this.isInitialized = true;
       }
     }
   }
@@ -187,50 +195,51 @@ export class OneSignalService {
       console.log('⚠️ OneSignal already initialized, skipping init call');
       return;
     }
-
-    if (!window.OneSignalDeferred) {
-      console.error('❌ OneSignal SDK v16 not loaded');
-      return;
-    }
     
     console.log('🔧 Initializing OneSignal v16+ with App ID:', this.appId);
     console.log('🔑 App ID length:', this.appId.length);
     console.log('🔑 App ID format check:', /^[a-f0-9-]{36}$/i.test(this.appId) ? 'Valid UUID' : 'Invalid UUID');
     
     try {
-      // Use new v16+ async/await API
-      await window.OneSignalDeferred.then(async (OneSignal: any) => {
-        await OneSignal.init({
-          appId: this.appId,
-          allowLocalhostAsSecureOrigin: true,
-          
-          // Service Worker paths (v16 defaults are good)
-          // serviceWorkerParam: { scope: '/' },
-          // serviceWorkerPath: 'OneSignalSDKWorker.js',
-          
-          // Notifications
-          notifyButton: {
-            enable: false,
-          },
-          
-          // Don't auto-subscribe - user must click button
-          autoRegister: false,
-          autoResubscribe: true,
-        });
+      // Get OneSignal SDK instance
+      const OneSignal = await this.getOneSignal();
+      
+      console.log('🔧 OneSignal SDK loaded, type:', typeof OneSignal);
+      console.log('🔧 OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
+      
+      // Initialize using v16 API
+      await OneSignal.init({
+        appId: this.appId,
+        allowLocalhostAsSecureOrigin: true,
         
-        this.isInitialized = true;
-        console.log('✅ OneSignal v16+ initialized successfully');
+        // Service Worker configuration
+        serviceWorkerParam: { scope: '/' },
+        serviceWorkerPath: 'OneSignalSDKWorker.js',
         
-        // Check subscription status using new API
-        const isPushSupported = OneSignal.Notifications.isPushSupported();
+        // Notifications
+        notifyButton: {
+          enable: false,
+        },
+        
+        // Don't auto-subscribe - user must click button
+        autoRegister: false,
+        autoResubscribe: true,
+      });
+      
+      this.isInitialized = true;
+      console.log('✅ OneSignal v16+ initialized successfully');
+      
+      // Log SDK info
+      try {
+        const isPushSupported = OneSignal.Notifications?.isPushSupported() ?? false;
         console.log('🔔 Push supported:', isPushSupported);
         
         if (isPushSupported) {
-          const permission = OneSignal.Notifications.permission;
+          const permission = OneSignal.Notifications?.permission ?? false;
           console.log('🔔 Permission status:', permission);
           
           if (permission) {
-            const subscriptionId = await OneSignal.User.PushSubscription.id;
+            const subscriptionId = await OneSignal.User?.PushSubscription?.id;
             if (subscriptionId) {
               console.log('✅ User subscribed with Player ID:', subscriptionId);
             } else {
@@ -238,7 +247,9 @@ export class OneSignalService {
             }
           }
         }
-      });
+      } catch (error) {
+        console.warn('⚠️ Could not get OneSignal status:', error);
+      }
     } catch (error) {
       console.error('❌ Error initializing OneSignal v16:', error);
       throw error;
@@ -249,14 +260,14 @@ export class OneSignalService {
    * Subscribe user to push notifications (v16+ API)
    */
   async subscribe(): Promise<string | null> {
-    if (!window.OneSignalDeferred) {
-      await this.initializeSDK();
-    }
-
     try {
       console.log('🔔 Requesting push notification permission...');
       
-      const OneSignal = await window.OneSignalDeferred;
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.Notifications) {
+        throw new Error('OneSignal.Notifications API not available. SDK may not be initialized.');
+      }
       
       // Request permission using v16+ API
       await OneSignal.Notifications.requestPermission();
@@ -264,7 +275,7 @@ export class OneSignalService {
       // Wait for subscription ID
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const subscriptionId = await OneSignal.User.PushSubscription.id;
+      const subscriptionId = await OneSignal.User?.PushSubscription?.id;
       
       if (subscriptionId) {
         console.log('✅ User subscribed with ID:', subscriptionId);
@@ -275,7 +286,7 @@ export class OneSignalService {
       }
     } catch (error) {
       console.error('❌ Error subscribing to push notifications:', error);
-      return null;
+      throw error;
     }
   }
 
@@ -283,12 +294,14 @@ export class OneSignalService {
    * Get current user's OneSignal player ID (v16+ API)
    */
   async getUserId(): Promise<string | null> {
-    if (!window.OneSignalDeferred) {
-      return null;
-    }
-
     try {
-      const OneSignal = await window.OneSignalDeferred;
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.User?.PushSubscription) {
+        console.warn('⚠️ OneSignal.User.PushSubscription not available');
+        return null;
+      }
+      
       const subscriptionId = await OneSignal.User.PushSubscription.id;
       console.log('📱 Current Player ID:', subscriptionId || 'Not subscribed');
       return subscriptionId || null;
@@ -302,12 +315,14 @@ export class OneSignalService {
    * Check if user is subscribed (v16+ API)
    */
   async isSubscribed(): Promise<boolean> {
-    if (!window.OneSignalDeferred) {
-      return false;
-    }
-
     try {
-      const OneSignal = await window.OneSignalDeferred;
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.Notifications || !OneSignal.User?.PushSubscription) {
+        console.warn('⚠️ OneSignal APIs not available');
+        return false;
+      }
+      
       const permission = OneSignal.Notifications.permission;
       const subscriptionId = await OneSignal.User.PushSubscription.id;
       const isSubscribed = permission && !!subscriptionId;
@@ -451,12 +466,13 @@ export class OneSignalService {
    * Tag user with custom data (v16+ API)
    */
   async tagUser(tags: Record<string, string>): Promise<void> {
-    if (!window.OneSignalDeferred) {
-      await this.initializeSDK();
-    }
-
     try {
-      const OneSignal = await window.OneSignalDeferred;
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.User?.addTags) {
+        throw new Error('OneSignal.User.addTags not available');
+      }
+      
       await OneSignal.User.addTags(tags);
       console.log('✅ Tags added:', tags);
     } catch (error) {
@@ -468,12 +484,13 @@ export class OneSignalService {
    * Delete user tags (v16+ API)
    */
   async deleteUserTags(tagKeys: string[]): Promise<void> {
-    if (!window.OneSignalDeferred) {
-      return;
-    }
-
     try {
-      const OneSignal = await window.OneSignalDeferred;
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.User?.removeTags) {
+        throw new Error('OneSignal.User.removeTags not available');
+      }
+      
       await OneSignal.User.removeTags(tagKeys);
       console.log('✅ Tags removed:', tagKeys);
     } catch (error) {
@@ -628,10 +645,9 @@ export class OneSignalService {
 // Singleton instance
 export const oneSignalService = new OneSignalService();
 
-// Type definitions for window.OneSignalDeferred (v16+)
+// Type definitions for window.OneSignal (v16+)
 declare global {
   interface Window {
-    OneSignal: any; // Legacy v15 compatibility
-    OneSignalDeferred: Promise<any>; // v16+ API
+    OneSignal: any;
   }
 }
