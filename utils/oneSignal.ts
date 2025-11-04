@@ -8,6 +8,8 @@
  * - Force reload: oneSignalService.reloadSettings()
  * - Check subscription: await oneSignalService.isSubscribed()
  * - Get user ID: await oneSignalService.getUserId()
+ * - Diagnostic: await oneSignalService.diagnosticCheckRegistration()
+ * - Force re-register: await oneSignalService.forceReRegister()
  */
 
 import { getServerUrl } from './supabase/client';
@@ -639,6 +641,93 @@ export class OneSignalService {
         userIds: [userId],
       }
     );
+  }
+
+  /**
+   * DIAGNOSTIC: Check if user is registered on OneSignal server
+   */
+  async diagnosticCheckRegistration() {
+    try {
+      console.log('🔍 Starting OneSignal registration diagnostic...');
+      const OneSignal = await this.getOneSignal();
+      const playerId = OneSignal.User?.PushSubscription?.id || null;
+      const token = OneSignal.User?.PushSubscription?.token || null;
+      const optedIn = OneSignal.User?.PushSubscription?.optedIn || false;
+      const permission = OneSignal.Notifications?.permission || 'default';
+      
+      console.log('📱 Local subscription:', { playerId, hasToken: !!token, optedIn, permission });
+
+      let registeredOnServer = false;
+      let serverResponse: any = null;
+
+      if (playerId && this.apiKey) {
+        try {
+          const response = await fetch(`${this.apiUrl}/players/${playerId}?app_id=${this.appId}`, {
+            headers: { 'Authorization': `Basic ${this.apiKey}` }
+          });
+          serverResponse = await response.json();
+          registeredOnServer = response.ok;
+          console.log('📥 Server response:', { status: response.status, ok: response.ok, data: serverResponse });
+        } catch (error) {
+          console.error('❌ Error checking server:', error);
+          serverResponse = { error: String(error) };
+        }
+      } else {
+        console.warn('⚠️ Cannot check server: missing playerId or apiKey');
+      }
+
+      return {
+        success: !!playerId && !!token && optedIn,
+        playerId,
+        token,
+        optedIn,
+        permission,
+        registeredOnServer,
+        serverResponse,
+        error: registeredOnServer ? undefined : 'User not found on OneSignal server'
+      };
+    } catch (error) {
+      console.error('❌ Diagnostic failed:', error);
+      return { 
+        success: false, 
+        playerId: null, 
+        token: null, 
+        optedIn: false, 
+        permission: 'denied', 
+        registeredOnServer: false, 
+        error: String(error) 
+      };
+    }
+  }
+
+  /**
+   * FORCE RE-REGISTER: Unsubscribe and re-subscribe to fix registration
+   */
+  async forceReRegister() {
+    try {
+      console.log('🔄 Force re-registering...');
+      const OneSignal = await this.getOneSignal();
+      console.log('1️⃣ Opting out...');
+      await OneSignal.User?.PushSubscription?.optOut();
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('2️⃣ Opting in...');
+      await OneSignal.User?.PushSubscription?.optIn();
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const newPlayerId = OneSignal.User?.PushSubscription?.id;
+      console.log('3️⃣ New Player ID:', newPlayerId);
+      if (newPlayerId) {
+        console.log('✅ Re-registration successful!');
+        setTimeout(async () => {
+          const diagnostic = await this.diagnosticCheckRegistration();
+          console.log('📊 Post-registration diagnostic:', diagnostic);
+        }, 3000);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('❌ Force re-register failed:', error);
+      return false;
+    }
   }
 }
 
