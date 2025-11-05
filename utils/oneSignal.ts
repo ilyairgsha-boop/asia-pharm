@@ -448,13 +448,14 @@ export class OneSignalService {
       // Check subscription status
       const isPushEnabled = OneSignal.User?.PushSubscription?.optedIn;
       const token = OneSignal.User?.PushSubscription?.token;
+      const currentPermissionStatus = OneSignal.Notifications?.permission;
       console.log('📊 Subscription status:', {
         subscriptionId,
         onesignalUserId,
         externalId,
         optedIn: isPushEnabled,
         hasToken: !!token,
-        permission: newPermission
+        permission: currentPermissionStatus
       });
       
       if (subscriptionId) {
