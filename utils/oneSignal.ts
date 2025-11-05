@@ -304,20 +304,11 @@ export class OneSignalService {
           optedIn: event.previous?.optedIn,
         });
         
-        // If user just subscribed, sync REAL Player ID to database
-        if (event.current.optedIn) {
-          console.log('✅ User subscribed, getting REAL Player ID...');
-          // Get REAL Player ID
-          this.getOneSignal().then(async (OneSignal) => {
-            const realPlayerId = await OneSignal.User?.onesignalId;
-            if (realPlayerId) {
-              console.log('✅ Got REAL Player ID:', realPlayerId, '- syncing to database...');
-              this.syncSubscriptionToDatabase(realPlayerId).catch(err => {
-                console.error('❌ Failed to sync subscription:', err);
-              });
-            } else {
-              console.warn('⚠️ No REAL Player ID available yet');
-            }
+        // If user just subscribed, sync Subscription ID to database
+        if (event.current.optedIn && event.current.id) {
+          console.log('✅ User subscribed with Subscription ID:', event.current.id);
+          this.syncSubscriptionToDatabase(event.current.id).catch(err => {
+            console.error('❌ Failed to sync subscription:', err);
           });
         }
       });
@@ -341,22 +332,24 @@ export class OneSignalService {
         console.log('🔔 Permission status:', permission);
         
         if (permission) {
-          // CRITICAL FIX: Use OneSignal.User.onesignalId (real Player ID) instead of PushSubscription.id
-          const realPlayerId = await OneSignal.User?.onesignalId;
+          // Get Subscription ID (used for sending notifications in OneSignal API)
           const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+          const onesignalUserId = await OneSignal.User?.onesignalId;
+          const externalId = await OneSignal.User?.externalId;
           
-          console.log('🔍 CRITICAL DEBUG - Player IDs:');
-          console.log('Real OneSignal Player ID (User.onesignalId):', realPlayerId);
-          console.log('Subscription ID (PushSubscription.id):', subscriptionId);
+          console.log('🔍 OneSignal IDs:');
+          console.log('Subscription ID (for notifications):', subscriptionId);
+          console.log('OneSignal User ID:', onesignalUserId);
+          console.log('External User ID:', externalId);
           
-          if (realPlayerId) {
-            console.log('✅ User already subscribed with REAL Player ID:', realPlayerId);
-            // Sync to database using REAL Player ID
-            await this.syncSubscriptionToDatabase(realPlayerId);
+          if (subscriptionId) {
+            console.log('✅ User already subscribed with Subscription ID:', subscriptionId);
+            // Sync Subscription ID to database
+            await this.syncSubscriptionToDatabase(subscriptionId);
             // Update last active
             await this.updateLastActive();
           } else {
-            console.log('ℹ️ User not subscribed yet (no onesignalId)');
+            console.log('ℹ️ User not subscribed yet (no subscription)');
           }
         }
       }
@@ -391,20 +384,16 @@ export class OneSignalService {
         hasPermission: currentPermission
       });
       
-      // CRITICAL: Get REAL Player ID
-      const existingRealId = await OneSignal.User?.onesignalId;
-      console.log('🔍 Real Player ID check:', existingRealId);
-      
-      // If already subscribed with permission, just return the REAL ID
-      if (existingRealId && existingOptedIn && currentPermission) {
-        console.log('✅ Already subscribed with REAL Player ID:', existingRealId);
-        console.log('💡 No need to call optIn() again - avoiding new Player ID creation');
+      // If already subscribed with permission, just return the Subscription ID
+      if (existingId && existingOptedIn && currentPermission) {
+        console.log('✅ Already subscribed with Subscription ID:', existingId);
+        console.log('💡 No need to call optIn() again - avoiding new subscription creation');
         
-        // Just sync to database with REAL Player ID
-        await this.syncSubscriptionToDatabase(existingRealId);
+        // Just sync to database with Subscription ID
+        await this.syncSubscriptionToDatabase(existingId);
         await this.updateLastActive();
         
-        return existingRealId;
+        return existingId;
       }
       
       // Request permission using v16+ API
@@ -448,36 +437,38 @@ export class OneSignalService {
       }
       
       // Wait for subscription ID to appear
-      console.log('⏳ Waiting for OneSignal IDs...');
+      console.log('⏳ Waiting for Subscription ID...');
       await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличено с 2s до 3s
       
-      // CRITICAL FIX: Get REAL Player ID from User.onesignalId, not PushSubscription.id
-      const realPlayerId = await OneSignal.User?.onesignalId;
+      // Get Subscription ID (used for notifications API)
       const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+      const onesignalUserId = await OneSignal.User?.onesignalId;
+      const externalId = await OneSignal.User?.externalId;
       
-      console.log('🔍 CRITICAL - Got IDs from OneSignal:');
-      console.log('Real Player ID (User.onesignalId):', realPlayerId);
-      console.log('Subscription ID (PushSubscription.id):', subscriptionId);
-      console.log('⚠️ IMPORTANT: Real Player ID is what shows in OneSignal Dashboard!');
+      console.log('🔍 Got IDs from OneSignal:');
+      console.log('Subscription ID (for notifications):', subscriptionId);
+      console.log('OneSignal User ID:', onesignalUserId);
+      console.log('External User ID:', externalId);
       
       // Check subscription status
       const isPushEnabled = OneSignal.User?.PushSubscription?.optedIn;
       const token = OneSignal.User?.PushSubscription?.token;
       console.log('📊 Subscription status:', {
-        realPlayerId,
         subscriptionId,
+        onesignalUserId,
+        externalId,
         optedIn: isPushEnabled,
         hasToken: !!token,
         permission: newPermission
       });
       
-      if (realPlayerId) {
-        console.log('✅ User subscribed with REAL Player ID:', realPlayerId);
+      if (subscriptionId) {
+        console.log('✅ User subscribed with Subscription ID:', subscriptionId);
         console.log('🔍 Verifying in OneSignal dashboard...');
         console.log('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/audiences');
         
-        // Sync REAL Player ID to database if user is logged in
-        await this.syncSubscriptionToDatabase(realPlayerId);
+        // Sync Subscription ID to database if user is logged in
+        await this.syncSubscriptionToDatabase(subscriptionId);
         
         // Double-check that user is opted in
         const finalOptedIn = await OneSignal.User.PushSubscription.optedIn;
@@ -508,18 +499,18 @@ export class OneSignalService {
           console.log('✅ User is properly opted in!');
         }
         
-        // CRITICAL: Validate REAL Player ID format before syncing
-        console.log('🔍 CRITICAL: Validating REAL Player ID format before sync');
-        console.log('Real Player ID:', realPlayerId);
-        console.log('Player ID type:', typeof realPlayerId);
-        console.log('Player ID length:', realPlayerId?.length);
-        const isValidUUID = realPlayerId && /^[a-f0-9-]{36}$/i.test(realPlayerId);
+        // Validate Subscription ID format before syncing
+        console.log('🔍 Validating Subscription ID format');
+        console.log('Subscription ID:', subscriptionId);
+        console.log('Type:', typeof subscriptionId);
+        console.log('Length:', subscriptionId?.length);
+        const isValidUUID = subscriptionId && /^[a-f0-9-]{36}$/i.test(subscriptionId);
         console.log('Is valid UUID:', isValidUUID);
         
         if (!isValidUUID) {
-          console.error('❌ CRITICAL: Invalid REAL Player ID format! Cannot sync to database.');
+          console.error('❌ Invalid Subscription ID format! Cannot sync to database.');
           console.error('Expected: UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)');
-          console.error('Got:', realPlayerId);
+          console.error('Got:', subscriptionId);
           return null;
         }
         
@@ -528,7 +519,7 @@ export class OneSignalService {
           console.warn('⚠️ Failed to update last active:', err);
         });
         
-        return realPlayerId;
+        return subscriptionId;
       } else {
         console.warn('⚠️ Subscription initiated but no ID yet.');
         console.warn('📋 Debug info:', {
@@ -542,21 +533,18 @@ export class OneSignalService {
         console.log('⏳ Waiting 3 more seconds...');
         await new Promise(resolve => setTimeout(resolve, 3000));
         
-        // CRITICAL: Get REAL Player ID on retry
-        const retryRealId = await OneSignal.User?.onesignalId;
+        // Get Subscription ID on retry
         const retrySubId = await OneSignal.User?.PushSubscription?.id;
-        console.log('🔍 Retry IDs:');
-        console.log('Real Player ID:', retryRealId);
-        console.log('Subscription ID:', retrySubId);
+        console.log('🔍 Retry Subscription ID:', retrySubId);
         
-        if (retryRealId) {
-          console.log('✅ Got REAL Player ID on retry:', retryRealId);
-          console.log('🔍 Retry Player ID format check:', /^[a-f0-9-]{36}$/i.test(retryRealId) ? 'Valid UUID' : 'Invalid');
-          await this.syncSubscriptionToDatabase(retryRealId);
-          return retryRealId;
+        if (retrySubId) {
+          console.log('✅ Got Subscription ID on retry:', retrySubId);
+          console.log('🔍 Format check:', /^[a-f0-9-]{36}$/i.test(retrySubId) ? 'Valid UUID' : 'Invalid');
+          await this.syncSubscriptionToDatabase(retrySubId);
+          return retrySubId;
         }
         
-        console.error('❌ Failed to get REAL Player ID after retry');
+        console.error('❌ Failed to get Subscription ID after retry');
         return null;
       }
     } catch (error) {
@@ -601,13 +589,6 @@ export class OneSignalService {
         const OneSignal = await this.getOneSignal();
         await OneSignal.login(session.user.id);
         console.log('✅ External User ID set:', session.user.id);
-        
-        // CRITICAL: The playerId from SDK might be a local ID, not the actual OneSignal Player ID
-        // We need to get the real OneSignal Player ID using External User ID
-        console.log('🔍 CRITICAL: Getting real OneSignal Player ID via External User ID...');
-        console.log('⚠️ SDK Player ID might be local:', playerId);
-        console.log('🔍 Using External User ID to find real Player ID:', session.user.id);
-        
       } catch (loginError) {
         console.warn('⚠️ Failed to set External User ID:', loginError);
         // Continue anyway
@@ -635,62 +616,19 @@ export class OneSignalService {
         os,
       });
       
-      // CRITICAL: Verify Player ID format
-      console.log('🔍 CRITICAL: Player ID validation:');
-      console.log('Player ID:', playerId);
-      console.log('Player ID length:', playerId?.length);
+      // Verify Subscription ID format
+      console.log('🔍 Subscription ID validation:');
+      console.log('Subscription ID:', playerId);
+      console.log('Length:', playerId?.length);
       const isValidFormat = /^[a-f0-9-]{36}$/i.test(playerId);
-      console.log('Player ID format (UUID):', isValidFormat);
+      console.log('Format (UUID):', isValidFormat);
       
       if (!isValidFormat) {
-        console.error('❌ CRITICAL: Invalid Player ID format - aborting sync!');
+        console.error('❌ Invalid Subscription ID format - aborting sync!');
         return;
       }
       
-      // Verify Player ID exists in OneSignal before saving to database
-      console.log('🔍 Verifying Player ID exists in OneSignal...');
-      try {
-        // Get OneSignal settings to make API call
-        const { data: settingsData } = await supabase
-          .from('settings')
-          .select('value')
-          .eq('key', 'oneSignal')
-          .maybeSingle();
-        
-        if (settingsData?.value) {
-          const settings = settingsData.value as any;
-          const apiKey = settings.restApiKey || settings.apiKey;
-          const appId = settings.appId;
-          
-          if (apiKey && appId) {
-            const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
-            const checkUrl = `https://onesignal.com/api/v1/players/${playerId}?app_id=${appId}`;
-            
-            const checkResponse = await fetch(checkUrl, {
-              method: 'GET',
-              headers: { 'Authorization': authHeader }
-            });
-            
-            if (checkResponse.ok) {
-              const playerData = await checkResponse.json();
-              console.log('✅ Player ID verified in OneSignal:', {
-                id: playerData.id,
-                session_count: playerData.session_count,
-                last_active: playerData.last_active,
-                created_at: playerData.created_at,
-              });
-            } else {
-              console.error('❌ Player ID NOT FOUND in OneSignal:', checkResponse.status);
-              console.error('This Player ID does not exist in your OneSignal app!');
-              console.error('Aborting database sync to prevent invalid data.');
-              return;
-            }
-          }
-        }
-      } catch (verifyError) {
-        console.warn('⚠️ Could not verify Player ID with OneSignal:', verifyError);
-        console.warn('Proceeding with sync anyway...');
-      }
+      console.log('✅ Subscription ID format is valid - proceeding with database sync');
 
       // Check if subscription already exists
       const { data: existingData, error: selectError } = await supabase
@@ -705,16 +643,15 @@ export class OneSignalService {
         console.log('📋 Existing subscription:', existingData || 'None');
       }
 
-      // IMPORTANT: Save External User ID (Supabase User ID) instead of unreliable SDK Player ID
-      // The Edge Function will use External User IDs to send notifications
-      console.log('💾 Saving External User ID for push targeting...');
+      // Save Subscription ID to database
+      console.log('💾 Saving Subscription ID to database...');
       
-      // Insert or update subscription - using user_id as primary identifier
+      // Insert or update subscription
       const { data, error } = await supabase
         .from('user_push_subscriptions')
         .upsert({
           user_id: session.user.id,
-          player_id: playerId, // This might be a local ID, but we'll use external_user_id in queries
+          player_id: playerId, // This is the Subscription ID for sending notifications
           device_type: deviceType,
           browser,
           os,
@@ -859,27 +796,23 @@ export class OneSignalService {
   }
 
   /**
-   * Get current user's REAL OneSignal player ID (v16+ API)
+   * Get current user's Subscription ID (v16+ API)
    */
   async getUserId(): Promise<string | null> {
     try {
       const OneSignal = await this.getOneSignal();
       
-      if (!OneSignal.User) {
-        console.warn('⚠️ OneSignal.User not available');
+      if (!OneSignal.User?.PushSubscription) {
+        console.warn('⚠️ OneSignal.User.PushSubscription not available');
         return null;
       }
       
-      // CRITICAL FIX: Return REAL Player ID from User.onesignalId
-      const realPlayerId = await OneSignal.User.onesignalId;
-      const subscriptionId = await OneSignal.User.PushSubscription?.id;
+      // Return Subscription ID (used for sending notifications)
+      const subscriptionId = await OneSignal.User.PushSubscription.id;
       
-      console.log('📱 Player IDs:');
-      console.log('Real Player ID (User.onesignalId):', realPlayerId || 'Not subscribed');
-      console.log('Subscription ID (PushSubscription.id):', subscriptionId || 'Not available');
-      console.log('⚠️ Using REAL Player ID for operations');
+      console.log('📱 Subscription ID:', subscriptionId || 'Not subscribed');
       
-      return realPlayerId || null;
+      return subscriptionId || null;
     } catch (error) {
       console.error('❌ Error getting user ID:', error);
       return null;
@@ -893,16 +826,15 @@ export class OneSignalService {
     try {
       const OneSignal = await this.getOneSignal();
       
-      if (!OneSignal.Notifications || !OneSignal.User) {
+      if (!OneSignal.Notifications || !OneSignal.User?.PushSubscription) {
         console.warn('⚠️ OneSignal APIs not available');
         return false;
       }
       
       const permission = OneSignal.Notifications.permission;
-      // CRITICAL: Check REAL Player ID exists
-      const realPlayerId = await OneSignal.User.onesignalId;
-      const isSubscribed = permission && !!realPlayerId;
-      console.log('🔍 Subscription check:', isSubscribed, '(Real Player ID exists:', !!realPlayerId, ')');
+      const subscriptionId = await OneSignal.User.PushSubscription.id;
+      const isSubscribed = permission && !!subscriptionId;
+      console.log('🔍 Subscription check:', isSubscribed, '(Subscription ID exists:', !!subscriptionId, ')');
       return isSubscribed;
     } catch (error) {
       console.error('❌ Error checking subscription status:', error);
@@ -1018,19 +950,19 @@ export class OneSignalService {
     data?: any;
   }): Promise<{ id: string; recipients: number } | null> {
     try {
-      // Get current user's REAL Player ID
-      const realPlayerId = await this.getUserId();
+      // Get current user's Subscription ID
+      const subscriptionId = await this.getUserId();
       
-      if (!realPlayerId) {
-        console.error('❌ Cannot send: User is not subscribed or REAL Player ID not found');
+      if (!subscriptionId) {
+        console.error('❌ Cannot send: User is not subscribed or Subscription ID not found');
         throw new Error('You must be subscribed to receive test notifications. Please subscribe first.');
       }
 
-      console.log('📤 Sending test notification to current user via REAL Player ID:', realPlayerId);
+      console.log('📤 Sending test notification to current user via Subscription ID:', subscriptionId);
 
-      // Send to specific REAL Player ID
+      // Send to specific Subscription ID
       return await this.sendNotification(data, {
-        userIds: [realPlayerId]
+        userIds: [subscriptionId]
       });
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
