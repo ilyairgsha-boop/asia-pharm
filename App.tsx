@@ -697,14 +697,25 @@ function AppContent() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={async () => {
-                  setShowPushPrompt(false);
+                  console.log('🔔 User clicked "Subscribe" on custom prompt');
+                  
+                  // Don't close prompt yet - wait for browser permission
                   // Remove flag when user interacts with prompt
                   localStorage.removeItem('show_push_prompt');
                   
                   try {
                     if (oneSignalService.isEnabled()) {
-                      console.log('🔔 Subscribing to push notifications...');
+                      console.log('🔔 OneSignal enabled, requesting browser permission...');
+                      
+                      // Close custom prompt FIRST, then show browser prompt
+                      setShowPushPrompt(false);
+                      
+                      // Small delay to let UI update
+                      await new Promise(resolve => setTimeout(resolve, 100));
+                      
+                      console.log('🔔 Calling oneSignalService.subscribe()...');
                       const playerId = await oneSignalService.subscribe();
+                      
                       if (playerId) {
                         console.log('✅ Successfully subscribed with Player ID:', playerId);
                         toast.success(
@@ -714,12 +725,12 @@ function AppContent() {
                           '✅ Thông báo đã бật!'
                         );
                       } else {
-                        console.warn('⚠️ Subscription initiated but no Player ID yet');
-                        toast.info(
-                          currentLanguage === 'ru' ? 'Подписка инициирована. Подождите...' :
-                          currentLanguage === 'en' ? 'Subscription initiated. Please wait...' :
-                          currentLanguage === 'zh' ? '订阅已启动。请稍候...' :
-                          'Đăng ký đã khởi tạo. Vui lòng đợi...'
+                        console.warn('⚠️ Subscription failed - no Player ID returned');
+                        toast.warning(
+                          currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще раз.' :
+                          currentLanguage === 'en' ? '⚠️ Subscription failed. Please try again.' :
+                          currentLanguage === 'zh' ? '⚠️ 订阅失败。请重试。' :
+                          '⚠️ Đăng ký thất bại. Vui lòng thử lại.'
                         );
                       }
                     } else {

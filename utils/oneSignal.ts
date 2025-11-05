@@ -196,7 +196,7 @@ export class OneSignalService {
    */
   private async initializeOneSignal(): Promise<void> {
     if (this.isInitialized) {
-      console.log('⚠️ OneSignal already initialized, skipping init call');
+      console.log('⚠️ OneSignal already initialized in this instance, skipping init call');
       return;
     }
     
@@ -210,6 +210,25 @@ export class OneSignalService {
       
       console.log('🔧 OneSignal SDK loaded, type:', typeof OneSignal);
       console.log('🔧 OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
+      
+      // Check if OneSignal is already initialized globally
+      // @ts-ignore - accessing internal state
+      if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
+        console.log('✅ OneSignal already initialized globally, reusing existing instance');
+        this.isInitialized = true;
+        
+        // Still set up our event listener if not already done
+        if (!((window as any).__oneSignalEventListenerSetup)) {
+          this.setupEventListeners(OneSignal);
+          (window as any).__oneSignalEventListenerSetup = true;
+        }
+        
+        // Check current subscription status
+        await this.checkInitialSubscription(OneSignal);
+        return;
+      }
+      
+      console.log('🔧 Calling OneSignal.init()...');
       
       // Initialize using v16 API
       await OneSignal.init({
@@ -230,10 +249,48 @@ export class OneSignalService {
         autoResubscribe: true,
       });
       
+      console.log('✅ OneSignal.init() completed successfully');
+      
       this.isInitialized = true;
       
-      // Set up subscription change listener
-      console.log('🔔 Setting up subscription change listener...');
+      // Mark as initialized globally
+      if (typeof window !== 'undefined') {
+        (window as any).__oneSignalInitialized = true;
+      }
+      
+      // Set up event listeners
+      this.setupEventListeners(OneSignal);
+      if (typeof window !== 'undefined') {
+        (window as any).__oneSignalEventListenerSetup = true;
+      }
+      
+      console.log('✅ OneSignal v16+ initialized successfully');
+      
+      // Check initial subscription status
+      await this.checkInitialSubscription(OneSignal);
+    } catch (error) {
+      console.error('❌ Error initializing OneSignal v16:', error);
+      
+      // Don't throw if already initialized
+      if (error instanceof Error && error.message.includes('already initialized')) {
+        console.log('✅ Recovering from "already initialized" error - SDK is ready');
+        this.isInitialized = true;
+        if (typeof window !== 'undefined') {
+          (window as any).__oneSignalInitialized = true;
+        }
+        return;
+      }
+      
+      throw error;
+    }
+  }
+  
+  /**
+   * Set up OneSignal event listeners
+   */
+  private setupEventListeners(OneSignal: any): void {
+    console.log('🔔 Setting up subscription change listener...');
+    try {
       OneSignal.User.PushSubscription.addEventListener('change', (event: any) => {
         console.log('🔔 Push subscription changed:', event);
         console.log('📊 Current subscription:', {
@@ -255,36 +312,40 @@ export class OneSignalService {
           });
         }
       });
-      console.log('✅ OneSignal v16+ initialized successfully');
+      console.log('✅ Event listeners set up successfully');
+    } catch (error) {
+      console.warn('⚠️ Failed to set up event listeners:', error);
+    }
+  }
+  
+  /**
+   * Check initial subscription status after initialization
+   */
+  private async checkInitialSubscription(OneSignal: any): Promise<void> {
+    console.log('🔍 Checking initial subscription status...');
+    try {
+      const isPushSupported = OneSignal.Notifications?.isPushSupported() ?? false;
+      console.log('🔔 Push supported:', isPushSupported);
       
-      // Log SDK info
-      try {
-        const isPushSupported = OneSignal.Notifications?.isPushSupported() ?? false;
-        console.log('🔔 Push supported:', isPushSupported);
+      if (isPushSupported) {
+        const permission = OneSignal.Notifications?.permission ?? false;
+        console.log('🔔 Permission status:', permission);
         
-        if (isPushSupported) {
-          const permission = OneSignal.Notifications?.permission ?? false;
-          console.log('🔔 Permission status:', permission);
-          
-          if (permission) {
-            const subscriptionId = await OneSignal.User?.PushSubscription?.id;
-            if (subscriptionId) {
-              console.log('✅ User subscribed with Player ID:', subscriptionId);
-              // Sync to database if user is logged in
-              await this.syncSubscriptionToDatabase(subscriptionId);
-              // Update last active
-              await this.updateLastActive();
-            } else {
-              console.log('ℹ️ User not subscribed yet');
-            }
+        if (permission) {
+          const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+          if (subscriptionId) {
+            console.log('✅ User already subscribed with Player ID:', subscriptionId);
+            // Sync to database if user is logged in
+            await this.syncSubscriptionToDatabase(subscriptionId);
+            // Update last active
+            await this.updateLastActive();
+          } else {
+            console.log('ℹ️ User not subscribed yet');
           }
         }
-      } catch (error) {
-        console.warn('⚠️ Could not get OneSignal status:', error);
       }
     } catch (error) {
-      console.error('❌ Error initializing OneSignal v16:', error);
-      throw error;
+      console.warn('⚠️ Could not get OneSignal initial status:', error);
     }
   }
 
@@ -319,16 +380,34 @@ export class OneSignalService {
         console.log('🔔 Permission granted, opting in to push...');
         try {
           await OneSignal.User.PushSubscription.optIn();
-          console.log('✅ Successfully opted in to push notifications');
+          console.log('✅ Successfully called optIn()');
+          
+          // Wait a bit for optIn to process
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
+          // Verify optIn status
+          const optedIn = await OneSignal.User.PushSubscription.optedIn;
+          console.log('📊 OptedIn status after optIn():', optedIn);
+          
+          if (!optedIn) {
+            console.warn('⚠️ optIn() called but status is still false, retrying...');
+            await OneSignal.User.PushSubscription.optIn();
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const retryOptedIn = await OneSignal.User.PushSubscription.optedIn;
+            console.log('📊 OptedIn status after retry:', retryOptedIn);
+          }
         } catch (optInError) {
           console.error('❌ Error opting in:', optInError);
           // Continue anyway, sometimes it auto-opts-in
         }
+      } else {
+        console.warn('⚠️ Permission NOT granted, cannot opt in');
+        return null;
       }
       
       // Wait for subscription ID
       console.log('⏳ Waiting for subscription ID...');
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Increase wait time to 3s
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s for ID to appear
       
       const subscriptionId = await OneSignal.User?.PushSubscription?.id;
       console.log('🔍 Subscription ID:', subscriptionId);
@@ -359,11 +438,31 @@ export class OneSignalService {
           console.warn('⚠️ User has Player ID but not opted in! Fixing...');
           try {
             await OneSignal.User.PushSubscription.optIn();
-            console.log('✅ Forced opt-in successful');
+            console.log('✅ Forced opt-in call completed');
+            
+            // Wait and check again
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const afterForceOptIn = await OneSignal.User.PushSubscription.optedIn;
+            console.log('📊 OptedIn after forced opt-in:', afterForceOptIn);
+            
+            if (!afterForceOptIn) {
+              console.error('❌ Still not opted in after force! Check OneSignal config.');
+              console.error('💡 Make sure your App ID and site origin are correct.');
+              console.error('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/settings');
+            } else {
+              console.log('✅ Successfully opted in after retry!');
+            }
           } catch (e) {
             console.error('❌ Failed to force opt-in:', e);
           }
+        } else {
+          console.log('✅ User is properly opted in!');
         }
+        
+        // Update last active timestamp
+        await this.updateLastActive().catch(err => {
+          console.warn('⚠️ Failed to update last active:', err);
+        });
         
         return subscriptionId;
       } else {
@@ -482,6 +581,22 @@ export class OneSignalService {
       } else {
         console.log('✅ Subscription synced to database successfully');
         console.log('📊 Synced data:', data);
+        
+        // Update profile to enable push notifications
+        console.log('📝 Enabling push notifications in profile...');
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ 
+            push_notifications_enabled: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', session.user.id);
+        
+        if (profileError) {
+          console.error('⚠️ Failed to update profile:', profileError);
+        } else {
+          console.log('✅ Profile updated: push_notifications_enabled = true');
+        }
       }
     } catch (error) {
       console.error('❌ Error syncing subscription to database:', error);
