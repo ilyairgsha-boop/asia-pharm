@@ -253,6 +253,43 @@ function AppContent() {
     };
   }, [user, loading]);
 
+  // Auto-show push prompt for logged in users who haven't subscribed yet
+  useEffect(() => {
+    if (user && !loading) {
+      // Wait for OneSignal to initialize
+      const checkSubscription = async () => {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+          
+          if (!oneSignalService.isEnabled()) {
+            console.log('ℹ️ OneSignal not enabled, skipping auto-prompt');
+            return;
+          }
+          
+          // Check if user is already subscribed
+          const isSubscribed = await oneSignalService.isSubscribed();
+          console.log('🔍 Auto-check: User subscribed?', isSubscribed);
+          
+          if (!isSubscribed) {
+            // Check if we've shown the prompt before
+            const promptShownBefore = localStorage.getItem('push_prompt_shown');
+            if (!promptShownBefore) {
+              console.log('🔔 User not subscribed, showing auto-prompt...');
+              setShowPushPrompt(true);
+              localStorage.setItem('push_prompt_shown', 'true');
+            } else {
+              console.log('ℹ️ Prompt was shown before, not showing again');
+            }
+          }
+        } catch (error) {
+          console.error('❌ Error checking subscription:', error);
+        }
+      };
+      
+      checkSubscription();
+    }
+  }, [user, loading]);
+
   // Check for push prompt flag after user login
   useEffect(() => {
     console.log('🔍 Push prompt useEffect triggered:', { 
@@ -569,6 +606,8 @@ function AppContent() {
                   setShowPushPrompt(false);
                   // Remove flag when user dismisses prompt
                   localStorage.removeItem('show_push_prompt');
+                  // Mark that we've shown the prompt
+                  localStorage.setItem('push_prompt_shown', 'true');
                 }}
                 className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
