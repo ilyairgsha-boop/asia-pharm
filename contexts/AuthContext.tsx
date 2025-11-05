@@ -65,6 +65,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           isAdmin: profile?.is_admin || false,
           isWholesaler: profile?.is_wholesaler || false,
         });
+
+        // Update OneSignal last active timestamp
+        try {
+          const { oneSignalService } = await import('../utils/oneSignal');
+          await oneSignalService.updateLastActive();
+        } catch (error) {
+          console.warn('⚠️ Could not update OneSignal last active:', error);
+        }
       }
     } catch (error) {
       console.error('Session check error:', error);

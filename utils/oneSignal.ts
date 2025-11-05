@@ -10,6 +10,8 @@
  * - Get user ID: await oneSignalService.getUserId()
  * - Diagnostic: await oneSignalService.diagnosticCheckRegistration()
  * - Force re-register: await oneSignalService.forceReRegister()
+ * - Get user devices: await oneSignalService.getUserPlayerIds('USER_ID')
+ * - Update last active: await oneSignalService.updateLastActive()
  */
 
 import { getServerUrl } from './supabase/client';
@@ -244,6 +246,10 @@ export class OneSignalService {
             const subscriptionId = await OneSignal.User?.PushSubscription?.id;
             if (subscriptionId) {
               console.log('✅ User subscribed with Player ID:', subscriptionId);
+              // Sync to database if user is logged in
+              await this.syncSubscriptionToDatabase(subscriptionId);
+              // Update last active
+              await this.updateLastActive();
             } else {
               console.log('ℹ️ User not subscribed yet');
             }
@@ -281,6 +287,10 @@ export class OneSignalService {
       
       if (subscriptionId) {
         console.log('✅ User subscribed with ID:', subscriptionId);
+        
+        // Sync subscription to database if user is logged in
+        await this.syncSubscriptionToDatabase(subscriptionId);
+        
         return subscriptionId;
       } else {
         console.log('⚠️ Subscription initiated but no ID yet. Try again in a moment.');
@@ -290,6 +300,145 @@ export class OneSignalService {
       console.error('❌ Error subscribing to push notifications:', error);
       throw error;
     }
+  }
+
+  /**
+   * Sync OneSignal Player ID to database for current user
+   */
+  private async syncSubscriptionToDatabase(playerId: string): Promise<void> {
+    try {
+      const { supabase } = await import('./supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        console.log('ℹ️ No user logged in, skipping subscription sync');
+        return;
+      }
+
+      // Get device info
+      const deviceType = this.getDeviceType();
+      const browser = this.getBrowser();
+      const os = this.getOS();
+
+      console.log('💾 Syncing subscription to database:', {
+        userId: session.user.id,
+        playerId,
+        deviceType,
+        browser,
+        os,
+      });
+
+      // Insert or update subscription
+      const { error } = await supabase
+        .from('user_push_subscriptions')
+        .upsert({
+          user_id: session.user.id,
+          player_id: playerId,
+          device_type: deviceType,
+          browser,
+          os,
+          is_active: true,
+          last_active_at: new Date().toISOString(),
+        }, {
+          onConflict: 'player_id',
+        });
+
+      if (error) {
+        console.error('❌ Error syncing subscription:', error);
+      } else {
+        console.log('✅ Subscription synced to database');
+      }
+    } catch (error) {
+      console.error('❌ Error syncing subscription to database:', error);
+    }
+  }
+
+  /**
+   * Get all Player IDs for a specific user
+   */
+  async getUserPlayerIds(userId: string): Promise<string[]> {
+    try {
+      const { supabase } = await import('./supabase/client');
+      
+      const { data, error } = await supabase
+        .from('user_push_subscriptions')
+        .select('player_id')
+        .eq('user_id', userId)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('❌ Error getting user player IDs:', error);
+        return [];
+      }
+
+      const playerIds = data?.map(row => row.player_id) || [];
+      console.log('📱 User has', playerIds.length, 'active devices');
+      return playerIds;
+    } catch (error) {
+      console.error('❌ Error getting user player IDs:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Update last active timestamp for current subscription
+   */
+  async updateLastActive(): Promise<void> {
+    try {
+      const playerId = await this.getUserId();
+      if (!playerId) return;
+
+      const { supabase } = await import('./supabase/client');
+      
+      await supabase
+        .from('user_push_subscriptions')
+        .update({ last_active_at: new Date().toISOString() })
+        .eq('player_id', playerId);
+      
+      console.log('✅ Last active timestamp updated');
+    } catch (error) {
+      console.error('❌ Error updating last active:', error);
+    }
+  }
+
+  /**
+   * Detect device type
+   */
+  private getDeviceType(): string {
+    const ua = navigator.userAgent;
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return 'tablet';
+    }
+    if (/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)) {
+      return 'mobile';
+    }
+    return 'desktop';
+  }
+
+  /**
+   * Detect browser
+   */
+  private getBrowser(): string {
+    const ua = navigator.userAgent;
+    if (ua.includes('Firefox')) return 'Firefox';
+    if (ua.includes('Edg')) return 'Edge';
+    if (ua.includes('Chrome')) return 'Chrome';
+    if (ua.includes('Safari')) return 'Safari';
+    if (ua.includes('Opera') || ua.includes('OPR')) return 'Opera';
+    return 'Unknown';
+  }
+
+  /**
+   * Detect operating system
+   */
+  private getOS(): string {
+    const ua = navigator.userAgent;
+    if (ua.includes('Win')) return 'Windows';
+    if (ua.includes('Mac')) return 'macOS';
+    if (ua.includes('Linux')) return 'Linux';
+    if (ua.includes('Android')) return 'Android';
+    if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) return 'iOS';
+    return 'Unknown';
   }
 
   /**
@@ -501,7 +650,7 @@ export class OneSignalService {
   }
 
   /**
-   * Send order status notification
+   * Send order status notification to ALL user's devices
    */
   async sendOrderStatusNotification(
     orderNumber: string,
@@ -626,6 +775,17 @@ export class OneSignalService {
       return;
     }
 
+    // Get ALL player IDs for this user (all devices/browsers)
+    const playerIds = await this.getUserPlayerIds(userId);
+    
+    if (playerIds.length === 0) {
+      console.warn(`User ${userId} has no active push subscriptions`);
+      return;
+    }
+
+    console.log(`📤 Sending order notification to ${playerIds.length} devices`);
+
+    // Send to all user's devices
     await this.sendNotification(
       {
         title: statusData.title,
@@ -638,7 +798,7 @@ export class OneSignalService {
         },
       },
       {
-        userIds: [userId],
+        userIds: playerIds, // Send to ALL player IDs
       }
     );
   }
