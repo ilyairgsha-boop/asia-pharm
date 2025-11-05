@@ -66,12 +66,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           isWholesaler: profile?.is_wholesaler || false,
         });
 
-        // Update OneSignal last active timestamp
+        // Link OneSignal subscription to logged-in user (if not already linked)
         try {
           const { oneSignalService } = await import('../utils/oneSignal');
+          await oneSignalService.linkUserAfterLogin(userData.id);
           await oneSignalService.updateLastActive();
         } catch (error) {
-          console.warn('⚠️ Could not update OneSignal last active:', error);
+          console.warn('⚠️ Could not link OneSignal subscription:', error);
         }
       }
     } catch (error) {
@@ -136,12 +137,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isWholesaler: profile?.is_wholesaler || false,
       });
 
-      // Update OneSignal last active timestamp
+      // Link OneSignal subscription to logged-in user
       try {
         const { oneSignalService } = await import('../utils/oneSignal');
+        await oneSignalService.linkUserAfterLogin(data.user.id);
         await oneSignalService.updateLastActive();
       } catch (error) {
-        console.warn('⚠️ Could not update OneSignal last active:', error);
+        console.warn('⚠️ Could not link OneSignal subscription:', error);
       }
     }
   };
@@ -287,6 +289,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAccessToken(null);
       localStorage.removeItem('mock_session');
       return;
+    }
+
+    // Logout from OneSignal first (clears External ID)
+    try {
+      const { oneSignalService } = await import('../utils/oneSignal');
+      await oneSignalService.logoutUser();
+    } catch (error) {
+      console.warn('⚠️ Could not logout from OneSignal:', error);
     }
 
     await supabase.auth.signOut();
