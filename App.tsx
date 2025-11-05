@@ -28,7 +28,7 @@ import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-che
 import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
-import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
+import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
 import './utils/clearOldCategories'; // Import to make functions available in console
 
 function AppContent() {
@@ -78,9 +78,47 @@ function AppContent() {
     // Clear old category format (without translations) from localStorage
     clearOldCategories();
     
-    // Initialize OneSignal if enabled
+    // Load OneSignal settings from database and initialize
     const initOneSignal = async () => {
       try {
+        console.log('📥 Loading OneSignal settings from database...');
+        
+        // Load settings from Supabase
+        try {
+          const { data, error } = await supabase
+            .from('settings')
+            .select('value')
+            .eq('key', 'oneSignal')
+            .single();
+          
+          if (data && !error) {
+            console.log('✅ Loaded OneSignal settings from database');
+            const parsed = data.value as any;
+            
+            // Migrate old apiKey to restApiKey
+            if (parsed.apiKey && !parsed.restApiKey) {
+              parsed.restApiKey = parsed.apiKey;
+              delete parsed.apiKey;
+            }
+            
+            // Store in localStorage for OneSignal service
+            localStorage.setItem('oneSignalSettings', JSON.stringify(parsed));
+            console.log('💾 Saved settings to localStorage:', {
+              enabled: parsed.enabled,
+              hasAppId: !!parsed.appId,
+              hasRestApiKey: !!parsed.restApiKey
+            });
+            
+            // Force reload settings in OneSignal service
+            oneSignalService.reloadSettings();
+          } else {
+            console.warn('⚠️ No OneSignal settings found in database:', error);
+          }
+        } catch (dbError) {
+          console.warn('⚠️ Failed to load OneSignal settings from database:', dbError);
+        }
+        
+        // Now check if enabled and initialize
         if (oneSignalService.isEnabled()) {
           console.log('🔔 Initializing OneSignal...');
           await oneSignalService.initializeSDK();
@@ -94,6 +132,34 @@ function AppContent() {
     };
     
     initOneSignal();
+    
+    // Listen for OneSignal settings changes (from admin panel)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'oneSignalSettings') {
+        console.log('🔄 OneSignal settings changed in localStorage, reloading...');
+        oneSignalService.reloadSettings();
+        
+        // Re-initialize if now enabled
+        if (oneSignalService.isEnabled() && !oneSignalService['isInitialized']) {
+          console.log('🔔 OneSignal now enabled, initializing...');
+          oneSignalService.initializeSDK().then(() => {
+            console.log('✅ OneSignal re-initialized successfully');
+          }).catch(error => {
+            console.warn('⚠️ OneSignal re-initialization failed:', error);
+          });
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom event (for same-tab changes)
+    const handleSettingsUpdate = () => {
+      console.log('🔄 OneSignal settings updated, reloading...');
+      oneSignalService.reloadSettings();
+    };
+    
+    window.addEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     
     // Make oneSignalService available in console for debugging
     if (typeof window !== 'undefined') {
@@ -194,16 +260,10 @@ function AppContent() {
       console.warn('⚠️ Health check failed:', error);
     });
     
-    // Listen for OneSignal settings updates
-    const handleOneSignalUpdate = () => {
-      console.log('🔄 OneSignal settings updated, reinitializing...');
-      initOneSignal();
-    };
-    
-    window.addEventListener('oneSignalSettingsUpdated', handleOneSignalUpdate);
-    
+    // Cleanup function
     return () => {
-      window.removeEventListener('oneSignalSettingsUpdated', handleOneSignalUpdate);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     };
   }, []);
 
