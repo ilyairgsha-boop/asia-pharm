@@ -355,10 +355,23 @@ export class OneSignalService {
 
   /**
    * Get all Player IDs for a specific user
+   * Also checks if user has push notifications enabled
    */
   async getUserPlayerIds(userId: string): Promise<string[]> {
     try {
       const { supabase } = await import('./supabase/client');
+      
+      // First check if user has push notifications enabled
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('push_notifications_enabled')
+        .eq('id', userId)
+        .single();
+      
+      if (!profile?.push_notifications_enabled) {
+        console.log('⚠️ User has push notifications disabled');
+        return [];
+      }
       
       const { data, error } = await supabase
         .from('user_push_subscriptions')

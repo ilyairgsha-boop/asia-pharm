@@ -83,13 +83,13 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
       const supabase = createClient();
       const { data, error } = await supabase
         .from('profiles')
-        .select('subscribed, subscribed_to_newsletter')
+        .select('push_notifications_enabled, email_notifications_enabled')
         .eq('id', user.id)
         .single();
 
       if (!error && data) {
-        setIsSubscribed(data.subscribed !== false); // По умолчанию true для push
-        setIsSubscribedToNewsletter(data.subscribed_to_newsletter || false);
+        setIsSubscribed(data.push_notifications_enabled !== false); // По умолчанию true
+        setIsSubscribedToNewsletter(data.email_notifications_enabled !== false); // По умолчанию true
       }
     } catch (error) {
       console.error('Error loading user settings:', error);
@@ -128,14 +128,37 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
     
     try {
       const supabase = createClient();
+      const newValue = !isSubscribed;
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ subscribed: !isSubscribed })
+        .update({ push_notifications_enabled: newValue })
         .eq('id', user.id);
 
       if (!error) {
-        setIsSubscribed(!isSubscribed);
-        toast.success(t('subscriptionUpdated') || 'Push subscription updated');
+        setIsSubscribed(newValue);
+        
+        // Если отключаем - деактивируем все устройства пользователя
+        if (!newValue) {
+          await supabase
+            .from('user_push_subscriptions')
+            .update({ is_active: false })
+            .eq('user_id', user.id);
+          console.log('🔕 All push subscriptions deactivated');
+        } else {
+          // Если включаем - пытаемся подписаться на текущем устройстве
+          try {
+            const { oneSignalService } = await import('../utils/oneSignal');
+            if (oneSignalService.isEnabled()) {
+              await oneSignalService.subscribe();
+              console.log('✅ Subscribed to push notifications');
+            }
+          } catch (pushError) {
+            console.warn('⚠️ Could not subscribe to push:', pushError);
+          }
+        }
+        
+        toast.success(newValue ? (t('pushEnabled') || 'Push notifications enabled') : (t('pushDisabled') || 'Push notifications disabled'));
       } else {
         toast.error(t('subscriptionError') || 'Failed to update subscription');
       }
@@ -150,14 +173,16 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
     
     try {
       const supabase = createClient();
+      const newValue = !isSubscribedToNewsletter;
+      
       const { error } = await supabase
         .from('profiles')
-        .update({ subscribed_to_newsletter: !isSubscribedToNewsletter })
+        .update({ email_notifications_enabled: newValue })
         .eq('id', user.id);
 
       if (!error) {
-        setIsSubscribedToNewsletter(!isSubscribedToNewsletter);
-        toast.success(t('subscriptionUpdated') || 'Email subscription updated');
+        setIsSubscribedToNewsletter(newValue);
+        toast.success(newValue ? (t('emailEnabled') || 'Email notifications enabled') : (t('emailDisabled') || 'Email notifications disabled'));
       } else {
         toast.error(t('subscriptionError') || 'Failed to update subscription');
       }

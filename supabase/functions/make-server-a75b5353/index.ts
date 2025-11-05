@@ -421,11 +421,11 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
     
     console.log('🔍 Querying profiles table for email subscribers...');
     
-    // First check if column exists - language is optional
+    // Query users with email notifications enabled
     const { data: subscribers, error } = await supabase
       .from('profiles')
-      .select('id, email, name, subscribed_to_newsletter')
-      .eq('subscribed_to_newsletter', true);
+      .select('id, email, name, email_notifications_enabled')
+      .eq('email_notifications_enabled', true);
     
     if (error) {
       console.error('❌ Error fetching subscribers:', error);
@@ -436,11 +436,11 @@ app.post('/make-server-a75b5353/api/email/broadcast', requireAdmin, async (c) =>
       
       // If column doesn't exist, return helpful error
       if (error.code === '42703' || error.message.toLowerCase().includes('column') || error.message.toLowerCase().includes('does not exist')) {
-        console.error('💥 Column subscribed_to_newsletter does NOT exist!');
+        console.error('💥 Column email_notifications_enabled does NOT exist!');
         return c.json({ 
           error: 'Database not configured',
-          details: 'Column subscribed_to_newsletter does not exist. Run SUBSCRIPTIONS_FIX.sql in Supabase Dashboard.',
-          hint: 'ALTER TABLE profiles ADD COLUMN subscribed_to_newsletter BOOLEAN DEFAULT FALSE;',
+          details: 'Column email_notifications_enabled does not exist. Run PROFILES_SUBSCRIPTIONS_UPDATE.sql in Supabase Dashboard.',
+          hint: 'ALTER TABLE profiles ADD COLUMN email_notifications_enabled BOOLEAN DEFAULT TRUE;',
           debugUrl: '/make-server-a75b5353/api/debug/db-check'
         }, 500);
       }

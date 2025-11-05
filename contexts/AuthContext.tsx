@@ -220,7 +220,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       console.log('✅ User registered in auth.users:', data.user.email);
 
-      // Создаём профиль в базе данных
+      // Создаём профиль в базе данных с автоподпиской
       try {
         const { error: profileError } = await supabase
           .from('profiles')
@@ -232,13 +232,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             is_wholesaler: false,
             loyalty_points: 0,
             total_spent: 0,
+            push_notifications_enabled: true, // Автоподписка на push
+            email_notifications_enabled: true, // Автоподписка на email
           });
 
         if (profileError) {
           console.warn('⚠️ Profile creation error:', profileError);
           // Не критично - профиль можно создать позже
         } else {
-          console.log('✅ Profile created in public.profiles');
+          console.log('✅ Profile created with auto-subscriptions enabled');
         }
       } catch (profileError) {
         console.warn('⚠️ Profile creation exception:', profileError);
@@ -249,6 +251,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         await login(email, password);
         console.log('✅ Auto-login successful!');
+        
+        // После успешного входа - автоматически подписываем на push
+        setTimeout(async () => {
+          try {
+            const { oneSignalService } = await import('../utils/oneSignal');
+            if (oneSignalService.isEnabled()) {
+              console.log('🔔 Auto-subscribing to push notifications...');
+              await oneSignalService.subscribe();
+              console.log('✅ Auto-subscribed to push notifications');
+            }
+          } catch (pushError) {
+            console.warn('⚠️ Auto push subscription failed:', pushError);
+          }
+        }, 2000);
       } catch (loginError) {
         console.warn('⚠️ Auto-login failed:', loginError);
         // Не критично - пользователь может войти вручную

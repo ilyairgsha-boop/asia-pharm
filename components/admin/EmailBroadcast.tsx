@@ -24,11 +24,11 @@ export const EmailBroadcast = () => {
 
     try {
       const supabase = createClient();
-      // Count users subscribed to newsletter from profiles table
+      // Count users with email notifications enabled
       const { count, error } = await supabase
         .from('profiles')
         .select('*', { count: 'exact', head: true })
-        .eq('subscribed_to_newsletter', true);
+        .eq('email_notifications_enabled', true);
 
       if (error) {
         console.error('Error loading subscriber count:', error);
