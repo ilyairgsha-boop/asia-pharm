@@ -228,6 +228,19 @@ export class OneSignalService {
         return;
       }
       
+      // Get Supabase user session to set External User ID
+      let externalUserId: string | undefined;
+      try {
+        const { supabase } = await import('./supabase/client');
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          externalUserId = session.user.id;
+          console.log('🔑 Will set External User ID during init:', externalUserId);
+        }
+      } catch (e) {
+        console.log('ℹ️ No user session found during init');
+      }
+      
       console.log('🔧 Calling OneSignal.init()...');
       
       // Initialize using v16 API
@@ -265,6 +278,17 @@ export class OneSignalService {
       }
       
       console.log('✅ OneSignal v16+ initialized successfully');
+      
+      // Set External User ID if user is logged in
+      if (externalUserId) {
+        try {
+          console.log('🔗 Setting External User ID after init:', externalUserId);
+          await OneSignal.login(externalUserId);
+          console.log('✅ External User ID set successfully');
+        } catch (loginError) {
+          console.warn('⚠️ Failed to set External User ID during init:', loginError);
+        }
+      }
       
       // Check initial subscription status
       await this.checkInitialSubscription(OneSignal);
@@ -341,6 +365,20 @@ export class OneSignalService {
           console.log('Subscription ID (for notifications):', subscriptionId);
           console.log('OneSignal User ID:', onesignalUserId);
           console.log('External User ID:', externalId);
+          
+          // Check if we need to set External User ID
+          const { supabase } = await import('./supabase/client');
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (session?.user && (!externalId || externalId !== session.user.id)) {
+            console.log('🔗 External User ID missing or incorrect, setting it now...');
+            try {
+              await OneSignal.login(session.user.id);
+              console.log('✅ External User ID set in checkInitialSubscription:', session.user.id);
+            } catch (loginError) {
+              console.warn('⚠️ Failed to set External User ID:', loginError);
+            }
+          }
           
           if (subscriptionId) {
             console.log('✅ User already subscribed with Subscription ID:', subscriptionId);
@@ -579,15 +617,22 @@ export class OneSignalService {
         return;
       }
       
-      // Set External User ID in OneSignal to link with Supabase User
-      console.log('🔗 Setting External User ID in OneSignal...');
-      try {
-        const OneSignal = await this.getOneSignal();
-        await OneSignal.login(session.user.id);
-        console.log('✅ External User ID set:', session.user.id);
-      } catch (loginError) {
-        console.warn('⚠️ Failed to set External User ID:', loginError);
-        // Continue anyway
+      // Check if External User ID is already set
+      const OneSignal = await this.getOneSignal();
+      const currentExternalId = OneSignal.User?.externalId;
+      
+      if (!currentExternalId || currentExternalId !== session.user.id) {
+        // Set External User ID in OneSignal to link with Supabase User
+        console.log('🔗 Setting External User ID in OneSignal...');
+        try {
+          await OneSignal.login(session.user.id);
+          console.log('✅ External User ID set:', session.user.id);
+        } catch (loginError) {
+          console.warn('⚠️ Failed to set External User ID:', loginError);
+          // Continue anyway
+        }
+      } else {
+        console.log('✅ External User ID already set:', currentExternalId);
       }
       
       // Continue with original sync logic
