@@ -384,56 +384,51 @@ export class OneSignalService {
         hasPermission: currentPermission
       });
       
-      // If already subscribed with permission, just return the Subscription ID
-      if (existingId && existingOptedIn && currentPermission) {
-        console.log('✅ Already subscribed with Subscription ID:', existingId);
-        console.log('💡 No need to call optIn() again - avoiding new subscription creation');
+      // If permission is NOT granted yet, request it
+      if (!currentPermission) {
+        console.log('📤 Requesting permission...');
+        const permissionGranted = await OneSignal.Notifications.requestPermission();
         
-        // Just sync to database with Subscription ID
-        await this.syncSubscriptionToDatabase(existingId);
-        await this.updateLastActive();
+        console.log('✅ Permission request completed:', permissionGranted);
         
-        return existingId;
-      }
-      
-      // Request permission using v16+ API
-      console.log('📤 Requesting permission...');
-      const permissionGranted = await OneSignal.Notifications.requestPermission();
-      
-      console.log('✅ Permission request completed:', permissionGranted);
-      const newPermission = OneSignal.Notifications.permission;
-      console.log('📋 New permission:', newPermission);
-      
-      // CRITICAL: Explicitly opt-in to push notifications
-      // This registers the device with OneSignal servers
-      if (permissionGranted) {
-        console.log('🔔 Permission granted, opting in to push...');
-        try {
-          await OneSignal.User.PushSubscription.optIn();
-          console.log('✅ Successfully called optIn()');
-          
-          // Wait longer for optIn to process on OneSignal servers
-          console.log('⏳ Waiting for OneSignal servers to process optIn...');
-          await new Promise(resolve => setTimeout(resolve, 2000)); // Увеличено с 1s до 2s
-          
-          // Verify optIn status
-          const optedIn = await OneSignal.User.PushSubscription.optedIn;
-          console.log('📊 OptedIn status after optIn():', optedIn);
-          
-          if (!optedIn) {
-            console.warn('⚠️ optIn() called but status is still false, retrying...');
-            await OneSignal.User.PushSubscription.optIn();
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Увеличено с 1s до 2s
-            const retryOptedIn = await OneSignal.User.PushSubscription.optedIn;
-            console.log('📊 OptedIn status after retry:', retryOptedIn);
-          }
-        } catch (optInError) {
-          console.error('❌ Error opting in:', optInError);
-          // Continue anyway, sometimes it auto-opts-in
+        if (!permissionGranted) {
+          console.warn('⚠️ Permission NOT granted, cannot subscribe');
+          return null;
         }
       } else {
-        console.warn('⚠️ Permission NOT granted, cannot opt in');
-        return null;
+        console.log('✅ Permission already granted');
+      }
+      
+      // CRITICAL: ALWAYS call optIn() to ensure user is subscribed on OneSignal servers
+      // Even if we already have a subscription ID, the user might not be opted-in on server
+      console.log('🔔 Calling optIn() to subscribe on OneSignal servers...');
+      try {
+        await OneSignal.User.PushSubscription.optIn();
+        console.log('✅ Successfully called optIn()');
+        
+        // Wait for optIn to process on OneSignal servers
+        console.log('⏳ Waiting for OneSignal servers to process optIn...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Verify optIn status
+        const optedIn = await OneSignal.User.PushSubscription.optedIn;
+        console.log('📊 OptedIn status after optIn():', optedIn);
+        
+        if (!optedIn) {
+          console.warn('⚠️ optIn() called but status is still false, retrying...');
+          await OneSignal.User.PushSubscription.optIn();
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          const retryOptedIn = await OneSignal.User.PushSubscription.optedIn;
+          console.log('📊 OptedIn status after retry:', retryOptedIn);
+          
+          if (!retryOptedIn) {
+            console.error('❌ Failed to opt-in after retry!');
+            throw new Error('Failed to subscribe to push notifications');
+          }
+        }
+      } catch (optInError) {
+        console.error('❌ Error opting in:', optInError);
+        throw optInError;
       }
       
       // Wait for subscription ID to appear
@@ -1243,6 +1238,64 @@ export class OneSignalService {
       return false;
     } catch (error) {
       console.error('❌ Force re-register failed:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Prompt user to subscribe (for use during registration)
+   * Shows native browser prompt AND opts in
+   */
+  async promptAndSubscribe(): Promise<boolean> {
+    try {
+      console.log('🔔 Prompting user to subscribe...');
+      const OneSignal = await this.getOneSignal();
+      
+      if (!OneSignal.Slidedown) {
+        console.warn('⚠️ OneSignal.Slidedown not available, using direct subscribe');
+        const subscriptionId = await this.subscribe();
+        return !!subscriptionId;
+      }
+      
+      // Show native prompt
+      console.log('📱 Showing native browser prompt...');
+      await OneSignal.Slidedown.promptPush();
+      
+      // Wait for user to respond
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Check if permission was granted
+      const permission = OneSignal.Notifications?.permission;
+      console.log('📋 Permission after prompt:', permission);
+      
+      if (!permission) {
+        console.warn('⚠️ Permission denied by user');
+        return false;
+      }
+      
+      // CRITICAL: Even with permission, we must call optIn()
+      console.log('🔔 Permission granted, calling optIn()...');
+      await OneSignal.User.PushSubscription.optIn();
+      
+      // Wait for optIn to process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Get subscription ID
+      const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+      const optedIn = await OneSignal.User?.PushSubscription?.optedIn;
+      
+      console.log('📊 Subscription result:', { subscriptionId, optedIn });
+      
+      if (subscriptionId && optedIn) {
+        console.log('✅ User subscribed successfully');
+        await this.syncSubscriptionToDatabase(subscriptionId);
+        return true;
+      } else {
+        console.warn('⚠️ Subscription incomplete');
+        return false;
+      }
+    } catch (error) {
+      console.error('❌ Error during prompt and subscribe:', error);
       return false;
     }
   }

@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.4.0-SUBSCRIPTION-IDS - Fixed push notifications using Subscription IDs (include_subscription_ids)
-// Build: 2025-01-05 21:00:00 UTC
+// Version: 2.4.1-PLAYER-IDS-WITH-OPTIN - Fixed push notifications: always call optIn() + use include_player_ids
+// Build: 2025-01-05 22:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -231,8 +231,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.4.0 - Subscription IDs Fix',
-    version: '2.4.0-SUBSCRIPTION-IDS',
+    message: 'Asia-Pharm API v2.4.1 - Player IDs with optIn Fix',
+    version: '2.4.1-PLAYER-IDS-WITH-OPTIN',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -633,12 +633,12 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       contents: { en: message },
     };
 
-    // Add targeting - priority: userIds (Subscription IDs) > externalUserIds > tags > get from DB > segments (fallback)
+    // Add targeting - priority: userIds (Player IDs / Subscription IDs) > externalUserIds > tags > get from DB > segments (fallback)
     if (userIds && userIds.length > 0) {
-      // Use new include_subscription_ids API (recommended by OneSignal)
-      notificationData.include_subscription_ids = userIds;
-      console.log('🎯 Targeting specific users via Subscription IDs:', userIds.length);
-      console.log('📋 Subscription IDs:', JSON.stringify(userIds));
+      // Use include_player_ids (works with both old Player IDs and new Subscription IDs)
+      notificationData.include_player_ids = userIds;
+      console.log('🎯 Targeting specific users via Player/Subscription IDs:', userIds.length);
+      console.log('📋 Player/Subscription IDs:', JSON.stringify(userIds));
     } else if (externalUserIds && externalUserIds.length > 0) {
       notificationData.include_external_user_ids = externalUserIds;
       console.log('🎯 Targeting specific users via External User IDs:', externalUserIds.length);
@@ -651,8 +651,8 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.filters = filters;
       console.log('🎯 Targeting by tags:', tags);
     } else {
-      // Get all active Subscription IDs from database
-      console.log('📊 Fetching active Subscription IDs from database...');
+      // Get all active Player/Subscription IDs from database
+      console.log('📊 Fetching active Player/Subscription IDs from database...');
       const supabase = getSupabaseAdmin();
       const { data: subscriptions, error: subError } = await supabase
         .from('user_push_subscriptions')
@@ -667,15 +667,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
         notificationData.included_segments = targetSegments;
         console.log('⚠️ Using segments as fallback:', targetSegments);
       } else {
-        const subscriptionIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
-        console.log('📊 Found', subscriptionIds.length, 'active Subscription IDs in database');
-        console.log('📋 Subscription IDs:', JSON.stringify(subscriptionIds.slice(0, 3)), '...');
+        const playerIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
+        console.log('📊 Found', playerIds.length, 'active Player/Subscription IDs in database');
+        console.log('📋 Player/Subscription IDs:', JSON.stringify(playerIds.slice(0, 3)), '...');
         
-        if (subscriptionIds.length > 0) {
-          // Use Subscription IDs from database (new OneSignal API)
-          notificationData.include_subscription_ids = subscriptionIds;
-          console.log('🎯 Targeting', subscriptionIds.length, 'users via Subscription IDs');
-          console.log('✅ Using Subscription IDs from PushSubscription.id');
+        if (playerIds.length > 0) {
+          // Use Player/Subscription IDs from database
+          notificationData.include_player_ids = playerIds;
+          console.log('🎯 Targeting', playerIds.length, 'users via Player/Subscription IDs');
+          console.log('✅ Using Player/Subscription IDs from PushSubscription.id');
         } else {
           console.warn('⚠️ No active subscriptions found in database');
           // Still try to send to segments as last resort
