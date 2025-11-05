@@ -277,13 +277,34 @@ export class OneSignalService {
         throw new Error('OneSignal.Notifications API not available. SDK may not be initialized.');
       }
       
+      console.log('🔍 OneSignal.Notifications available, checking permission...');
+      const currentPermission = OneSignal.Notifications.permission;
+      console.log('📋 Current permission:', currentPermission);
+      
       // Request permission using v16+ API
+      console.log('📤 Requesting permission...');
       await OneSignal.Notifications.requestPermission();
       
+      console.log('✅ Permission request completed');
+      const newPermission = OneSignal.Notifications.permission;
+      console.log('📋 New permission:', newPermission);
+      
       // Wait for subscription ID
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('⏳ Waiting for subscription ID...');
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Increase wait time
       
       const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+      console.log('🔍 Subscription ID:', subscriptionId);
+      
+      // Check subscription status
+      const isPushEnabled = OneSignal.User?.PushSubscription?.optedIn;
+      const token = OneSignal.User?.PushSubscription?.token;
+      console.log('📊 Subscription status:', {
+        id: subscriptionId,
+        optedIn: isPushEnabled,
+        hasToken: !!token,
+        permission: newPermission
+      });
       
       if (subscriptionId) {
         console.log('✅ User subscribed with ID:', subscriptionId);
@@ -293,11 +314,33 @@ export class OneSignalService {
         
         return subscriptionId;
       } else {
-        console.log('⚠️ Subscription initiated but no ID yet. Try again in a moment.');
+        console.warn('⚠️ Subscription initiated but no ID yet.');
+        console.warn('📋 Debug info:', {
+          permission: newPermission,
+          isPushSupported: OneSignal.Notifications.isPushSupported(),
+          hasUser: !!OneSignal.User,
+          hasPushSubscription: !!OneSignal.User?.PushSubscription
+        });
+        
+        // Wait a bit more and try again
+        console.log('⏳ Waiting 3 more seconds...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        const retryId = await OneSignal.User?.PushSubscription?.id;
+        console.log('🔍 Retry subscription ID:', retryId);
+        
+        if (retryId) {
+          console.log('✅ Got subscription ID on retry:', retryId);
+          await this.syncSubscriptionToDatabase(retryId);
+          return retryId;
+        }
+        
         return null;
       }
     } catch (error) {
       console.error('❌ Error subscribing to push notifications:', error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : String(error));
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
       throw error;
     }
   }
@@ -307,6 +350,7 @@ export class OneSignalService {
    */
   private async syncSubscriptionToDatabase(playerId: string): Promise<void> {
     try {
+      console.log('💾 Starting subscription sync to database...');
       const { supabase } = await import('./supabase/client');
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -315,6 +359,8 @@ export class OneSignalService {
         return;
       }
 
+      console.log('✅ User session found:', session.user.email);
+
       // Get device info
       const deviceType = this.getDeviceType();
       const browser = this.getBrowser();
@@ -322,14 +368,28 @@ export class OneSignalService {
 
       console.log('💾 Syncing subscription to database:', {
         userId: session.user.id,
+        userEmail: session.user.email,
         playerId,
         deviceType,
         browser,
         os,
       });
 
+      // Check if table exists
+      const { data: existingData, error: selectError } = await supabase
+        .from('user_push_subscriptions')
+        .select('*')
+        .eq('player_id', playerId)
+        .single();
+      
+      if (selectError && selectError.code !== 'PGRST116') {
+        console.error('❌ Error checking existing subscription:', selectError);
+      } else {
+        console.log('📋 Existing subscription:', existingData);
+      }
+
       // Insert or update subscription
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_push_subscriptions')
         .upsert({
           user_id: session.user.id,
@@ -341,15 +401,22 @@ export class OneSignalService {
           last_active_at: new Date().toISOString(),
         }, {
           onConflict: 'player_id',
-        });
+        })
+        .select();
 
       if (error) {
         console.error('❌ Error syncing subscription:', error);
+        console.error('❌ Error code:', error.code);
+        console.error('❌ Error message:', error.message);
+        console.error('❌ Error details:', error.details);
       } else {
-        console.log('✅ Subscription synced to database');
+        console.log('✅ Subscription synced to database successfully');
+        console.log('📊 Synced data:', data);
       }
     } catch (error) {
       console.error('❌ Error syncing subscription to database:', error);
+      console.error('❌ Error type:', typeof error);
+      console.error('❌ Error details:', error instanceof Error ? error.message : String(error));
     }
   }
 

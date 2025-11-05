@@ -244,11 +244,12 @@ function AppContent() {
               setShowPushPrompt(true);
             } else {
               console.warn('⚠️ OneSignal not enabled, skipping push prompt');
+              // Remove flag if OneSignal is not enabled
+              localStorage.removeItem('show_push_prompt');
             }
           } catch (error) {
             console.error('❌ Error checking OneSignal:', error);
-          } finally {
-            console.log('🧹 Removing show_push_prompt flag');
+            // Remove flag on error
             localStorage.removeItem('show_push_prompt');
           }
         };
@@ -459,6 +460,9 @@ function AppContent() {
               <button
                 onClick={async () => {
                   setShowPushPrompt(false);
+                  // Remove flag when user interacts with prompt
+                  localStorage.removeItem('show_push_prompt');
+                  
                   try {
                     if (oneSignalService.isEnabled()) {
                       console.log('🔔 Subscribing to push notifications...');
@@ -469,7 +473,7 @@ function AppContent() {
                           currentLanguage === 'ru' ? '✅ Уведомления включены!' :
                           currentLanguage === 'en' ? '✅ Notifications enabled!' :
                           currentLanguage === 'zh' ? '✅ 通知已启用！' :
-                          '✅ Thông báo đã bật!'
+                          '✅ Thông báo đã бật!'
                         );
                       } else {
                         console.warn('⚠️ Subscription initiated but no Player ID yet');
@@ -506,7 +510,11 @@ function AppContent() {
                 {currentLanguage === 'vi' && 'Bật'}
               </button>
               <button
-                onClick={() => setShowPushPrompt(false)}
+                onClick={() => {
+                  setShowPushPrompt(false);
+                  // Remove flag when user dismisses prompt
+                  localStorage.removeItem('show_push_prompt');
+                }}
                 className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 {currentLanguage === 'ru' && 'Не сейчас'}
