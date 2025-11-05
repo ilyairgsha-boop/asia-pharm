@@ -231,6 +231,30 @@ export class OneSignalService {
       });
       
       this.isInitialized = true;
+      
+      // Set up subscription change listener
+      console.log('🔔 Setting up subscription change listener...');
+      OneSignal.User.PushSubscription.addEventListener('change', (event: any) => {
+        console.log('🔔 Push subscription changed:', event);
+        console.log('📊 Current subscription:', {
+          id: event.current.id,
+          token: event.current.token,
+          optedIn: event.current.optedIn,
+        });
+        console.log('📊 Previous subscription:', {
+          id: event.previous?.id,
+          token: event.previous?.token,
+          optedIn: event.previous?.optedIn,
+        });
+        
+        // If user just subscribed, sync to database
+        if (event.current.optedIn && event.current.id) {
+          console.log('✅ User subscribed, syncing to database...');
+          this.syncSubscriptionToDatabase(event.current.id).catch(err => {
+            console.error('❌ Failed to sync subscription:', err);
+          });
+        }
+      });
       console.log('✅ OneSignal v16+ initialized successfully');
       
       // Log SDK info
@@ -283,15 +307,28 @@ export class OneSignalService {
       
       // Request permission using v16+ API
       console.log('📤 Requesting permission...');
-      await OneSignal.Notifications.requestPermission();
+      const permissionGranted = await OneSignal.Notifications.requestPermission();
       
-      console.log('✅ Permission request completed');
+      console.log('✅ Permission request completed:', permissionGranted);
       const newPermission = OneSignal.Notifications.permission;
       console.log('📋 New permission:', newPermission);
       
+      // CRITICAL: Explicitly opt-in to push notifications
+      // This registers the device with OneSignal servers
+      if (permissionGranted) {
+        console.log('🔔 Permission granted, opting in to push...');
+        try {
+          await OneSignal.User.PushSubscription.optIn();
+          console.log('✅ Successfully opted in to push notifications');
+        } catch (optInError) {
+          console.error('❌ Error opting in:', optInError);
+          // Continue anyway, sometimes it auto-opts-in
+        }
+      }
+      
       // Wait for subscription ID
       console.log('⏳ Waiting for subscription ID...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Increase wait time
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Increase wait time to 3s
       
       const subscriptionId = await OneSignal.User?.PushSubscription?.id;
       console.log('🔍 Subscription ID:', subscriptionId);
@@ -307,10 +344,26 @@ export class OneSignalService {
       });
       
       if (subscriptionId) {
-        console.log('✅ User subscribed with ID:', subscriptionId);
+        console.log('✅ User subscribed with Player ID:', subscriptionId);
+        console.log('🔍 Verifying in OneSignal dashboard...');
+        console.log('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/audiences');
         
         // Sync subscription to database if user is logged in
         await this.syncSubscriptionToDatabase(subscriptionId);
+        
+        // Double-check that user is opted in
+        const finalOptedIn = await OneSignal.User.PushSubscription.optedIn;
+        console.log('📊 Final optedIn status:', finalOptedIn);
+        
+        if (!finalOptedIn) {
+          console.warn('⚠️ User has Player ID but not opted in! Fixing...');
+          try {
+            await OneSignal.User.PushSubscription.optIn();
+            console.log('✅ Forced opt-in successful');
+          } catch (e) {
+            console.error('❌ Failed to force opt-in:', e);
+          }
+        }
         
         return subscriptionId;
       } else {
@@ -356,6 +409,23 @@ export class OneSignalService {
       
       if (!session?.user) {
         console.log('ℹ️ No user logged in, skipping subscription sync');
+        return;
+      }
+      
+      // Set External User ID in OneSignal to link with Supabase User
+      console.log('🔗 Setting External User ID in OneSignal...');
+      try {
+        const OneSignal = await this.getOneSignal();
+        await OneSignal.login(session.user.id);
+        console.log('✅ External User ID set:', session.user.id);
+      } catch (loginError) {
+        console.warn('⚠️ Failed to set External User ID:', loginError);
+        // Continue anyway
+      }
+      
+      // Continue with original sync logic
+      if (!session?.user) {
+        console.log('ℹ️ No user logged in (double-check), skipping subscription sync');
         return;
       }
 

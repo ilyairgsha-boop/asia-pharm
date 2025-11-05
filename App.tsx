@@ -31,6 +31,7 @@ import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
 import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
 import './utils/clearOldCategories'; // Import to make functions available in console
+import './utils/oneSignalDebug'; // Import debug tools
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -314,6 +315,9 @@ function AppContent() {
       console.log('  - window.oneSignalService');
       console.log('  - window.testPushPrompt() - test push prompt display');
       console.log('  - await window.checkOneSignalSetup() - comprehensive OneSignal check');
+      console.log('  - await window.oneSignalDebug.checkPlayer(playerId) - check player in OneSignal');
+      console.log('  - await window.oneSignalDebug.getAllPlayers(10) - get all players');
+      console.log('  - await window.oneSignalDebug.getAppInfo() - get app info and player count');
       console.log('  - window.debugSupabase.getAnonKey()');
       console.log('  - window.debugSupabase.getServerUrl(path)');
       console.log('  - await window.debugSupabase.testConnection()');
