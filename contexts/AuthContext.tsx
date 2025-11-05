@@ -135,6 +135,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin: profile?.is_admin || false,
         isWholesaler: profile?.is_wholesaler || false,
       });
+
+      // Update OneSignal last active timestamp
+      try {
+        const { oneSignalService } = await import('../utils/oneSignal');
+        await oneSignalService.updateLastActive();
+      } catch (error) {
+        console.warn('⚠️ Could not update OneSignal last active:', error);
+      }
     }
   };
 
@@ -252,19 +260,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         await login(email, password);
         console.log('✅ Auto-login successful!');
         
-        // После успешного входа - автоматически подписываем на push
-        setTimeout(async () => {
-          try {
-            const { oneSignalService } = await import('../utils/oneSignal');
-            if (oneSignalService.isEnabled()) {
-              console.log('🔔 Auto-subscribing to push notifications...');
-              await oneSignalService.subscribe();
-              console.log('✅ Auto-subscribed to push notifications');
-            }
-          } catch (pushError) {
-            console.warn('⚠️ Auto push subscription failed:', pushError);
-          }
-        }, 2000);
+        // Установить флаг для показа промпта подписки на push
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('show_push_prompt', 'true');
+        }
       } catch (loginError) {
         console.warn('⚠️ Auto-login failed:', loginError);
         // Не критично - пользователь может войти вручную

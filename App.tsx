@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LanguageProvider } from './contexts/LanguageContext';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider, type StoreType, type Product } from './contexts/CartContext';
 import { Header } from './components/Header';
@@ -21,6 +21,7 @@ import { ProductDetailsModal } from './components/ProductDetailsModal';
 import { CreateAdminPage } from './components/CreateAdminPage';
 import { Footer } from './components/Footer';
 import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
 import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
@@ -36,7 +37,9 @@ function AppContent() {
   const [selectedDisease, setSelectedDisease] = useState<string | null>('popular'); // Default to "popular"
   const [currentStore, setCurrentStore] = useState<StoreType>('china');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
   const { user, loading } = useAuth();
+  const { t, currentLanguage } = useLanguage();
 
   // Handlers for exclusive category selection
   const handleCategorySelect = (category: string | null) => {
@@ -199,6 +202,36 @@ function AppContent() {
     };
   }, []);
 
+  // Check for push prompt flag after user login
+  useEffect(() => {
+    if (user && !loading) {
+      const shouldShowPrompt = localStorage.getItem('show_push_prompt');
+      if (shouldShowPrompt === 'true') {
+        // Wait for OneSignal to initialize and check if enabled
+        const checkAndShowPrompt = async () => {
+          try {
+            // Wait for OneSignal to be ready
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Check if OneSignal is configured
+            if (oneSignalService.isEnabled()) {
+              console.log('✅ OneSignal enabled, showing push prompt');
+              setShowPushPrompt(true);
+            } else {
+              console.warn('⚠️ OneSignal not enabled, skipping push prompt');
+            }
+          } catch (error) {
+            console.error('❌ Error checking OneSignal:', error);
+          } finally {
+            localStorage.removeItem('show_push_prompt');
+          }
+        };
+        
+        checkAndShowPrompt();
+      }
+    }
+  }, [user, loading]);
+
   const handleNavigate = async (page: string, store?: StoreType) => {
     // Handle product navigation (from order history)
     if (page.startsWith('product-')) {
@@ -321,6 +354,137 @@ function AppContent() {
         product={selectedProduct}
         onClose={() => setSelectedProduct(null)}
       />
+
+      {/* Push Notification Prompt */}
+      {showPushPrompt && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl">
+                🔔
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {currentLanguage === 'ru' && 'Включить уведомления?'}
+                  {currentLanguage === 'en' && 'Enable Notifications?'}
+                  {currentLanguage === 'zh' && '启用通知？'}
+                  {currentLanguage === 'vi' && 'Bật thông báo?'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {currentLanguage === 'ru' && 'Будьте в курсе всех новостей'}
+                  {currentLanguage === 'en' && 'Stay updated on your orders'}
+                  {currentLanguage === 'zh' && '及时了解您的订单'}
+                  {currentLanguage === 'vi' && 'Cập nhật đơn hàng của bạn'}
+                </p>
+              </div>
+            </div>
+            
+            <div className="space-y-2 text-sm text-gray-600">
+              {currentLanguage === 'ru' && (
+                <>
+                  <p>✅ Статусы заказов в реальном времени</p>
+                  <p>✅ Эксклюзивные предложения и акции</p>
+                  <p>✅ Новинки и рекомендации</p>
+                  <p className="text-xs text-gray-500 mt-3">
+                    Вы можете отключить уведомления в любое время в настройках профиля
+                  </p>
+                </>
+              )}
+              {currentLanguage === 'en' && (
+                <>
+                  <p>✅ Real-time order status updates</p>
+                  <p>✅ Exclusive offers and promotions</p>
+                  <p>✅ New products and recommendations</p>
+                  <p className="text-xs text-gray-500 mt-3">
+                    You can disable notifications anytime in profile settings
+                  </p>
+                </>
+              )}
+              {currentLanguage === 'zh' && (
+                <>
+                  <p>✅ 实时订单状态更新</p>
+                  <p>✅ 独家优惠和促销</p>
+                  <p>✅ 新产品和推荐</p>
+                  <p className="text-xs text-gray-500 mt-3">
+                    您可以随时在个人资料设置中禁用通知
+                  </p>
+                </>
+              )}
+              {currentLanguage === 'vi' && (
+                <>
+                  <p>✅ Cập nhật trạng thái đơn hàng theo thời gian thực</p>
+                  <p>✅ Ưu đãi và khuyến mãi độc quyền</p>
+                  <p>✅ Sản phẩm mới và đề xuất</p>
+                  <p className="text-xs text-gray-500 mt-3">
+                    Bạn có thể tắt thông báo bất cứ lúc nào trong cài đặt hồ sơ
+                  </p>
+                </>
+              )}
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                onClick={async () => {
+                  setShowPushPrompt(false);
+                  try {
+                    if (oneSignalService.isEnabled()) {
+                      console.log('🔔 Subscribing to push notifications...');
+                      const playerId = await oneSignalService.subscribe();
+                      if (playerId) {
+                        console.log('✅ Successfully subscribed with Player ID:', playerId);
+                        toast.success(
+                          currentLanguage === 'ru' ? '✅ Уведомления включены!' :
+                          currentLanguage === 'en' ? '✅ Notifications enabled!' :
+                          currentLanguage === 'zh' ? '✅ 通知已启用！' :
+                          '✅ Thông báo đã bật!'
+                        );
+                      } else {
+                        console.warn('⚠️ Subscription initiated but no Player ID yet');
+                        toast.info(
+                          currentLanguage === 'ru' ? 'Подписка инициирована. Подождите...' :
+                          currentLanguage === 'en' ? 'Subscription initiated. Please wait...' :
+                          currentLanguage === 'zh' ? '订阅已启动。请稍候...' :
+                          'Đăng ký đã khởi tạo. Vui lòng đợi...'
+                        );
+                      }
+                    } else {
+                      toast.error(
+                        currentLanguage === 'ru' ? 'OneSignal не настроен' :
+                        currentLanguage === 'en' ? 'OneSignal not configured' :
+                        currentLanguage === 'zh' ? 'OneSignal 未配置' :
+                        'OneSignal chưa được cấu hình'
+                      );
+                    }
+                  } catch (error: any) {
+                    console.error('⚠️ Push subscription failed:', error);
+                    toast.error(
+                      currentLanguage === 'ru' ? '❌ Не удалось подписаться: ' + (error.message || 'Неизвестная ошибка') :
+                      currentLanguage === 'en' ? '❌ Subscription failed: ' + (error.message || 'Unknown error') :
+                      currentLanguage === 'zh' ? '❌ 订阅失败：' + (error.message || '未知错误') :
+                      '❌ Đăng ký thất bại: ' + (error.message || 'Lỗi không xác định')
+                    );
+                  }
+                }}
+                className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                {currentLanguage === 'ru' && 'Включить'}
+                {currentLanguage === 'en' && 'Enable'}
+                {currentLanguage === 'zh' && '启用'}
+                {currentLanguage === 'vi' && 'Bật'}
+              </button>
+              <button
+                onClick={() => setShowPushPrompt(false)}
+                className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                {currentLanguage === 'ru' && 'Не сейчас'}
+                {currentLanguage === 'en' && 'Not now'}
+                {currentLanguage === 'zh' && '以后再说'}
+                {currentLanguage === 'vi' && 'Để sau'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <Footer onNavigate={handleNavigate} />
