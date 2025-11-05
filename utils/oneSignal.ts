@@ -481,6 +481,21 @@ export class OneSignalService {
           console.log('✅ User is properly opted in!');
         }
         
+        // CRITICAL: Validate Player ID format before syncing
+        console.log('🔍 CRITICAL: Validating Player ID format before sync');
+        console.log('Player ID:', subscriptionId);
+        console.log('Player ID type:', typeof subscriptionId);
+        console.log('Player ID length:', subscriptionId?.length);
+        const isValidUUID = subscriptionId && /^[a-f0-9-]{36}$/i.test(subscriptionId);
+        console.log('Is valid UUID:', isValidUUID);
+        
+        if (!isValidUUID) {
+          console.error('❌ CRITICAL: Invalid Player ID format! Cannot sync to database.');
+          console.error('Expected: UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)');
+          console.error('Got:', subscriptionId);
+          return null;
+        }
+        
         // Update last active timestamp
         await this.updateLastActive().catch(err => {
           console.warn('⚠️ Failed to update last active:', err);
@@ -505,10 +520,12 @@ export class OneSignalService {
         
         if (retryId) {
           console.log('✅ Got subscription ID on retry:', retryId);
+          console.log('🔍 Retry Player ID format check:', /^[a-f0-9-]{36}$/i.test(retryId) ? 'Valid UUID' : 'Invalid');
           await this.syncSubscriptionToDatabase(retryId);
           return retryId;
         }
         
+        console.error('❌ Failed to get Player ID after retry');
         return null;
       }
     } catch (error) {
@@ -579,6 +596,63 @@ export class OneSignalService {
         browser,
         os,
       });
+      
+      // CRITICAL: Verify Player ID format
+      console.log('🔍 CRITICAL: Player ID validation:');
+      console.log('Player ID:', playerId);
+      console.log('Player ID length:', playerId?.length);
+      const isValidFormat = /^[a-f0-9-]{36}$/i.test(playerId);
+      console.log('Player ID format (UUID):', isValidFormat);
+      
+      if (!isValidFormat) {
+        console.error('❌ CRITICAL: Invalid Player ID format - aborting sync!');
+        return;
+      }
+      
+      // Verify Player ID exists in OneSignal before saving to database
+      console.log('🔍 Verifying Player ID exists in OneSignal...');
+      try {
+        // Get OneSignal settings to make API call
+        const { data: settingsData } = await supabase
+          .from('settings')
+          .select('value')
+          .eq('key', 'oneSignal')
+          .maybeSingle();
+        
+        if (settingsData?.value) {
+          const settings = settingsData.value as any;
+          const apiKey = settings.restApiKey || settings.apiKey;
+          const appId = settings.appId;
+          
+          if (apiKey && appId) {
+            const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
+            const checkUrl = `https://onesignal.com/api/v1/players/${playerId}?app_id=${appId}`;
+            
+            const checkResponse = await fetch(checkUrl, {
+              method: 'GET',
+              headers: { 'Authorization': authHeader }
+            });
+            
+            if (checkResponse.ok) {
+              const playerData = await checkResponse.json();
+              console.log('✅ Player ID verified in OneSignal:', {
+                id: playerData.id,
+                session_count: playerData.session_count,
+                last_active: playerData.last_active,
+                created_at: playerData.created_at,
+              });
+            } else {
+              console.error('❌ Player ID NOT FOUND in OneSignal:', checkResponse.status);
+              console.error('This Player ID does not exist in your OneSignal app!');
+              console.error('Aborting database sync to prevent invalid data.');
+              return;
+            }
+          }
+        }
+      } catch (verifyError) {
+        console.warn('⚠️ Could not verify Player ID with OneSignal:', verifyError);
+        console.warn('Proceeding with sync anyway...');
+      }
 
       // Check if subscription already exists
       const { data: existingData, error: selectError } = await supabase

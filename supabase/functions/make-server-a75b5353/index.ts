@@ -663,10 +663,55 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       } else {
         const playerIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
         console.log('📊 Found', playerIds.length, 'active player IDs in database');
+        console.log('📋 Player IDs list:', JSON.stringify(playerIds));
         
+        // Validate each Player ID through OneSignal API
         if (playerIds.length > 0) {
-          notificationData.include_player_ids = playerIds;
-          console.log('🎯 Targeting', playerIds.length, 'subscribers from database');
+          console.log('🔍 Validating Player IDs with OneSignal...');
+          const authHeader = apiKey.startsWith('Basic ') ? apiKey : `Basic ${apiKey}`;
+          
+          let validPlayerIds: string[] = [];
+          for (const playerId of playerIds) {
+            try {
+              const checkUrl = `https://onesignal.com/api/v1/players/${playerId}?app_id=${settings.appId}`;
+              console.log(`🔍 Checking Player ID: ${playerId}`);
+              
+              const checkResponse = await fetch(checkUrl, {
+                method: 'GET',
+                headers: { 'Authorization': authHeader }
+              });
+              
+              if (checkResponse.ok) {
+                const playerData = await checkResponse.json();
+                console.log(`✅ Player ${playerId}: session_count=${playerData.session_count}, last_active=${playerData.last_active}`);
+                
+                // Only include if player is valid and has been active
+                if (playerData.session_count > 0) {
+                  validPlayerIds.push(playerId);
+                } else {
+                  console.warn(`⚠️ Player ${playerId} has no sessions, skipping`);
+                }
+              } else {
+                const errorText = await checkResponse.text();
+                console.warn(`⚠️ Player ${playerId} not found in OneSignal: ${checkResponse.status} ${errorText}`);
+              }
+            } catch (err) {
+              console.error(`❌ Error validating Player ${playerId}:`, err);
+            }
+          }
+          
+          console.log(`📊 Validation complete: ${validPlayerIds.length}/${playerIds.length} valid players`);
+          
+          if (validPlayerIds.length > 0) {
+            notificationData.include_player_ids = validPlayerIds;
+            console.log('🎯 Targeting', validPlayerIds.length, 'validated subscribers');
+          } else {
+            console.error('❌ No valid Player IDs found! Using segments as fallback.');
+            const hasSegments = segments && Array.isArray(segments) && segments.length > 0;
+            const targetSegments = hasSegments ? segments : ['All'];
+            notificationData.included_segments = targetSegments;
+            console.log('⚠️ Using segments as fallback (no valid players):', targetSegments);
+          }
         } else {
           console.warn('⚠️ No active subscriptions found in database');
           // Still try to send to segments as last resort
