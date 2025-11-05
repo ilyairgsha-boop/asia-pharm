@@ -66,13 +66,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           isWholesaler: profile?.is_wholesaler || false,
         });
 
-        // Link OneSignal subscription to logged-in user (if not already linked)
+        // Update OneSignal last active timestamp
         try {
           const { oneSignalService } = await import('../utils/oneSignal');
-          await oneSignalService.linkUserAfterLogin(userData.id);
           await oneSignalService.updateLastActive();
         } catch (error) {
-          console.warn('⚠️ Could not link OneSignal subscription:', error);
+          console.warn('⚠️ Could not update OneSignal last active:', error);
         }
       }
     } catch (error) {
@@ -137,13 +136,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isWholesaler: profile?.is_wholesaler || false,
       });
 
-      // Link OneSignal subscription to logged-in user
+      // Update OneSignal last active timestamp
       try {
         const { oneSignalService } = await import('../utils/oneSignal');
-        await oneSignalService.linkUserAfterLogin(data.user.id);
         await oneSignalService.updateLastActive();
       } catch (error) {
-        console.warn('⚠️ Could not link OneSignal subscription:', error);
+        console.warn('⚠️ Could not update OneSignal last active:', error);
       }
     }
   };

@@ -258,22 +258,6 @@ export class OneSignalService {
         (window as any).__oneSignalInitialized = true;
       }
       
-      // CRITICAL: Set External User ID IMMEDIATELY after init if user is logged in
-      // This ensures subscriptions are created for an identified user, not anonymous
-      try {
-        const { supabase } = await import('./supabase/client');
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.log('🔑 User logged in, setting External ID BEFORE subscription:', session.user.id);
-          await OneSignal.login(session.user.id);
-          console.log('✅ External User ID set early in lifecycle');
-        } else {
-          console.log('ℹ️ No user session - will create anonymous subscription');
-        }
-      } catch (e) {
-        console.log('⚠️ Could not check user session during init:', e);
-      }
-      
       // Set up event listeners
       this.setupEventListeners(OneSignal);
       if (typeof window !== 'undefined') {
@@ -321,10 +305,11 @@ export class OneSignalService {
         });
         
         // If user just subscribed, sync to database
+        // Note: External ID linking happens in subscribe() method, not here
         if (event.current.optedIn && event.current.id) {
-          console.log('✅ User subscribed with Subscription ID:', event.current.id);
+          console.log('✅ Subscription changed:', event.current.id);
           
-          // Sync to database (External ID already set during init)
+          // Sync to database
           this.syncSubscriptionToDatabase(event.current.id).catch(err => {
             console.error('❌ Failed to sync subscription:', err);
           });
@@ -363,7 +348,10 @@ export class OneSignalService {
           if (subscriptionId) {
             console.log('✅ User already subscribed with Subscription ID:', subscriptionId);
             
-            // Sync Subscription ID to database (External ID already set during init)
+            // Link External User ID if user is logged in
+            await this.linkExternalUserIdIfNeeded(OneSignal);
+            
+            // Sync Subscription ID to database
             await this.syncSubscriptionToDatabase(subscriptionId);
             
             // Update last active
@@ -483,7 +471,10 @@ export class OneSignalService {
         console.log('🔍 Verifying in OneSignal dashboard...');
         console.log('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/audiences');
         
-        // Sync Subscription ID to database (External ID already set during init)
+        // Link External User ID first (must be done after subscription is created)
+        await this.linkExternalUserIdIfNeeded(OneSignal);
+        
+        // Then sync Subscription ID to database
         await this.syncSubscriptionToDatabase(subscriptionId);
         
         // Double-check that user is opted in
