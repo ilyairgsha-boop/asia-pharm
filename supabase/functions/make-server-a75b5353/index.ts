@@ -633,7 +633,7 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       contents: { en: message },
     };
 
-    // Add targeting - priority: userIds > tags > segments (default to All)
+    // Add targeting - priority: userIds > tags > get from DB > segments (fallback)
     if (userIds && userIds.length > 0) {
       notificationData.include_player_ids = userIds;
       console.log('🎯 Targeting specific users:', userIds.length);
@@ -645,12 +645,37 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.filters = filters;
       console.log('🎯 Targeting by tags:', tags);
     } else {
-      // Default to "All" segment which includes all subscribed users including test users
-      // Check if segments is provided and not empty
-      const hasSegments = segments && Array.isArray(segments) && segments.length > 0;
-      const targetSegments = hasSegments ? segments : ['All'];
-      notificationData.included_segments = targetSegments;
-      console.log('🎯 Targeting segments:', targetSegments, hasSegments ? '(from request)' : '(default All)');
+      // Get all active player IDs from database instead of using segments
+      console.log('📊 Fetching active push subscriptions from database...');
+      const supabase = getSupabaseAdmin();
+      const { data: subscriptions, error: subError } = await supabase
+        .from('user_push_subscriptions')
+        .select('player_id')
+        .eq('is_active', true);
+      
+      if (subError) {
+        console.error('❌ Error fetching subscriptions:', subError);
+        // Fallback to segments if DB query fails
+        const hasSegments = segments && Array.isArray(segments) && segments.length > 0;
+        const targetSegments = hasSegments ? segments : ['All'];
+        notificationData.included_segments = targetSegments;
+        console.log('⚠️ Using segments as fallback:', targetSegments);
+      } else {
+        const playerIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
+        console.log('📊 Found', playerIds.length, 'active player IDs in database');
+        
+        if (playerIds.length > 0) {
+          notificationData.include_player_ids = playerIds;
+          console.log('🎯 Targeting', playerIds.length, 'subscribers from database');
+        } else {
+          console.warn('⚠️ No active subscriptions found in database');
+          // Still try to send to segments as last resort
+          const hasSegments = segments && Array.isArray(segments) && segments.length > 0;
+          const targetSegments = hasSegments ? segments : ['All'];
+          notificationData.included_segments = targetSegments;
+          console.log('⚠️ Using segments as fallback (no DB subs):', targetSegments);
+        }
+      }
     }
 
     if (url) {
