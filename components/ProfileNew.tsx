@@ -146,15 +146,29 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
             .eq('user_id', user.id);
           console.log('🔕 All push subscriptions deactivated');
         } else {
-          // Если включаем - пытаемся подписаться на текущем устройстве
+          // Если включаем - активируем все устройства и подписываемся на текущем
+          await supabase
+            .from('user_push_subscriptions')
+            .update({ is_active: true })
+            .eq('user_id', user.id);
+          console.log('✅ All push subscriptions activated');
+          
+          // Пытаемся подписаться на текущем устройстве
           try {
             const { oneSignalService } = await import('../utils/oneSignal');
             if (oneSignalService.isEnabled()) {
-              await oneSignalService.subscribe();
-              console.log('✅ Subscribed to push notifications');
+              console.log('🔔 Calling subscribe() from profile...');
+              const playerId = await oneSignalService.subscribe();
+              if (playerId) {
+                console.log('✅ Subscribed to push notifications with Player ID:', playerId);
+              } else {
+                console.warn('⚠️ Subscribe returned no Player ID');
+              }
+            } else {
+              console.warn('⚠️ OneSignal not enabled');
             }
           } catch (pushError) {
-            console.warn('⚠️ Could not subscribe to push:', pushError);
+            console.error('❌ Could not subscribe to push:', pushError);
           }
         }
         

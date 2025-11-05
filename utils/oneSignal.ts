@@ -366,6 +366,27 @@ export class OneSignalService {
       const currentPermission = OneSignal.Notifications.permission;
       console.log('📋 Current permission:', currentPermission);
       
+      // Check if already subscribed
+      const existingId = await OneSignal.User?.PushSubscription?.id;
+      const existingOptedIn = await OneSignal.User?.PushSubscription?.optedIn;
+      console.log('📊 Current subscription state:', { 
+        id: existingId, 
+        optedIn: existingOptedIn,
+        hasPermission: currentPermission
+      });
+      
+      // If already subscribed with permission, just return the ID
+      if (existingId && existingOptedIn && currentPermission) {
+        console.log('✅ Already subscribed with Player ID:', existingId);
+        console.log('💡 No need to call optIn() again - avoiding new Player ID creation');
+        
+        // Just sync to database
+        await this.syncSubscriptionToDatabase(existingId);
+        await this.updateLastActive();
+        
+        return existingId;
+      }
+      
       // Request permission using v16+ API
       console.log('📤 Requesting permission...');
       const permissionGranted = await OneSignal.Notifications.requestPermission();
@@ -382,8 +403,9 @@ export class OneSignalService {
           await OneSignal.User.PushSubscription.optIn();
           console.log('✅ Successfully called optIn()');
           
-          // Wait a bit for optIn to process
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          // Wait longer for optIn to process on OneSignal servers
+          console.log('⏳ Waiting for OneSignal servers to process optIn...');
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Увеличено с 1s до 2s
           
           // Verify optIn status
           const optedIn = await OneSignal.User.PushSubscription.optedIn;
@@ -392,7 +414,7 @@ export class OneSignalService {
           if (!optedIn) {
             console.warn('⚠️ optIn() called but status is still false, retrying...');
             await OneSignal.User.PushSubscription.optIn();
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Увеличено с 1s до 2s
             const retryOptedIn = await OneSignal.User.PushSubscription.optedIn;
             console.log('📊 OptedIn status after retry:', retryOptedIn);
           }
@@ -405,9 +427,9 @@ export class OneSignalService {
         return null;
       }
       
-      // Wait for subscription ID
+      // Wait for subscription ID to appear
       console.log('⏳ Waiting for subscription ID...');
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2s for ID to appear
+      await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличено с 2s до 3s
       
       const subscriptionId = await OneSignal.User?.PushSubscription?.id;
       console.log('🔍 Subscription ID:', subscriptionId);
@@ -544,17 +566,17 @@ export class OneSignalService {
         os,
       });
 
-      // Check if table exists
+      // Check if subscription already exists
       const { data: existingData, error: selectError } = await supabase
         .from('user_push_subscriptions')
         .select('*')
         .eq('player_id', playerId)
-        .single();
+        .maybeSingle(); // Use maybeSingle() to avoid 406 error when no rows
       
-      if (selectError && selectError.code !== 'PGRST116') {
+      if (selectError) {
         console.error('❌ Error checking existing subscription:', selectError);
       } else {
-        console.log('📋 Existing subscription:', existingData);
+        console.log('📋 Existing subscription:', existingData || 'None');
       }
 
       // Insert or update subscription
@@ -590,7 +612,7 @@ export class OneSignalService {
             push_notifications_enabled: true,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', session.user.id);
+          .eq('id', session.user.id);
         
         if (profileError) {
           console.error('⚠️ Failed to update profile:', profileError);
