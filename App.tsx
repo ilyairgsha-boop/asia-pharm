@@ -29,6 +29,7 @@ import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
+import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
 import './utils/clearOldCategories'; // Import to make functions available in console
 
 function AppContent() {
@@ -80,58 +81,81 @@ function AppContent() {
     
     // Load OneSignal settings from database and initialize
     const initOneSignal = async () => {
+      console.log('🚀 [INIT] Starting OneSignal initialization...');
+      
       try {
-        console.log('📥 Loading OneSignal settings from database...');
+        // Step 1: Check if settings table exists
+        console.log('📥 [INIT] Step 1: Checking settings table...');
+        const tableExists = await checkAndCreateSettingsTable();
         
-        // Load settings from Supabase
-        try {
-          const { data, error } = await supabase
-            .from('settings')
-            .select('value')
-            .eq('key', 'oneSignal')
-            .single();
+        if (!tableExists) {
+          console.error('❌ [INIT] Settings table not accessible');
+          console.error('💡 [INIT] Run /CHECK_SETTINGS_TABLE.sql in Supabase SQL Editor');
+          return;
+        }
+        
+        // Step 2: Load OneSignal settings
+        console.log('📥 [INIT] Step 2: Loading OneSignal settings...');
+        const settings = await checkOneSignalSettings();
+        
+        if (settings) {
+          console.log('✅ [INIT] Settings loaded from database');
           
-          if (data && !error) {
-            console.log('✅ Loaded OneSignal settings from database');
-            const parsed = data.value as any;
-            
-            // Migrate old apiKey to restApiKey
-            if (parsed.apiKey && !parsed.restApiKey) {
-              parsed.restApiKey = parsed.apiKey;
-              delete parsed.apiKey;
-            }
-            
-            // Store in localStorage for OneSignal service
-            localStorage.setItem('oneSignalSettings', JSON.stringify(parsed));
-            console.log('💾 Saved settings to localStorage:', {
-              enabled: parsed.enabled,
-              hasAppId: !!parsed.appId,
-              hasRestApiKey: !!parsed.restApiKey
-            });
-            
-            // Force reload settings in OneSignal service
-            oneSignalService.reloadSettings();
-          } else {
-            console.warn('⚠️ No OneSignal settings found in database:', error);
+          // Migrate old apiKey to restApiKey
+          if (settings.apiKey && !settings.restApiKey) {
+            console.log('🔄 [INIT] Migrating apiKey to restApiKey...');
+            settings.restApiKey = settings.apiKey;
+            delete settings.apiKey;
           }
-        } catch (dbError) {
-          console.warn('⚠️ Failed to load OneSignal settings from database:', dbError);
+          
+          // Store in localStorage
+          console.log('💾 [INIT] Saving to localStorage...');
+          localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
+          console.log('✅ [INIT] Saved to localStorage');
+          
+          // Reload in service
+          console.log('🔄 [INIT] Reloading in OneSignal service...');
+          oneSignalService.reloadSettings();
+        } else {
+          console.warn('⚠️ [INIT] No OneSignal settings in database');
+          console.warn('💡 [INIT] Configure in Admin Panel -> OneSignal Settings');
+          
+          // Check localStorage fallback
+          const localSettings = localStorage.getItem('oneSignalSettings');
+          if (localSettings) {
+            console.log('📦 [INIT] Using localStorage fallback');
+            const parsed = JSON.parse(localSettings);
+            console.log('📋 [INIT] Fallback settings:', {
+              enabled: parsed?.enabled,
+              hasAppId: !!parsed?.appId,
+              hasRestApiKey: !!parsed?.restApiKey
+            });
+          }
         }
         
-        // Now check if enabled and initialize
-        if (oneSignalService.isEnabled()) {
-          console.log('🔔 Initializing OneSignal...');
+        // Step 3: Initialize SDK if enabled
+        console.log('📥 [INIT] Step 3: Checking if enabled...');
+        const isEnabled = oneSignalService.isEnabled();
+        console.log('📊 [INIT] isEnabled:', isEnabled);
+        
+        if (isEnabled) {
+          console.log('🔔 [INIT] Initializing OneSignal SDK...');
           await oneSignalService.initializeSDK();
-          console.log('✅ OneSignal initialized successfully');
+          console.log('✅ [INIT] OneSignal SDK initialized');
         } else {
-          console.log('ℹ️ OneSignal not enabled or not configured (skip initialization)');
+          console.log('ℹ️ [INIT] OneSignal not enabled, skipping SDK init');
         }
-      } catch (error) {
-        console.warn('⚠️ OneSignal initialization failed:', error);
+      } catch (error: any) {
+        console.error('❌ [INIT] Initialization failed:', error?.message);
       }
+      
+      console.log('🏁 [INIT] Completed');
     };
     
-    initOneSignal();
+    // Call async function
+    initOneSignal().catch(err => {
+      console.error('❌ [INIT] Unhandled error in initOneSignal:', err);
+    });
     
     // Listen for OneSignal settings changes (from admin panel)
     const handleStorageChange = (e: StorageEvent) => {
@@ -167,6 +191,46 @@ function AppContent() {
       (window as any).testPushPrompt = () => {
         console.log('🧪 Testing push prompt...');
         setShowPushPrompt(true);
+      };
+      (window as any).checkOneSignalSetup = async () => {
+        console.log('🔍 === OneSignal Setup Check ===');
+        
+        // 1. Check table
+        console.log('\n1️⃣ Checking settings table...');
+        const tableExists = await checkAndCreateSettingsTable();
+        console.log('   Table exists:', tableExists);
+        
+        // 2. Check database settings
+        console.log('\n2️⃣ Checking database settings...');
+        const dbSettings = await checkOneSignalSettings();
+        console.log('   Database settings:', dbSettings);
+        
+        // 3. Check localStorage
+        console.log('\n3️⃣ Checking localStorage...');
+        const localSettings = localStorage.getItem('oneSignalSettings');
+        console.log('   localStorage:', localSettings ? JSON.parse(localSettings) : null);
+        
+        // 4. Check service
+        console.log('\n4️⃣ Checking OneSignal service...');
+        console.log('   isConfigured:', oneSignalService.isConfigured());
+        console.log('   isEnabled:', oneSignalService.isEnabled());
+        
+        // 5. Check SDK
+        console.log('\n5️⃣ Checking OneSignal SDK...');
+        console.log('   SDK loaded:', !!window.OneSignal);
+        
+        if (window.OneSignal) {
+          try {
+            const userId = await window.OneSignal.User.PushSubscription.id;
+            console.log('   User ID:', userId);
+            const isSubscribed = window.OneSignal.User.PushSubscription.optedIn;
+            console.log('   Subscribed:', isSubscribed);
+          } catch (e) {
+            console.log('   SDK check failed:', e);
+          }
+        }
+        
+        console.log('\n✅ Check complete');
       };
       (window as any).debugSupabase = {
         getAnonKey,
@@ -232,6 +296,7 @@ function AppContent() {
       console.log('💡 Debug tools available:');
       console.log('  - window.oneSignalService');
       console.log('  - window.testPushPrompt() - test push prompt display');
+      console.log('  - await window.checkOneSignalSetup() - comprehensive OneSignal check');
       console.log('  - window.debugSupabase.getAnonKey()');
       console.log('  - window.debugSupabase.getServerUrl(path)');
       console.log('  - await window.debugSupabase.testConnection()');
