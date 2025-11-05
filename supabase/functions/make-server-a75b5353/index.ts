@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.3.0-EXTERNAL-USER-IDS - Fixed push notifications using External User IDs
-// Build: 2025-01-05 19:30:00 UTC
+// Version: 2.3.1-REAL-PLAYER-IDS - Fixed push notifications using REAL Player IDs from User.onesignalId
+// Build: 2025-01-05 20:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -231,8 +231,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.3.0 - External User IDs Fix',
-    version: '2.3.0-EXTERNAL-USER-IDS',
+    message: 'Asia-Pharm API v2.3.1 - REAL Player IDs Fix',
+    version: '2.3.1-REAL-PLAYER-IDS',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -633,14 +633,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       contents: { en: message },
     };
 
-    // Add targeting - priority: externalUserIds > userIds > tags > get from DB > segments (fallback)
-    if (externalUserIds && externalUserIds.length > 0) {
+    // Add targeting - priority: userIds (Player IDs) > externalUserIds > tags > get from DB > segments (fallback)
+    if (userIds && userIds.length > 0) {
+      notificationData.include_player_ids = userIds;
+      console.log('🎯 Targeting specific users via Player IDs:', userIds.length);
+      console.log('📋 Player IDs:', JSON.stringify(userIds));
+    } else if (externalUserIds && externalUserIds.length > 0) {
       notificationData.include_external_user_ids = externalUserIds;
       console.log('🎯 Targeting specific users via External User IDs:', externalUserIds.length);
       console.log('📋 External User IDs:', JSON.stringify(externalUserIds));
-    } else if (userIds && userIds.length > 0) {
-      notificationData.include_player_ids = userIds;
-      console.log('🎯 Targeting specific users via Player IDs:', userIds.length);
     } else if (tags && Object.keys(tags).length > 0) {
       const filters: any[] = [];
       Object.entries(tags).forEach(([key, value]) => {
@@ -649,13 +650,13 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.filters = filters;
       console.log('🎯 Targeting by tags:', tags);
     } else {
-      // CRITICAL FIX: Use External User IDs (Supabase User IDs) instead of Player IDs
-      // OneSignal SDK v16 returns local IDs that don't match actual OneSignal Player IDs
-      console.log('📊 Fetching active users with push enabled from database...');
+      // CRITICAL FIX: Now we save REAL Player IDs (User.onesignalId) to database
+      // Get all active REAL Player IDs from database
+      console.log('📊 Fetching active Player IDs from database...');
       const supabase = getSupabaseAdmin();
       const { data: subscriptions, error: subError } = await supabase
         .from('user_push_subscriptions')
-        .select('user_id')
+        .select('player_id')
         .eq('is_active', true);
       
       if (subError) {
@@ -666,16 +667,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
         notificationData.included_segments = targetSegments;
         console.log('⚠️ Using segments as fallback:', targetSegments);
       } else {
-        const externalUserIds = subscriptions?.map(s => s.user_id).filter(Boolean) || [];
-        console.log('📊 Found', externalUserIds.length, 'active users in database');
-        console.log('📋 External User IDs (Supabase User IDs):', JSON.stringify(externalUserIds.slice(0, 3)), '...');
+        const playerIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
+        console.log('📊 Found', playerIds.length, 'active REAL Player IDs in database');
+        console.log('📋 REAL Player IDs (from User.onesignalId):', JSON.stringify(playerIds.slice(0, 3)), '...');
         
-        if (externalUserIds.length > 0) {
-          // Use include_external_user_ids instead of include_player_ids
-          // This targets users by their Supabase User ID (External User ID in OneSignal)
-          notificationData.include_external_user_ids = externalUserIds;
-          console.log('🎯 Targeting', externalUserIds.length, 'users via External User IDs');
-          console.log('✅ Using External User IDs - OneSignal will resolve to actual Player IDs automatically');
+        if (playerIds.length > 0) {
+          // Use REAL Player IDs from database
+          notificationData.include_player_ids = playerIds;
+          console.log('🎯 Targeting', playerIds.length, 'users via REAL Player IDs');
+          console.log('✅ Using REAL Player IDs from User.onesignalId - should match OneSignal Dashboard!');
         } else {
           console.warn('⚠️ No active subscriptions found in database');
           // Still try to send to segments as last resort
