@@ -262,7 +262,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         
         // Установить флаг для показа промпта подписки на push
         if (typeof window !== 'undefined') {
+          console.log('🔔 Setting show_push_prompt flag...');
           localStorage.setItem('show_push_prompt', 'true');
+          console.log('✅ Flag set:', localStorage.getItem('show_push_prompt'));
         }
       } catch (loginError) {
         console.warn('⚠️ Auto-login failed:', loginError);

@@ -98,6 +98,10 @@ function AppContent() {
     // Make oneSignalService available in console for debugging
     if (typeof window !== 'undefined') {
       (window as any).oneSignalService = oneSignalService;
+      (window as any).testPushPrompt = () => {
+        console.log('🧪 Testing push prompt...');
+        setShowPushPrompt(true);
+      };
       (window as any).debugSupabase = {
         getAnonKey,
         getServerUrl,
@@ -161,6 +165,7 @@ function AppContent() {
       };
       console.log('💡 Debug tools available:');
       console.log('  - window.oneSignalService');
+      console.log('  - window.testPushPrompt() - test push prompt display');
       console.log('  - window.debugSupabase.getAnonKey()');
       console.log('  - window.debugSupabase.getServerUrl(path)');
       console.log('  - await window.debugSupabase.testConnection()');
@@ -202,20 +207,40 @@ function AppContent() {
     };
   }, []);
 
+  // Log when showPushPrompt changes
+  useEffect(() => {
+    console.log('🔔 showPushPrompt state changed:', showPushPrompt);
+  }, [showPushPrompt]);
+
   // Check for push prompt flag after user login
   useEffect(() => {
+    console.log('🔍 Push prompt useEffect triggered:', { 
+      user: user?.email, 
+      loading,
+      flag: localStorage.getItem('show_push_prompt')
+    });
+    
     if (user && !loading) {
       const shouldShowPrompt = localStorage.getItem('show_push_prompt');
+      console.log('🔔 Checking push prompt flag:', shouldShowPrompt);
+      
       if (shouldShowPrompt === 'true') {
+        console.log('✅ Flag is true, preparing to show prompt...');
+        
         // Wait for OneSignal to initialize and check if enabled
         const checkAndShowPrompt = async () => {
           try {
+            console.log('⏳ Waiting 1.5s for OneSignal initialization...');
             // Wait for OneSignal to be ready
             await new Promise(resolve => setTimeout(resolve, 1500));
             
             // Check if OneSignal is configured
-            if (oneSignalService.isEnabled()) {
-              console.log('✅ OneSignal enabled, showing push prompt');
+            console.log('🔍 Checking if OneSignal is enabled...');
+            const isEnabled = oneSignalService.isEnabled();
+            console.log('OneSignal enabled:', isEnabled);
+            
+            if (isEnabled) {
+              console.log('✅ OneSignal enabled, showing push prompt NOW');
               setShowPushPrompt(true);
             } else {
               console.warn('⚠️ OneSignal not enabled, skipping push prompt');
@@ -223,12 +248,17 @@ function AppContent() {
           } catch (error) {
             console.error('❌ Error checking OneSignal:', error);
           } finally {
+            console.log('🧹 Removing show_push_prompt flag');
             localStorage.removeItem('show_push_prompt');
           }
         };
         
         checkAndShowPrompt();
+      } else {
+        console.log('ℹ️ No push prompt flag or flag is not "true"');
       }
+    } else {
+      console.log('ℹ️ Conditions not met: user=' + !!user + ', loading=' + loading);
     }
   }, [user, loading]);
 
@@ -356,8 +386,11 @@ function AppContent() {
       />
 
       {/* Push Notification Prompt */}
-      {showPushPrompt && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {showPushPrompt && (() => {
+        console.log('🎨 RENDERING PUSH PROMPT!');
+        return true;
+      })() && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl">
