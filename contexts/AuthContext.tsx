@@ -265,6 +265,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           console.log('🔔 Setting show_push_prompt flag...');
           localStorage.setItem('show_push_prompt', 'true');
           console.log('✅ Flag set:', localStorage.getItem('show_push_prompt'));
+          
+          // Отправляем custom event чтобы App.tsx мог отреагировать
+          window.dispatchEvent(new CustomEvent('pushPromptFlagSet'));
+          console.log('📢 Dispatched pushPromptFlagSet event');
         }
       } catch (loginError) {
         console.warn('⚠️ Auto-login failed:', loginError);

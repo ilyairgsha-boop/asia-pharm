@@ -212,29 +212,19 @@ function AppContent() {
     console.log('🔔 showPushPrompt state changed:', showPushPrompt);
   }, [showPushPrompt]);
 
-  // Check for push prompt flag after user login
+  // Listen for custom event when push prompt flag is set
   useEffect(() => {
-    console.log('🔍 Push prompt useEffect triggered:', { 
-      user: user?.email, 
-      loading,
-      flag: localStorage.getItem('show_push_prompt')
-    });
-    
-    if (user && !loading) {
-      const shouldShowPrompt = localStorage.getItem('show_push_prompt');
-      console.log('🔔 Checking push prompt flag:', shouldShowPrompt);
+    const handlePushPromptFlag = () => {
+      console.log('📢 Received pushPromptFlagSet event!');
       
-      if (shouldShowPrompt === 'true') {
-        console.log('✅ Flag is true, preparing to show prompt...');
+      if (user && !loading) {
+        console.log('✅ User is logged in, checking OneSignal...');
         
-        // Wait for OneSignal to initialize and check if enabled
         const checkAndShowPrompt = async () => {
           try {
             console.log('⏳ Waiting 1.5s for OneSignal initialization...');
-            // Wait for OneSignal to be ready
             await new Promise(resolve => setTimeout(resolve, 1500));
             
-            // Check if OneSignal is configured
             console.log('🔍 Checking if OneSignal is enabled...');
             const isEnabled = oneSignalService.isEnabled();
             console.log('OneSignal enabled:', isEnabled);
@@ -244,20 +234,85 @@ function AppContent() {
               setShowPushPrompt(true);
             } else {
               console.warn('⚠️ OneSignal not enabled, skipping push prompt');
-              // Remove flag if OneSignal is not enabled
               localStorage.removeItem('show_push_prompt');
             }
           } catch (error) {
             console.error('❌ Error checking OneSignal:', error);
-            // Remove flag on error
             localStorage.removeItem('show_push_prompt');
           }
         };
         
         checkAndShowPrompt();
-      } else {
-        console.log('ℹ️ No push prompt flag or flag is not "true"');
       }
+    };
+    
+    window.addEventListener('pushPromptFlagSet', handlePushPromptFlag);
+    
+    return () => {
+      window.removeEventListener('pushPromptFlagSet', handlePushPromptFlag);
+    };
+  }, [user, loading]);
+
+  // Check for push prompt flag after user login
+  useEffect(() => {
+    console.log('🔍 Push prompt useEffect triggered:', { 
+      user: user?.email, 
+      loading,
+      flag: localStorage.getItem('show_push_prompt')
+    });
+    
+    if (user && !loading) {
+      // Проверяем флаг с небольшой задержкой, чтобы дать время на установку флага
+      const checkPromptFlag = () => {
+        const shouldShowPrompt = localStorage.getItem('show_push_prompt');
+        console.log('🔔 Checking push prompt flag:', shouldShowPrompt);
+        
+        if (shouldShowPrompt === 'true') {
+          console.log('✅ Flag is true, preparing to show prompt...');
+          
+          // Wait for OneSignal to initialize and check if enabled
+          const checkAndShowPrompt = async () => {
+            try {
+              console.log('⏳ Waiting 1.5s for OneSignal initialization...');
+              // Wait for OneSignal to be ready
+              await new Promise(resolve => setTimeout(resolve, 1500));
+              
+              // Check if OneSignal is configured
+              console.log('🔍 Checking if OneSignal is enabled...');
+              const isEnabled = oneSignalService.isEnabled();
+              console.log('OneSignal enabled:', isEnabled);
+              
+              if (isEnabled) {
+                console.log('✅ OneSignal enabled, showing push prompt NOW');
+                setShowPushPrompt(true);
+              } else {
+                console.warn('⚠️ OneSignal not enabled, skipping push prompt');
+                // Remove flag if OneSignal is not enabled
+                localStorage.removeItem('show_push_prompt');
+              }
+            } catch (error) {
+              console.error('❌ Error checking OneSignal:', error);
+              // Remove flag on error
+              localStorage.removeItem('show_push_prompt');
+            }
+          };
+          
+          checkAndShowPrompt();
+        } else {
+          console.log('ℹ️ No push prompt flag or flag is not "true"');
+        }
+      };
+      
+      // Проверяем сразу
+      checkPromptFlag();
+      
+      // И проверяем еще раз через 500ms (на случай если флаг установится позже)
+      const timeoutId = setTimeout(() => {
+        console.log('🔄 Rechecking push prompt flag after delay...');
+        checkPromptFlag();
+      }, 500);
+      
+      return () => clearTimeout(timeoutId);
     } else {
       console.log('ℹ️ Conditions not met: user=' + !!user + ', loading=' + loading);
     }
