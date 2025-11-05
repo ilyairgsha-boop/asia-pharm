@@ -57,34 +57,27 @@ export const OneSignalSettings = () => {
     }
 
     try {
-      // Get subscriber count from Edge Function (avoids CORS issues)
-      const { data: { session } } = await supabase.auth.getSession();
-      const authToken = session?.access_token;
+      console.log('📊 Loading subscriber count from database...');
+      
+      // Query database directly for active push subscriptions
+      const { count, error } = await supabase
+        .from('user_push_subscriptions')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
 
-      if (!authToken) {
-        console.warn('⚠️ No auth token available');
+      if (error) {
+        console.error('❌ Error loading subscriber count:', error);
+        setSubscriberCount(0);
         return;
       }
 
-      const statsUrl = getServerUrl('/api/push/stats');
-      const response = await fetch(statsUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${authToken}`,
-          'apikey': getAnonKey(),
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setSubscriberCount(data.players || 0);
-        console.log('✅ OneSignal subscriber count:', data.players || 0);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to get subscriber count:', errorData);
-      }
+      const totalCount = count || 0;
+      setSubscriberCount(totalCount);
+      console.log('✅ Active push subscriptions in database:', totalCount);
+      
     } catch (error) {
-      console.error('Error loading OneSignal subscriber count:', error);
+      console.error('❌ Error loading subscriber count:', error);
+      setSubscriberCount(0);
     }
   };
 

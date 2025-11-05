@@ -515,6 +515,20 @@ export class OneSignalService {
       console.error('❌ Error subscribing to push notifications:', error);
       console.error('❌ Error details:', error instanceof Error ? error.message : String(error));
       console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
+      
+      // Check if permission was blocked (common in Incognito mode)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('Permission blocked') || errorMessage.includes('blocked')) {
+        // Import toast dynamically to avoid circular dependencies
+        const { toast } = await import('sonner');
+        toast.error('Push-уведомления заблокированы', {
+          description: 'В режиме инкогнито браузеры блокируют push-уведомления. Попробуйте в обычном режиме.',
+          duration: 8000,
+        });
+        console.warn('⚠️ Push notifications blocked - likely Incognito mode');
+        return null;
+      }
+      
       throw error;
     }
   }
