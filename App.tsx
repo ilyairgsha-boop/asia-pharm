@@ -118,18 +118,35 @@ function AppContent() {
           oneSignalService.reloadSettings();
         } else {
           console.warn('⚠️ [INIT] No OneSignal settings in database');
-          console.warn('💡 [INIT] Configure in Admin Panel -> OneSignal Settings');
+          console.warn('💡 [INIT] SOLUTION OPTIONS:');
+          console.warn('   1. Configure in Admin Panel -> OneSignal Settings');
+          console.warn('   2. Or run SQL: /FIX_ONESIGNAL_SETTINGS.sql');
+          console.warn('   3. Or insert manually:');
+          console.warn(`      INSERT INTO settings (key, value) VALUES ('oneSignal', '{"enabled":false}'::jsonb);`);
           
           // Check localStorage fallback
           const localSettings = localStorage.getItem('oneSignalSettings');
           if (localSettings) {
             console.log('📦 [INIT] Using localStorage fallback');
-            const parsed = JSON.parse(localSettings);
-            console.log('📋 [INIT] Fallback settings:', {
-              enabled: parsed?.enabled,
-              hasAppId: !!parsed?.appId,
-              hasRestApiKey: !!parsed?.restApiKey
-            });
+            try {
+              const parsed = JSON.parse(localSettings);
+              console.log('📋 [INIT] Fallback settings:', {
+                enabled: parsed?.enabled,
+                hasAppId: !!parsed?.appId,
+                hasRestApiKey: !!parsed?.restApiKey
+              });
+              
+              // If localStorage has valid settings, reload service
+              if (parsed?.enabled && parsed?.appId && parsed?.restApiKey) {
+                console.log('✅ [INIT] Valid settings in localStorage, using them');
+                oneSignalService.reloadSettings();
+              }
+            } catch (parseError) {
+              console.error('❌ [INIT] Failed to parse localStorage settings:', parseError);
+            }
+          } else {
+            console.warn('⚠️ [INIT] No settings in localStorage either');
+            console.warn('⚠️ [INIT] OneSignal will NOT work until configured');
           }
         }
         

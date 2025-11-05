@@ -98,9 +98,14 @@ export const OneSignalSettings = () => {
           .from('settings')
           .select('value')
           .eq('key', 'oneSignal')
-          .single();
+          .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 error
         
-        if (data && !error) {
+        if (error) {
+          console.error('❌ Failed to load from Supabase:', error.message, error.code);
+          throw error;
+        }
+        
+        if (data) {
           console.log('✅ Loaded OneSignal settings from Supabase');
           const parsed = data.value as OneSignalSettingsData;
           
@@ -114,10 +119,50 @@ export const OneSignalSettings = () => {
           
           // Sync to localStorage for offline access
           localStorage.setItem('oneSignalSettings', JSON.stringify(parsed));
+          
+          // Dispatch event for App.tsx to reload
+          window.dispatchEvent(new CustomEvent('oneSignalSettingsUpdated'));
+          
           return;
+        } else {
+          console.warn('⚠️ No OneSignal settings found in Supabase');
+          console.log('💡 Creating default settings record...');
+          
+          // Create default settings
+          const defaultSettings = {
+            appId: '',
+            restApiKey: '',
+            safariWebId: '',
+            enabled: false,
+            autoSubscribe: false,
+            welcomeNotification: true,
+            orderNotifications: true,
+            marketingNotifications: false,
+          };
+          
+          try {
+            const { error: insertError } = await supabase
+              .from('settings')
+              .insert({
+                key: 'oneSignal',
+                value: defaultSettings,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+            
+            if (insertError) {
+              console.error('❌ Failed to create default settings:', insertError);
+            } else {
+              console.log('✅ Created default OneSignal settings');
+              setSettings({ ...settings, ...defaultSettings });
+              localStorage.setItem('oneSignalSettings', JSON.stringify(defaultSettings));
+            }
+          } catch (insertErr) {
+            console.error('❌ Error creating default settings:', insertErr);
+          }
         }
       } catch (dbError) {
-        console.warn('⚠️ Failed to load from Supabase, trying localStorage:', dbError);
+        console.error('❌ Database error loading settings:', dbError);
       }
       
       // 2️⃣ Fallback to localStorage (for backward compatibility)
