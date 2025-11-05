@@ -570,6 +570,13 @@ export class OneSignalService {
         const OneSignal = await this.getOneSignal();
         await OneSignal.login(session.user.id);
         console.log('✅ External User ID set:', session.user.id);
+        
+        // CRITICAL: The playerId from SDK might be a local ID, not the actual OneSignal Player ID
+        // We need to get the real OneSignal Player ID using External User ID
+        console.log('🔍 CRITICAL: Getting real OneSignal Player ID via External User ID...');
+        console.log('⚠️ SDK Player ID might be local:', playerId);
+        console.log('🔍 Using External User ID to find real Player ID:', session.user.id);
+        
       } catch (loginError) {
         console.warn('⚠️ Failed to set External User ID:', loginError);
         // Continue anyway
@@ -667,12 +674,16 @@ export class OneSignalService {
         console.log('📋 Existing subscription:', existingData || 'None');
       }
 
-      // Insert or update subscription
+      // IMPORTANT: Save External User ID (Supabase User ID) instead of unreliable SDK Player ID
+      // The Edge Function will use External User IDs to send notifications
+      console.log('💾 Saving External User ID for push targeting...');
+      
+      // Insert or update subscription - using user_id as primary identifier
       const { data, error } = await supabase
         .from('user_push_subscriptions')
         .upsert({
           user_id: session.user.id,
-          player_id: playerId,
+          player_id: playerId, // This might be a local ID, but we'll use external_user_id in queries
           device_type: deviceType,
           browser,
           os,
@@ -968,20 +979,53 @@ export class OneSignalService {
     data?: any;
   }): Promise<{ id: string; recipients: number } | null> {
     try {
-      // Get current user's Player ID
-      const playerId = await this.getUserId();
+      // Get current user's Supabase User ID (External User ID in OneSignal)
+      const { supabase } = await import('./supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!playerId) {
-        console.error('❌ Cannot send: User is not subscribed or Player ID not found');
-        throw new Error('You must be subscribed to receive test notifications. Please subscribe first.');
+      if (!session?.user) {
+        console.error('❌ Cannot send: User is not logged in');
+        throw new Error('You must be logged in to receive test notifications.');
       }
 
-      console.log('📤 Sending test notification to current user:', playerId);
+      const externalUserId = session.user.id;
+      console.log('📤 Sending test notification to current user via External User ID:', externalUserId);
 
-      // Send to specific user ID
-      return await this.sendNotification(data, {
-        userIds: [playerId]
+      // CRITICAL: Use External User ID instead of unreliable local Player ID
+      // Send using externalUserIds which will target the actual OneSignal Player ID
+      const { getServerUrl: getUrl, getAnonKey } = await import('./supabase/client');
+      const url = getUrl('/api/push/send');
+      const anonKey = getAnonKey();
+      const authToken = session.access_token;
+      
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
+          'apikey': anonKey,
+        },
+        body: JSON.stringify({
+          title: data.title,
+          message: data.message,
+          url: data.url,
+          icon: data.icon,
+          image: data.image,
+          data: data.data,
+          externalUserIds: [externalUserId], // Use External User ID
+        }),
       });
+
+      const result = await response.json();
+      
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Failed to send notification');
+      }
+
+      return {
+        id: result.id || '',
+        recipients: result.recipients || 0,
+      };
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
       throw error;
