@@ -278,18 +278,11 @@ export const PushNotifications = () => {
       // Prepare targeting options
       const options: any = {};
       
-      // Map UI segment names to OneSignal segment names
-      const segmentMap: Record<string, string> = {
-        'all': 'All',
-        'subscribed': 'Subscribed Users',
-        'active': 'Active Users',
-        'inactive': 'Inactive Users',
-      };
+      // IMPORTANT: For OneSignal SDK v16, we should use External User IDs (Supabase User IDs)
+      // instead of segments for reliable delivery
+      // The Edge Function will automatically fetch user IDs from database if not provided
       
-      // Always include segments - default to "All" to target all subscribers
-      const oneSignalSegment = segmentMap[targetSegment] || 'All';
-      options.segments = [oneSignalSegment];
-      console.log(`📍 Segment mapping: ${targetSegment} -> ${oneSignalSegment}`);
+      // Note: segments option is removed - Edge Function will get External User IDs from DB
       
       if (targetLanguage !== 'all') {
         options.language = targetLanguage;

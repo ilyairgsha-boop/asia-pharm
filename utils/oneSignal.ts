@@ -946,19 +946,21 @@ export class OneSignalService {
     data?: any;
   }): Promise<{ id: string; recipients: number } | null> {
     try {
-      // Get current user's Subscription ID
-      const subscriptionId = await this.getUserId();
+      // Get current Supabase user ID (External User ID in OneSignal)
+      const { supabase } = await import('./supabase/client');
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!subscriptionId) {
-        console.error('❌ Cannot send: User is not subscribed or Subscription ID not found');
-        throw new Error('You must be subscribed to receive test notifications. Please subscribe first.');
+      if (!session?.user) {
+        console.error('❌ Cannot send: User not logged in');
+        throw new Error('You must be logged in to receive test notifications.');
       }
 
-      console.log('📤 Sending test notification to current user via Subscription ID:', subscriptionId);
+      const externalUserId = session.user.id;
+      console.log('📤 Sending test notification to current user via External User ID (Supabase User ID):', externalUserId);
 
-      // Send to specific Subscription ID
+      // Send to specific External User ID (Supabase User ID)
       return await this.sendNotification(data, {
-        userIds: [subscriptionId]
+        externalUserIds: [externalUserId]
       });
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
@@ -1128,17 +1130,10 @@ export class OneSignalService {
       return;
     }
 
-    // Get ALL player IDs for this user (all devices/browsers)
-    const playerIds = await this.getUserPlayerIds(userId);
-    
-    if (playerIds.length === 0) {
-      console.warn(`User ${userId} has no active push subscriptions`);
-      return;
-    }
+    console.log(`📤 Sending order notification to user: ${userId}`);
 
-    console.log(`📤 Sending order notification to ${playerIds.length} devices`);
-
-    // Send to all user's devices
+    // Send to user via External User ID (Supabase User ID)
+    // This will deliver to ALL devices associated with this user
     await this.sendNotification(
       {
         title: statusData.title,
@@ -1151,7 +1146,7 @@ export class OneSignalService {
         },
       },
       {
-        userIds: playerIds, // Send to ALL player IDs
+        externalUserIds: [userId], // Send via External User ID (Supabase User ID)
       }
     );
   }

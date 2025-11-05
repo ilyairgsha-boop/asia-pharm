@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.4.1-PLAYER-IDS-WITH-OPTIN - Fixed push notifications: always call optIn() + use include_player_ids
-// Build: 2025-01-05 22:00:00 UTC
+// Version: 2.5.0-EXTERNAL-USER-IDS - Use External User IDs (Supabase User IDs) for reliable push delivery
+// Build: 2025-01-05 23:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -231,8 +231,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.4.1 - Player IDs with optIn Fix',
-    version: '2.4.1-PLAYER-IDS-WITH-OPTIN',
+    message: 'Asia-Pharm API v2.5.0 - External User IDs for reliable push',
+    version: '2.5.0-EXTERNAL-USER-IDS',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -633,16 +633,17 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       contents: { en: message },
     };
 
-    // Add targeting - priority: userIds (Player IDs / Subscription IDs) > externalUserIds > tags > get from DB > segments (fallback)
-    if (userIds && userIds.length > 0) {
-      // Use include_player_ids (works with both old Player IDs and new Subscription IDs)
-      notificationData.include_player_ids = userIds;
-      console.log('🎯 Targeting specific users via Player/Subscription IDs:', userIds.length);
-      console.log('📋 Player/Subscription IDs:', JSON.stringify(userIds));
-    } else if (externalUserIds && externalUserIds.length > 0) {
+    // Add targeting - priority: externalUserIds (Supabase User IDs) > userIds > tags > get from DB > segments (fallback)
+    // IMPORTANT: OneSignal SDK v16 requires External User IDs (Supabase User IDs) for reliable targeting
+    if (externalUserIds && externalUserIds.length > 0) {
       notificationData.include_external_user_ids = externalUserIds;
-      console.log('🎯 Targeting specific users via External User IDs:', externalUserIds.length);
+      console.log('🎯 Targeting specific users via External User IDs (Supabase User IDs):', externalUserIds.length);
       console.log('📋 External User IDs:', JSON.stringify(externalUserIds));
+    } else if (userIds && userIds.length > 0) {
+      // Fallback to player IDs (less reliable with SDK v16)
+      notificationData.include_player_ids = userIds;
+      console.log('⚠️ Targeting via Player/Subscription IDs (fallback):', userIds.length);
+      console.log('📋 Player/Subscription IDs:', JSON.stringify(userIds));
     } else if (tags && Object.keys(tags).length > 0) {
       const filters: any[] = [];
       Object.entries(tags).forEach(([key, value]) => {
@@ -651,12 +652,12 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
       notificationData.filters = filters;
       console.log('🎯 Targeting by tags:', tags);
     } else {
-      // Get all active Player/Subscription IDs from database
-      console.log('📊 Fetching active Player/Subscription IDs from database...');
+      // Get all active External User IDs (Supabase User IDs) from database
+      console.log('📊 Fetching active External User IDs (Supabase User IDs) from database...');
       const supabase = getSupabaseAdmin();
       const { data: subscriptions, error: subError } = await supabase
         .from('user_push_subscriptions')
-        .select('player_id')
+        .select('user_id')
         .eq('is_active', true);
       
       if (subError) {
@@ -667,15 +668,15 @@ app.post('/make-server-a75b5353/api/push/send', requireAdmin, async (c) => {
         notificationData.included_segments = targetSegments;
         console.log('⚠️ Using segments as fallback:', targetSegments);
       } else {
-        const playerIds = subscriptions?.map(s => s.player_id).filter(Boolean) || [];
-        console.log('📊 Found', playerIds.length, 'active Player/Subscription IDs in database');
-        console.log('📋 Player/Subscription IDs:', JSON.stringify(playerIds.slice(0, 3)), '...');
+        const externalUserIdsFromDB = subscriptions?.map(s => s.user_id).filter(Boolean) || [];
+        console.log('📊 Found', externalUserIdsFromDB.length, 'active External User IDs in database');
+        console.log('📋 External User IDs (Supabase):', JSON.stringify(externalUserIdsFromDB.slice(0, 3)), '...');
         
-        if (playerIds.length > 0) {
-          // Use Player/Subscription IDs from database
-          notificationData.include_player_ids = playerIds;
-          console.log('🎯 Targeting', playerIds.length, 'users via Player/Subscription IDs');
-          console.log('✅ Using Player/Subscription IDs from PushSubscription.id');
+        if (externalUserIdsFromDB.length > 0) {
+          // Use External User IDs (Supabase User IDs) from database
+          notificationData.include_external_user_ids = externalUserIdsFromDB;
+          console.log('🎯 Targeting', externalUserIdsFromDB.length, 'users via External User IDs');
+          console.log('✅ Using External User IDs (Supabase User IDs) for reliable delivery');
         } else {
           console.warn('⚠️ No active subscriptions found in database');
           // Still try to send to segments as last resort
