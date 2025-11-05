@@ -92,6 +92,42 @@ serve(async (req) => {
       console.log('✅ Profile created');
     }
 
+    // Send welcome push notification (async, don't wait for response)
+    try {
+      console.log('🔔 Scheduling welcome push notification...');
+      
+      // Wait a bit to allow user to complete registration flow and potentially subscribe
+      setTimeout(async () => {
+        try {
+          const pushResponse = await fetch(
+            `${supabaseUrl}/functions/v1/send-push-notification`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify({
+                userId: newUser.user.id,
+                type: 'welcome',
+              }),
+            }
+          );
+          
+          if (pushResponse.ok) {
+            console.log('✅ Welcome push notification sent');
+          } else {
+            console.warn('⚠️ Failed to send welcome push:', await pushResponse.text());
+          }
+        } catch (pushError) {
+          console.warn('⚠️ Error sending welcome push:', pushError);
+        }
+      }, 5000); // Wait 5 seconds to allow push subscription to complete
+    } catch (error) {
+      console.warn('⚠️ Error scheduling welcome push:', error);
+      // Don't fail registration if push fails
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
