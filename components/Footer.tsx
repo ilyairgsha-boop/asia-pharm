@@ -1,4 +1,5 @@
 import { useLanguage } from '../contexts/LanguageContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface FooterProps {
   onNavigate: (page: string) => void;
@@ -6,9 +7,10 @@ interface FooterProps {
 
 export const Footer = ({ onNavigate }: FooterProps) => {
   const { t } = useLanguage();
+  const { currentTheme } = useTheme();
 
   return (
-    <footer className="bg-white border-t-[1.7px] border-gray-200 mt-12">
+    <footer className="bg-white border-t-[1.7px] border-gray-200 mt-12 relative overflow-hidden">
       <div className="container mx-auto px-[10px] md:px-4 py-[26px] md:py-8">
         
         {/* DESKTOP VERSION - 3 columns */}
@@ -102,6 +104,27 @@ export const Footer = ({ onNavigate }: FooterProps) => {
           <p className="text-[13px] leading-[19.5px] tracking-[-0.076px]">© 2025 Asia-Pharm.ru. {t('siteName')}.</p>
         </div>
       </div>
+
+      {/* Summer Grass Decoration */}
+      {currentTheme === 'summer' && (
+        <div className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none overflow-hidden">
+          <div className="flex justify-around items-end h-full">
+            {Array.from({ length: 50 }).map((_, i) => (
+              <div
+                key={i}
+                className="text-green-600"
+                style={{
+                  fontSize: `${20 + Math.random() * 20}px`,
+                  transform: `rotate(${-10 + Math.random() * 20}deg)`,
+                  opacity: 0.7 + Math.random() * 0.3,
+                }}
+              >
+                🌿
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </footer>
   );
 };

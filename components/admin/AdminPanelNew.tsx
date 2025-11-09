@@ -18,6 +18,7 @@ import { CategoryDebugger } from './CategoryDebugger';
 import { OneSignalSettings } from './OneSignalSettings';
 import { PushNotifications } from './PushNotifications';
 import { PopUpSettings } from './PopUpSettings';
+import { ThemeSettings } from './ThemeSettings';
 import { EdgeFunctionStatus } from '../EdgeFunctionStatus';
 import { 
   Package, 
@@ -37,10 +38,11 @@ import {
   Send,
   Bell,
   BellRing,
-  MessageSquare
+  MessageSquare,
+  Palette
 } from 'lucide-react';
 
-type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications' | 'popup';
+type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications' | 'popup' | 'themes';
 
 export const AdminPanelNew = () => {
   const { t } = useLanguage();
@@ -63,6 +65,7 @@ export const AdminPanelNew = () => {
     { id: 'pushSettings' as AdminTab, label: t('pushNotificationsSettings'), icon: Bell },
     { id: 'pushNotifications' as AdminTab, label: t('pushNotifications'), icon: BellRing },
     { id: 'popup' as AdminTab, label: t('popUpSettings'), icon: MessageSquare },
+    { id: 'themes' as AdminTab, label: t('themeSettings'), icon: Palette },
     { id: 'seo' as AdminTab, label: t('seoSettings'), icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
   ];
@@ -95,6 +98,8 @@ export const AdminPanelNew = () => {
         return <PushNotifications />;
       case 'popup':
         return <PopUpSettings />;
+      case 'themes':
+        return <ThemeSettings />;
       case 'seo':
         return <SEOSettings />;
       case 'categories':

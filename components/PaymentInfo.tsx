@@ -123,7 +123,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         {/* Header */}
         <button
           onClick={() => onNavigate('profile')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
+          className="order-success-button flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
         >
           <ArrowLeft size={20} />
           {t('backToProfile')}
@@ -162,9 +162,9 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             {/* Card Transfer */}
             <button
               onClick={() => setPaymentMethod('card')}
-              className={`flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
+              className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
                 paymentMethod === 'card'
-                  ? 'border-red-500 bg-red-50'
+                  ? 'border-red-500 bg-red-50 selected'
                   : 'border-gray-200 hover:border-red-300'
               }`}
             >
@@ -185,9 +185,9 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             {/* QR Code */}
             <button
               onClick={() => setPaymentMethod('qr')}
-              className={`flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
+              className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
                 paymentMethod === 'qr'
-                  ? 'border-blue-500 bg-blue-50'
+                  ? 'border-blue-500 bg-blue-50 selected'
                   : 'border-gray-200 hover:border-blue-300'
               }`}
             >
@@ -208,9 +208,9 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             {/* T-Bank */}
             <button
               onClick={() => setPaymentMethod('tbank')}
-              className={`flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
+              className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
                 paymentMethod === 'tbank'
-                  ? 'border-yellow-500 bg-yellow-50'
+                  ? 'border-yellow-500 bg-yellow-50 selected'
                   : 'border-gray-200 hover:border-yellow-300'
               }`}
             >
@@ -231,13 +231,13 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         </div>
 
         {/* Payment Instructions */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="payment-instruction instruction-card bg-white rounded-lg shadow-md p-6">
           {/* Card Payment */}
           {paymentMethod === 'card' && (
             <div className="space-y-6">
               <h2 className="text-xl text-gray-800">{t('cardTransferTitle')}</h2>
               
-              <div className="border-2 border-red-200 rounded-lg p-6 bg-red-50">
+              <div className="instruction-card border-2 border-red-200 rounded-lg p-6 bg-red-50">
                 <label className="block text-sm text-gray-600 mb-3">{t('cardNumber')}</label>
                 <div className="flex items-center gap-4">
                   <div className="text-3xl text-gray-800 tracking-wider flex-1">
@@ -257,19 +257,19 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
                 </div>
               </div>
 
-              <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+              <div className="instruction-card bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
                 <p className="text-gray-800">
                   <strong>⚠️ {t('paymentImportantNote')}</strong>
                 </p>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="instruction-card bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-gray-700">
                   ✅ {t('afterPaymentProcessing')}
                 </p>
               </div>
 
-              <div className="border-t pt-6">
+              <div className="instruction-card border-t pt-6">
                 <h3 className="text-lg text-gray-800 mb-4">📱 {t('paymentInstructions')}:</h3>
                 <ol className="list-decimal list-inside space-y-3 text-gray-700">
                   <li>{t('cardTransferStep1')}</li>
@@ -289,7 +289,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             <div className="space-y-6">
               <h2 className="text-xl text-gray-800">{t('paymentByQrCode')}</h2>
               
-              <div className="flex justify-center p-8 bg-gray-50 rounded-lg">
+              <div className="instruction-card flex justify-center p-8 bg-gray-50 rounded-lg">
                 {qrCodeUrl ? (
                   <div className="w-96 h-96 bg-white border-4 border-blue-500 rounded-lg flex items-center justify-center p-4">
                     <img 
@@ -313,13 +313,13 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
                 )}
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="instruction-card bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-gray-700">
                   ✅ {t('openBankApp')}
                 </p>
               </div>
 
-              <div className="border-t pt-6">
+              <div className="instruction-card border-t pt-6">
                 <h3 className="text-lg text-gray-800 mb-4">📱 {t('paymentInstructions')}:</h3>
                 <ol className="list-decimal list-inside space-y-3 text-gray-700">
                   <li>{t('qrCodeStep1')}</li>
@@ -337,7 +337,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             <div className="space-y-6">
               <h2 className="text-xl text-gray-800">{t('paymentByTBank')}</h2>
               
-              <div className="border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
+              <div className="instruction-card border-2 border-yellow-200 rounded-lg p-6 bg-yellow-50">
                 <label className="block text-sm text-gray-600 mb-3">{t('contractNumber')}</label>
                 <div className="flex items-center gap-4">
                   <div className="text-3xl text-gray-800 tracking-wider flex-1">
@@ -357,13 +357,13 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="instruction-card bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-gray-700">
                   ✅ {t('afterPaymentProcessing')}
                 </p>
               </div>
 
-              <div className="border-t pt-6">
+              <div className="instruction-card border-t pt-6">
                 <h3 className="text-lg text-gray-800 mb-4">📱 {t('paymentInstructions')}:</h3>
                 <ol className="list-decimal list-inside space-y-3 text-gray-700">
                   <li>{t('tbankStep1New')} <a href="https://www.tbank.ru/cardtocard/?tab=card2acc" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{t('tbankClickHere')}</a></li>

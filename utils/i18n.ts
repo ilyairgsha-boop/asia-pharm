@@ -488,7 +488,7 @@ export const translations = {
     order: 'Заказ',
     cardNumberDescription: 'Н��мер карты для перевода. Показывается клиентам при выборе способа оплаты.',
     contractNumberDescription: 'Номер договора для оплаты через Т-Банк.',
-    qrCodeDescription: 'Загрузите QR код для оплаты через СБП (Система быстрых платежей).',
+    qrCodeDescription: 'Загрузите QR код для оплаты через СБП (Система бы��трых платежей).',
     paymentSettingsNote: 'Эти настройки используются на страницах оплаты. Клиенты увидят эту информацию после оформления заказа.',
     
     // New translations for samples category
@@ -991,6 +991,23 @@ export const translations = {
     popUpTranslateApiKeyMissing: 'API ключ Google Translate не настроен',
     popUpTranslateFrom: 'Перевести из',
     popUpSelectSourceLanguage: 'Выберите исходный язык',
+    
+    // Theme Settings
+    themeSettings: 'Управление темами',
+    themeSettingsDescription: 'Выберите тематическое оформление сайта для праздников и сезонов',
+    colorScheme: 'Цветовая схема',
+    primaryColor: 'Основной цвет',
+    secondaryColor: 'Вторичный цвет',
+    accentColor: 'Акцентный цвет',
+    withDecorations: 'С декорациями',
+    applyTheme: 'Применить тему',
+    activeTheme: 'Активная тема',
+    themeApplied: '✅ Тема применена',
+    themeError: '❌ Ошибка применения темы',
+    themePreviewTitle: 'Информация о теме',
+    themePreviewDescription: 'Текущая активная тема и её настройки',
+    currentTheme: 'Текущая тема',
+    decorationsEnabled: 'Декоративные элементы включены',
   },
   
   en: {
@@ -1975,6 +1992,23 @@ export const translations = {
     popUpTranslateApiKeyMissing: 'Google Translate API key not configured',
     popUpTranslateFrom: 'Translate from',
     popUpSelectSourceLanguage: 'Select source language',
+    
+    // Theme Settings
+    themeSettings: 'Theme Management',
+    themeSettingsDescription: 'Select themed design for holidays and seasons',
+    colorScheme: 'Color Scheme',
+    primaryColor: 'Primary Color',
+    secondaryColor: 'Secondary Color',
+    accentColor: 'Accent Color',
+    withDecorations: 'With Decorations',
+    applyTheme: 'Apply Theme',
+    activeTheme: 'Active Theme',
+    themeApplied: '✅ Theme applied',
+    themeError: '❌ Theme application error',
+    themePreviewTitle: 'Theme Information',
+    themePreviewDescription: 'Current active theme and its settings',
+    currentTheme: 'Current Theme',
+    decorationsEnabled: 'Decorative elements enabled',
   },
   
   zh: {
@@ -2960,6 +2994,23 @@ export const translations = {
     popUpTranslateApiKeyMissing: 'Google Translate API密钥未配置',
     popUpTranslateFrom: '翻译自',
     popUpSelectSourceLanguage: '选择源语言',
+    
+    // Theme Settings
+    themeSettings: '主题管理',
+    themeSettingsDescription: '为节日和季节选择主题设计',
+    colorScheme: '配色方案',
+    primaryColor: '主色',
+    secondaryColor: '辅助色',
+    accentColor: '强调色',
+    withDecorations: '带装饰',
+    applyTheme: '应用主题',
+    activeTheme: '活动主题',
+    themeApplied: '✅ 主题已应用',
+    themeError: '❌ 主题应用错误',
+    themePreviewTitle: '主题信息',
+    themePreviewDescription: '当前活动主题及其设置',
+    currentTheme: '当前主题',
+    decorationsEnabled: '装饰元素已启用',
   },
   
   vi: {
@@ -3945,6 +3996,23 @@ export const translations = {
     popUpTranslateApiKeyMissing: 'Khóa API Google Translate chưa được cấu hình',
     popUpTranslateFrom: 'Dịch từ',
     popUpSelectSourceLanguage: 'Chọn ngôn ngữ nguồn',
+    
+    // Theme Settings
+    themeSettings: 'Quản lý chủ đề',
+    themeSettingsDescription: 'Chọn thiết kế chủ đề cho các ngày lễ và mùa',
+    colorScheme: 'Bảng màu',
+    primaryColor: 'Màu chính',
+    secondaryColor: 'Màu phụ',
+    accentColor: 'Màu nhấn',
+    withDecorations: 'Với trang trí',
+    applyTheme: 'Áp dụng chủ đề',
+    activeTheme: 'Chủ đề đang hoạt động',
+    themeApplied: '✅ Chủ đề đã được áp dụng',
+    themeError: '❌ Lỗi áp dụng chủ đề',
+    themePreviewTitle: 'Thông tin chủ đề',
+    themePreviewDescription: 'Chủ đề đang hoạt động hiện tại và cài đặt của nó',
+    currentTheme: 'Chủ đề hiện tại',
+    decorationsEnabled: 'Các yếu tố trang trí đã được bật',
   },
 };
 

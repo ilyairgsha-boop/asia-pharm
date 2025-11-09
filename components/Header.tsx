@@ -3,6 +3,7 @@ import { ShoppingCart, User, LogOut, UserPlus, Settings, Menu, X, Activity, Hear
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart, type Product } from '../contexts/CartContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { Language } from '../utils/i18n';
 import { SmartSearch } from './SmartSearch';
 
@@ -20,6 +21,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
   const { language, setLanguage, t, currentLanguage } = useLanguage();
   const { user, logout } = useAuth();
   const { totalItemsCount } = useCart();
+  const { currentTheme } = useTheme();
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const [sidebarMenuOpen, setSidebarMenuOpen] = useState(false);
   const [sidebarCategories, setSidebarCategories] = useState<any[]>([]);
@@ -84,6 +86,24 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
 
   const cartItemsCount = totalItemsCount;
 
+  // Функция для получения декорации логотипа в зависимости от темы
+  const getLogoDecoration = () => {
+    switch (currentTheme) {
+      case 'new-year':
+        return <span className="ml-2 text-3xl">❄️</span>;
+      case 'womens-day':
+        return <span className="ml-2 text-3xl">🌷</span>;
+      case 'autumn':
+        return <span className="ml-2 text-3xl">🍁</span>;
+      case 'defenders-day':
+        return <span className="ml-2 text-2xl">⭐🎗️</span>;
+      case 'summer':
+        return <span className="ml-2 text-3xl">☀️</span>;
+      default:
+        return null;
+    }
+  };
+
   return (
     <header className="bg-white border-b-4 border-red-600 shadow-md sticky top-0 z-50">
       {/* Top bar with language selector - Desktop only */}
@@ -124,12 +144,15 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
                 <span className="text-4xl">中</span>
               </div>
-              <h1 
-                className="text-red-600 text-4xl whitespace-nowrap"
-                style={{ fontFamily: "'Marck Script', cursive" }}
-              >
-                Азия Фарм
-              </h1>
+              <div className="flex items-center">
+                <h1 
+                  className="text-red-600 text-4xl whitespace-nowrap"
+                  style={{ fontFamily: "'Marck Script', cursive" }}
+                >
+                  Азия Фарм
+                </h1>
+                {getLogoDecoration()}
+              </div>
             </button>
             
             <div className="relative">
@@ -172,7 +195,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
                   onStoreChange(store.id);
                   onNavigate('home');
                 }}
-                className={`flex-1 px-3 py-4 rounded-lg transition-all flex items-center justify-center text-center ${
+                className={`store-button flex-1 px-3 py-4 rounded-lg transition-all flex items-center justify-center text-center ${
                   currentStore === store.id
                     ? 'bg-red-600 text-white shadow-md border-2 border-red-600'
                     : 'border-2 border-red-600 text-red-600 hover:bg-red-50'
@@ -222,7 +245,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
             <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg">
               <span className="text-3xl">中</span>
             </div>
-            <div>
+            <div className="flex items-center">
               <h1 
                 className="text-red-600 text-5xl leading-tight tracking-wide font-russian"
                 style={{ 
@@ -231,6 +254,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               >
                 Азия Фарм
               </h1>
+              {getLogoDecoration()}
             </div>
           </button>
 
@@ -330,9 +354,9 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
                 onStoreChange(store.id);
                 onNavigate('home');
               }}
-              className={`px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
+              className={`store-button px-4 py-2 rounded-lg transition-all flex items-center gap-2 ${
                 currentStore === store.id
-                  ? 'bg-red-600 text-white shadow-md border-2 border-red-600'
+                  ? 'bg-red-600 text-white shadow-md border-2 border-red-600 active'
                   : 'border-2 border-red-600 text-red-600 hover:bg-red-50'
               }`}
             >

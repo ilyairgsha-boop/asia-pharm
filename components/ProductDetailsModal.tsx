@@ -157,7 +157,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
               {/* Badges */}
               <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
                 {isSaleActive && saleDiscount > 0 && (
-                  <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-full text-base shadow-lg font-semibold">
+                  <div className="sale-badge bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-full text-base shadow-lg font-semibold">
                     -{saleDiscount}%
                   </div>
                 )}
@@ -185,12 +185,12 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
                     <div className="text-gray-400 text-xl line-through mb-2">
                       {originalPrice.toFixed(0)} ₽
                     </div>
-                    <div className="text-3xl md:text-3xl text-red-600 font-semibold">
+                    <div className="product-price text-3xl md:text-3xl text-red-600 font-semibold">
                       {discountedPrice.toFixed(0)} ₽
                     </div>
                   </div>
                 ) : (
-                  <div className="text-3xl md:text-3xl text-red-600 mb-3 md:mb-2">
+                  <div className="product-price text-3xl md:text-3xl text-red-600 mb-3 md:mb-2">
                     {product.price.toFixed(0)} ₽
                   </div>
                 )}
@@ -203,7 +203,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
                   ref={buttonRef}
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
-                  className={`w-full flex items-center justify-center gap-2 px-6 py-4 md:py-3 rounded-lg transition-colors text-lg md:text-base ${
+                  className={`add-to-cart-button w-full flex items-center justify-center gap-2 px-6 py-4 md:py-3 rounded-lg transition-colors text-lg md:text-base ${
                     product.inStock
                       ? 'bg-red-600 text-white hover:bg-red-700'
                       : 'bg-gray-300 text-gray-500 cursor-not-allowed'

@@ -16,6 +16,15 @@
     --font-weight-medium: 500;
     --font-weight-normal: 400;
 
+    /* Theme color variables - default (can be overridden by JavaScript) */
+    --color-primary: #dc2626;
+    --color-secondary: #991b1b;
+    --color-accent: #f87171;
+    --color-background: #ffffff;
+    --color-surface: #f9fafb;
+    --color-text: #1f2937;
+    --color-border: #e5e7eb;
+
     /* Color variables in HSL format for Tailwind */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
@@ -287,4 +296,396 @@ img.product-image {
   :root {
     --font-size: 13px;
   }
+}
+
+/* Theme-specific styles */
+
+/* BLACK FRIDAY - черно-бело-желтая тема */
+.theme-black-friday {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+}
+
+/* 1. Верхняя часть с флагами - черный фон */
+.theme-black-friday header .bg-red-600 {
+  background-color: #000000 !important;
+}
+
+/* 2. Хедер - черный фон, белые элементы */
+.theme-black-friday header {
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+  color: #ffffff !important;
+}
+
+.theme-black-friday header .bg-white {
+  background-color: #000000 !important;
+}
+
+.theme-black-friday header .text-red-600,
+.theme-black-friday header .text-red-500 {
+  color: #ffffff !important;
+}
+
+/* Логотип белый */
+.theme-black-friday header h1 {
+  color: #ffffff !important;
+}
+
+/* Китайский иероглиф - белый фон с черным текстом */
+.theme-black-friday header .bg-red-600.rounded-full {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* Строка поиска - черный фон, белый текст */
+.theme-black-friday header input,
+.theme-black-friday header input::placeholder {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border-color: #fbbf24 !important;
+}
+
+/* Кнопки выбора магазинов - белые с черным текстом */
+.theme-black-friday header button[class*="store"],
+.theme-black-friday .store-button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday header button[class*="store"]:hover,
+.theme-black-friday header button[class*="store"].active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+/* 3. Верхнее меню категорий - черный текст в кнопках */
+.theme-black-friday .category-menu-button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .category-menu-button:hover,
+.theme-black-friday .category-menu-button.active {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+/* 4. Футер - черный фон, белый текст */
+.theme-black-friday footer {
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+  color: #ffffff !important;
+}
+
+.theme-black-friday footer .text-gray-900,
+.theme-black-friday footer .text-gray-800,
+.theme-black-friday footer .text-gray-700,
+.theme-black-friday footer .text-gray-600,
+.theme-black-friday footer .text-gray-500 {
+  color: #ffffff !important;
+}
+
+.theme-black-friday footer button {
+  color: #ffffff !important;
+  background-color: transparent !important;
+}
+
+.theme-black-friday footer button:hover {
+  color: #fbbf24 !important;
+}
+
+/* 5. Корзина - черные кнопки с белым текстом */
+.theme-black-friday .cart-remove-button,
+.theme-black-friday button[class*="remove"] {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .checkout-button,
+.theme-black-friday .continue-shopping-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .checkout-button:hover,
+.theme-black-friday .continue-shopping-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 6. Способы доставки - при нажатии не меняют цвет */
+.theme-black-friday .delivery-option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .delivery-option.selected,
+.theme-black-friday .delivery-option:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+/* 7. Способы оплаты - желтая обводка, белый фон */
+.theme-black-friday .payment-option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .payment-option.selected,
+.theme-black-friday .payment-option:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+/* 8. Чекбокс "Я согласен" - белый фон, без желтого */
+.theme-black-friday .agreement-section {
+  background-color: #ffffff !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .agreement-checkbox {
+  background-color: #ffffff !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .agreement-checkbox:checked {
+  background-color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .agreement-section label {
+  color: #000000 !important;
+}
+
+.theme-black-friday .agreement-section button {
+  background-color: transparent !important;
+  color: #fbbf24 !important;
+}
+
+/* 9. Страница успешного заказа */
+.theme-black-friday .order-success-button {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-success-button:hover {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+/* Способы оплаты на странице успеха - только желтая обводка */
+.theme-black-friday .payment-option {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .payment-option.selected,
+.theme-black-friday .payment-option:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .payment-option .bg-red-500,
+.theme-black-friday .payment-option .bg-red-100,
+.theme-black-friday .payment-option .bg-blue-500,
+.theme-black-friday .payment-option .bg-blue-100,
+.theme-black-friday .payment-option .bg-yellow-400,
+.theme-black-friday .payment-option .bg-yellow-100 {
+  background-color: #fbbf24 !important;
+}
+
+.theme-black-friday .payment-option .text-white,
+.theme-black-friday .payment-option .text-red-600,
+.theme-black-friday .payment-option .text-blue-600,
+.theme-black-friday .payment-option .text-yellow-600,
+.theme-black-friday .payment-option .text-gray-900 {
+  color: #000000 !important;
+}
+
+/* Инструкции - белые окна, черный текст */
+.theme-black-friday .instruction-card,
+.theme-black-friday .payment-instruction {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .instruction-card .text-gray-800,
+.theme-black-friday .instruction-card .text-gray-700,
+.theme-black-friday .instruction-card .text-gray-600 {
+  color: #000000 !important;
+}
+
+.theme-black-friday .instruction-card .bg-red-50,
+.theme-black-friday .instruction-card .bg-yellow-50,
+.theme-black-friday .instruction-card .bg-blue-50,
+.theme-black-friday .instruction-card .bg-gray-50 {
+  background-color: #ffffff !important;
+}
+
+.theme-black-friday .instruction-card .border-red-200,
+.theme-black-friday .instruction-card .border-yellow-200,
+.theme-black-friday .instruction-card .border-yellow-300,
+.theme-black-friday .instruction-card .border-blue-200 {
+  border-color: #fbbf24 !important;
+}
+
+/* 10. Сумма к оплате - белая */
+.theme-black-friday .final-total-price,
+.theme-black-friday .cart-total-price {
+  color: #ffffff !important;
+}
+
+/* 11. Иконки акции (-X%) - желтые с черным текстом */
+.theme-black-friday .sale-badge {
+  background: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+/* 12. Онлайн чат - желтая кнопка с черным текстом */
+.theme-black-friday .chat-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .chat-button:hover {
+  background-color: #eab308 !important;
+}
+
+.theme-black-friday .chat-header {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .chat-platform-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .chat-platform-button:hover {
+  background-color: #eab308 !important;
+}
+
+/* Карточки товаров */
+/* 2. Цена белая, кнопка в корзину желтая */
+.theme-black-friday .product-price {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .add-to-cart-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .add-to-cart-button:hover:not(:disabled) {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 3. Сердечко - желтая обводка при наведении */
+.theme-black-friday .favorite-button:hover {
+  border: 2px solid #fbbf24 !important;
+}
+
+/* 4. Кнопки магазинов в корзине - желтые с черным текстом */
+.theme-black-friday .cart-store-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .cart-store-button:hover,
+.theme-black-friday .cart-store-button.active {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 5. Цена белая, кнопки +/- желтые */
+.theme-black-friday .cart-item-price {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .quantity-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .quantity-button:hover {
+  background-color: #eab308 !important;
+}
+
+/* 6, 7. Способы доставки и оплаты - черный текст */
+.theme-black-friday .delivery-option .text-gray-800,
+.theme-black-friday .delivery-option .text-gray-600,
+.theme-black-friday .payment-option .text-gray-800,
+.theme-black-friday .payment-option .text-gray-600 {
+  color: #000000 !important;
+}
+
+/* 8. "Я согласен с" - желтого цвета */
+.theme-black-friday .agreement-section label a {
+  color: #fbbf24 !important;
+}
+
+/* 9. Кнопка оформить заказ */
+.theme-black-friday button[type="submit"] {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday button[type="submit"]:hover:not(:disabled) {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* Общие стили */
+.theme-black-friday .bg-white {
+  background-color: #000000 !important;
+}
+
+.theme-black-friday .text-gray-900,
+.theme-black-friday .text-gray-800,
+.theme-black-friday .text-gray-700,
+.theme-black-friday .text-gray-600 {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .border-red-600,
+.theme-black-friday .border-gray-200,
+.theme-black-friday .border-gray-300 {
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .shadow-md,
+.theme-black-friday .shadow-lg,
+.theme-black-friday .shadow-xl {
+  box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.3), 0 2px 4px -1px rgba(251, 191, 36, 0.2);
+}
+
+/* Стили для темы 23 февраля */
+.theme-defenders-day .bg-red-600 {
+  background-color: var(--color-primary) !important;
+}
+
+/* Стили для летней темы */
+.theme-summer .bg-red-600 {
+  background-color: var(--color-primary) !important;
+}
+
+.theme-summer .text-red-600 {
+  color: var(--color-primary) !important;
 }

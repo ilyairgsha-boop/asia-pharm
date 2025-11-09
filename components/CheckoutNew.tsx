@@ -634,7 +634,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
 
               {store === 'china' && (
                 <div className="space-y-3">
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className={`delivery-option flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                    deliveryMethod === 'russian_post' ? 'selected' : ''
+                  }`}>
                     <input
                       type="radio"
                       name="deliveryMethod"
@@ -648,7 +650,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     </div>
                   </label>
 
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                  <label className={`delivery-option flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
+                    deliveryMethod === 'pyaterochka' ? 'selected' : ''
+                  }`}>
                     <input
                       type="radio"
                       name="deliveryMethod"
@@ -687,9 +691,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               <div className="grid md:grid-cols-3 gap-4">
                 {/* Card Transfer */}
                 <label
-                  className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     paymentMethod === 'card'
-                      ? 'border-red-500 bg-red-50'
+                      ? 'border-red-500 bg-red-50 selected'
                       : 'border-gray-200 hover:border-red-300'
                   }`}
                 >
@@ -717,9 +721,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
 
                 {/* QR Code */}
                 <label
-                  className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     paymentMethod === 'qr'
-                      ? 'border-blue-500 bg-blue-50'
+                      ? 'border-blue-500 bg-blue-50 selected'
                       : 'border-gray-200 hover:border-blue-300'
                   }`}
                 >
@@ -747,9 +751,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
 
                 {/* T-Bank */}
                 <label
-                  className={`flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                  className={`payment-option flex flex-col items-center p-4 border-2 rounded-lg cursor-pointer transition-all ${
                     paymentMethod === 'tbank'
-                      ? 'border-yellow-500 bg-yellow-50'
+                      ? 'border-yellow-500 bg-yellow-50 selected'
                       : 'border-gray-200 hover:border-yellow-300'
                   }`}
                 >
@@ -918,14 +922,14 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             </div>
 
             {/* Соглашения */}
-            <div className="bg-white rounded-lg shadow-md p-6 space-y-3">
+            <div className="agreement-section bg-white rounded-lg shadow-md p-6 space-y-3">
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
                   id="privacyPolicy"
                   checked={agreedToPrivacy}
                   onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                  className="mt-1"
+                  className="agreement-checkbox mt-1"
                 />
                 <label htmlFor="privacyPolicy" className="text-sm text-gray-700">
                   {t('iAgreeWith')}{' '}
@@ -946,7 +950,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                   id="termsOfService"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1"
+                  className="agreement-checkbox mt-1"
                 />
                 <label htmlFor="termsOfService" className="text-sm text-gray-700">
                   {t('iAgreeWith')}{' '}
@@ -1102,7 +1106,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
 
               <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                 <span className="text-gray-800">{t('finalTotal')}:</span>
-                <span className="text-red-600 text-xl">
+                <span className="final-total-price text-red-600 text-xl">
                   {total.toLocaleString()} ₽
                 </span>
               </div>

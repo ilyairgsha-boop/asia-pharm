@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CartProvider, type StoreType, type Product } from './contexts/CartContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { CategoryMenu } from './components/CategoryMenu';
 import { DiseaseSidebar } from './components/DiseaseSidebar';
@@ -20,6 +21,7 @@ import { CookieConsent } from './components/CookieConsent';
 import { ProductDetailsModal } from './components/ProductDetailsModal';
 import { CreateAdminPage } from './components/CreateAdminPage';
 import { PopUpModal } from './components/PopUpModal';
+import { ThemeDecorations } from './components/ThemeDecorations';
 import { Footer } from './components/Footer';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
@@ -782,6 +784,9 @@ function AppContent() {
       {/* Pop Up Modal */}
       <PopUpModal />
 
+      {/* Theme Decorations */}
+      <ThemeDecorations />
+
       {/* Footer */}
       <Footer onNavigate={handleNavigate} />
 
@@ -794,11 +799,13 @@ function AppContent() {
 export default function App() {
   return (
     <LanguageProvider>
-      <AuthProvider>
-        <CartProvider>
-          <AppContent />
-        </CartProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <CartProvider>
+            <AppContent />
+          </CartProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </LanguageProvider>
   );
 }

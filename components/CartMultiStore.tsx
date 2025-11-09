@@ -86,9 +86,9 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
               <button
                 key={store.id}
                 onClick={() => setSelectedStore(store.id)}
-                className={`px-6 py-3 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap ${
+                className={`cart-store-button px-6 py-3 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap ${
                   selectedStore === store.id
-                    ? 'bg-red-600 text-white'
+                    ? 'bg-red-600 text-white active'
                     : 'bg-white text-gray-700 border border-gray-300 hover:border-red-600'
                 }`}
               >
@@ -164,14 +164,14 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
 
                   <div className="flex-grow">
                     <h3 className="text-gray-800 mb-2">{getName(item)}</h3>
-                    <p className="text-red-600 mb-2">
+                    <p className="cart-item-price text-red-600 mb-2">
                       {(item.price || 0).toLocaleString()} ₽
                     </p>
 
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1, selectedStore)}
-                        className="p-1 rounded bg-gray-200 hover:bg-gray-300 transition-colors"
+                        className="quantity-button p-1 rounded bg-gray-200 hover:bg-gray-300 transition-colors"
                       >
                         <Minus size={16} />
                       </button>
@@ -180,7 +180,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                       </span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1, selectedStore)}
-                        className="p-1 rounded bg-gray-200 hover:bg-gray-300 transition-colors"
+                        className="quantity-button p-1 rounded bg-gray-200 hover:bg-gray-300 transition-colors"
                       >
                         <Plus size={16} />
                       </button>
@@ -190,7 +190,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                   <div className="flex flex-col items-end justify-between">
                     <button
                       onClick={() => removeFromCart(item.id, selectedStore)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="cart-remove-button p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title={t('remove')}
                     >
                       <Trash2 size={20} />
@@ -213,7 +213,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
             <div className="border-t border-gray-200 pt-4 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600">{t('subtotal')}:</span>
-                <span className="text-gray-800">{(totalPrice || 0).toLocaleString()} ₽</span>
+                <span className="cart-total-price text-gray-800">{(totalPrice || 0).toLocaleString()} ₽</span>
               </div>
             </div>
 
@@ -221,14 +221,14 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
               <>
                 <button
                   onClick={() => onNavigate('checkout', selectedStore)}
-                  className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors mb-3 text-center flex items-center justify-center"
+                  className="checkout-button w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors mb-3 text-center flex items-center justify-center"
                 >
                   {t('checkout')}
                 </button>
 
                 <button
                   onClick={() => onNavigate('home')}
-                  className="w-full border border-red-600 text-red-600 py-3 rounded-lg hover:bg-red-50 transition-colors text-center flex items-center justify-center"
+                  className="continue-shopping-button w-full border border-red-600 text-red-600 py-3 rounded-lg hover:bg-red-50 transition-colors text-center flex items-center justify-center"
                 >
                   {t('continueShopping')}
                 </button>

@@ -460,9 +460,9 @@ export const CategoryMenu = ({ selectedCategory, onSelectCategory, currentStore 
             <button
               key={category.id}
               onClick={() => onSelectCategory(category.id)}
-              className={`flex-shrink-0 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+              className={`category-menu-button flex-shrink-0 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                 selectedCategory === category.id
-                  ? 'bg-red-600 text-white'
+                  ? 'bg-red-600 text-white active'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >

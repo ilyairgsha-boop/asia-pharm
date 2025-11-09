@@ -170,7 +170,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
         {/* Badges container */}
         <div className="absolute top-2 right-2 flex flex-col gap-1.5 md:gap-2 items-end">
           {isSaleActive && saleDiscount > 0 && (
-            <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 py-1 rounded-full text-sm shadow-lg font-semibold">
+            <div className="sale-badge bg-gradient-to-r from-red-600 to-red-700 text-white px-3 py-1 rounded-full text-sm shadow-lg font-semibold">
               -{saleDiscount}%
             </div>
           )}
@@ -191,7 +191,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
         {/* Favorite button */}
         <button
           onClick={toggleFavorite}
-          className="absolute top-2 left-2 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all z-10"
+          className="favorite-button absolute top-2 left-2 p-2 bg-white rounded-full shadow-md hover:shadow-lg transition-all z-10"
           title={isFavorite ? t('removeFromFavorites') : t('addToFavorites')}
         >
           <Heart
@@ -223,12 +223,12 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
                 <div className="text-gray-400 text-sm line-through whitespace-nowrap">
                   {originalPrice.toFixed(0)} ₽
                 </div>
-                <div className="text-red-600 font-semibold text-lg md:text-base whitespace-nowrap">
+                <div className="product-price text-red-600 font-semibold text-lg md:text-base whitespace-nowrap">
                   {discountedPrice.toFixed(0)} ₽
                 </div>
               </div>
             ) : (
-              <div className="text-red-600 text-lg md:text-base whitespace-nowrap">
+              <div className="product-price text-red-600 text-lg md:text-base whitespace-nowrap">
                 {product.price.toFixed(0)} ₽
               </div>
             )}
@@ -243,7 +243,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
             ref={buttonRef}
             onClick={handleAddToCart}
             disabled={!product.inStock}
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 md:py-2 rounded-lg transition-colors text-base md:text-sm whitespace-nowrap shrink-0 ${
+            className={`add-to-cart-button flex items-center justify-center gap-2 px-4 py-2.5 md:py-2 rounded-lg transition-colors text-base md:text-sm whitespace-nowrap shrink-0 ${
               product.inStock
                 ? 'bg-red-600 text-white hover:bg-red-700'
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
