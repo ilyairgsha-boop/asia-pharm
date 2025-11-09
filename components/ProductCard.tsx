@@ -1,4 +1,4 @@
-import { ShoppingCart, Heart, Zap } from 'lucide-react';
+import { ShoppingCart, Heart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -207,14 +207,6 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 
       <div className="p-3 md:p-4">
         <h3 className="text-gray-800 mb-3 line-clamp-2 min-h-[3rem] md:min-h-[3rem] text-base md:text-base text-[16px]">{getName()}</h3>
-
-        {/* Sale badge */}
-        {isSaleActive && (
-          <div className="mb-2 flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1 rounded text-sm">
-            <Zap size={14} className="shrink-0 fill-orange-600" />
-            <span className="truncate font-semibold">{t('sale')}</span>
-          </div>
-        )}
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div className="min-w-0">
