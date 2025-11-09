@@ -19,6 +19,7 @@ import { LiveChat } from './components/LiveChat';
 import { CookieConsent } from './components/CookieConsent';
 import { ProductDetailsModal } from './components/ProductDetailsModal';
 import { CreateAdminPage } from './components/CreateAdminPage';
+import { PopUpModal } from './components/PopUpModal';
 import { Footer } from './components/Footer';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
@@ -777,6 +778,9 @@ function AppContent() {
           </div>
         </div>
       )}
+
+      {/* Pop Up Modal */}
+      <PopUpModal />
 
       {/* Footer */}
       <Footer onNavigate={handleNavigate} />

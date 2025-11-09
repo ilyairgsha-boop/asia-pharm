@@ -964,6 +964,22 @@ export const translations = {
     language: 'Язык',
     system: 'Системное',
     marketing: 'Реклама',
+    
+    // Pop Up Settings
+    popUpSettings: 'Управление Pop Up',
+    popUpTitle: 'Настройки всплывающего окна',
+    popUpDescription: 'Настройте всплывающее модальное окно, которое будет отображаться посетителям сайта',
+    enablePopUp: 'Включить Pop Up',
+    popUpContent: 'Содержимое Pop Up (HTML)',
+    popUpEnabled: 'Pop Up включен',
+    popUpDisabled: 'Pop Up отключен',
+    enterHtmlContent: 'Введите HTML код',
+    popUpContentPlaceholder: 'Вставьте HTML код содержимого Pop Up...',
+    popUpPreview: 'Предварительный просмотр',
+    popUpShowOnce: 'Показывать один раз за сессию',
+    popUpShowOnceDescription: 'Pop Up будет показан только один раз посетителю',
+    popUpDelay: 'Задержка показа (секунды)',
+    popUpDelayDescription: 'Время задержки перед показом Pop Up',
   },
   
   en: {
@@ -1921,6 +1937,22 @@ export const translations = {
     language: 'Language',
     system: 'System',
     marketing: 'Marketing',
+    
+    // Pop Up Settings
+    popUpSettings: 'Pop Up Management',
+    popUpTitle: 'Pop Up Settings',
+    popUpDescription: 'Configure a pop-up modal window that will be displayed to site visitors',
+    enablePopUp: 'Enable Pop Up',
+    popUpContent: 'Pop Up Content (HTML)',
+    popUpEnabled: 'Pop Up Enabled',
+    popUpDisabled: 'Pop Up Disabled',
+    enterHtmlContent: 'Enter HTML code',
+    popUpContentPlaceholder: 'Paste HTML code for Pop Up content...',
+    popUpPreview: 'Preview',
+    popUpShowOnce: 'Show once per session',
+    popUpShowOnceDescription: 'Pop Up will be shown only once to a visitor',
+    popUpDelay: 'Show delay (seconds)',
+    popUpDelayDescription: 'Delay time before showing Pop Up',
   },
   
   zh: {
@@ -2879,6 +2911,22 @@ export const translations = {
     language: '语言',
     system: '系统',
     marketing: '营销',
+    
+    // Pop Up Settings
+    popUpSettings: 'Pop Up管理',
+    popUpTitle: 'Pop Up设置',
+    popUpDescription: '配置将向网站访问者显示的弹出模态窗口',
+    enablePopUp: '启用Pop Up',
+    popUpContent: 'Pop Up内容 (HTML)',
+    popUpEnabled: 'Pop Up已启用',
+    popUpDisabled: 'Pop Up已禁用',
+    enterHtmlContent: '输入HTML代码',
+    popUpContentPlaceholder: '粘贴Pop Up内容的HTML代码...',
+    popUpPreview: '预览',
+    popUpShowOnce: '每次会话仅显示一次',
+    popUpShowOnceDescription: 'Pop Up仅向访问者显示一次',
+    popUpDelay: '显示延迟（秒）',
+    popUpDelayDescription: '显示Pop Up前的延迟时间',
   },
   
   vi: {
@@ -3837,6 +3885,22 @@ export const translations = {
     language: 'Ngôn ngữ',
     system: 'Hệ thống',
     marketing: 'Tiếp thị',
+    
+    // Pop Up Settings
+    popUpSettings: 'Quản lý Pop Up',
+    popUpTitle: 'Cài đặt Pop Up',
+    popUpDescription: 'Cấu hình cửa sổ bật lên sẽ được hiển thị cho khách truy cập trang web',
+    enablePopUp: 'Bật Pop Up',
+    popUpContent: 'Nội dung Pop Up (HTML)',
+    popUpEnabled: 'Pop Up đã bật',
+    popUpDisabled: 'Pop Up đã tắt',
+    enterHtmlContent: 'Nhập mã HTML',
+    popUpContentPlaceholder: 'Dán mã HTML cho nội dung Pop Up...',
+    popUpPreview: 'Xem trước',
+    popUpShowOnce: 'Hiển thị một lần mỗi phiên',
+    popUpShowOnceDescription: 'Pop Up sẽ chỉ hiển thị một lần cho khách',
+    popUpDelay: 'Độ trễ hiển thị (giây)',
+    popUpDelayDescription: 'Thời gian trễ trước khi hiển thị Pop Up',
   },
 };
 

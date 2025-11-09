@@ -17,6 +17,7 @@ import { CatalogCSV } from './CatalogCSV';
 import { CategoryDebugger } from './CategoryDebugger';
 import { OneSignalSettings } from './OneSignalSettings';
 import { PushNotifications } from './PushNotifications';
+import { PopUpSettings } from './PopUpSettings';
 import { EdgeFunctionStatus } from '../EdgeFunctionStatus';
 import { 
   Package, 
@@ -35,10 +36,11 @@ import {
   Bug,
   Send,
   Bell,
-  BellRing
+  BellRing,
+  MessageSquare
 } from 'lucide-react';
 
-type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications';
+type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications' | 'popup';
 
 export const AdminPanelNew = () => {
   const { t } = useLanguage();
@@ -60,6 +62,7 @@ export const AdminPanelNew = () => {
     { id: 'broadcast' as AdminTab, label: t('emailBroadcast'), icon: Send },
     { id: 'pushSettings' as AdminTab, label: t('pushNotificationsSettings'), icon: Bell },
     { id: 'pushNotifications' as AdminTab, label: t('pushNotifications'), icon: BellRing },
+    { id: 'popup' as AdminTab, label: t('popUpSettings'), icon: MessageSquare },
     { id: 'seo' as AdminTab, label: t('seoSettings'), icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
   ];
@@ -90,6 +93,8 @@ export const AdminPanelNew = () => {
         return <OneSignalSettings />;
       case 'pushNotifications':
         return <PushNotifications />;
+      case 'popup':
+        return <PopUpSettings />;
       case 'seo':
         return <SEOSettings />;
       case 'categories':
