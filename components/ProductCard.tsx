@@ -206,24 +206,23 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
       </div>
 
       <div className="p-3 md:p-4">
-        <h3 className="text-gray-800 mb-3 line-clamp-2 min-h-[3rem] md:min-h-[3rem] text-base md:text-base text-[16px]">{getName()}</h3>
+        <h3 className="text-gray-800 mb-2 line-clamp-2 min-h-[3rem] md:min-h-[3rem] text-base md:text-base text-[16px]">{getName()}</h3>
+        
+        {/* Зачеркнутая цена - показываем под названием для товаров с акцией */}
+        {isSaleActive && saleDiscount > 0 ? (
+          <div className="text-gray-400 text-sm line-through whitespace-nowrap mb-2">
+            {originalPrice.toFixed(0)} ₽
+          </div>
+        ) : (
+          <div className="h-[20px] mb-2"></div>
+        )}
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
           <div className="min-w-0">
-            {isSaleActive && saleDiscount > 0 ? (
-              <div className="flex flex-col gap-1">
-                <div className="text-gray-400 text-sm line-through whitespace-nowrap">
-                  {originalPrice.toFixed(0)} ₽
-                </div>
-                <div className="product-price text-red-600 font-semibold text-lg md:text-base whitespace-nowrap">
-                  {discountedPrice.toFixed(0)} ₽
-                </div>
-              </div>
-            ) : (
-              <div className="product-price text-red-600 text-lg md:text-base whitespace-nowrap">
-                {product.price.toFixed(0)} ₽
-              </div>
-            )}
+            {/* Актуальная цена (для товаров с акцией и без) */}
+            <div className="product-price text-red-600 font-semibold text-lg md:text-base whitespace-nowrap">
+              {isSaleActive && saleDiscount > 0 ? discountedPrice.toFixed(0) : product.price.toFixed(0)} ₽
+            </div>
             {isWholesaler && wholesalePrice && (
               <div className="text-sm md:text-sm text-green-600 mt-1 whitespace-nowrap">
                 {t('wholesalePrice')}: ¥{wholesalePrice.toFixed(2)}
