@@ -10,7 +10,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Input } from '../ui/input';
 import { Eye, EyeOff, Save, Languages } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { translateText } from '../../utils/googleTranslate';
 import type { Language } from '../../utils/i18n';
 
 interface PopUpContent {
@@ -137,6 +136,7 @@ export const PopUpSettings = () => {
 
       if (apiKeyError || !apiKeyData?.value) {
         toast.error(t('popUpTranslateApiKeyMissing'));
+        setTranslating(false);
         return;
       }
 
@@ -147,14 +147,35 @@ export const PopUpSettings = () => {
 
       const newContent = { ...content };
 
+      // Map language codes to Google Translate format
+      const langMap: Record<Language, string> = {
+        ru: 'ru',
+        en: 'en',
+        zh: 'zh-CN',
+        vi: 'vi',
+      };
+
       for (const targetLang of targetLanguages) {
         try {
-          const result = await translateText(apiKey, {
-            text: sourceContent,
-            targetLanguage: targetLang,
-            sourceLanguage: sourceLang,
-          });
-          newContent[targetLang] = result.translatedText;
+          const response = await fetch(
+            `https://translation.googleapis.com/language/translate/v2?key=${apiKey}&q=${encodeURIComponent(sourceContent)}&target=${langMap[targetLang]}&source=${langMap[sourceLang]}&format=text`,
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (!response.ok) {
+            console.error(`Translation failed for ${targetLang}`);
+            continue;
+          }
+
+          const data = await response.json();
+          if (data.data?.translations?.[0]) {
+            newContent[targetLang] = data.data.translations[0].translatedText;
+          }
         } catch (error) {
           console.error(`Error translating to ${targetLang}:`, error);
         }
