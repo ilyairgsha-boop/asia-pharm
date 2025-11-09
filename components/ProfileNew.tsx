@@ -954,7 +954,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               {/* Email Settings */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Mail size={20} className="text-red-600" />
+                  <Mail size={20} className="profile-email-icon text-red-600" />
                   <h3 className="text-gray-800">{t('emailSettings')}</h3>
                 </div>
 

@@ -441,7 +441,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
           <button
             onClick={onClose}
-            className="w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center"
+            className="order-details-footer-button w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center"
           >
             {t('close')}
           </button>

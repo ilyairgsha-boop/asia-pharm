@@ -1057,7 +1057,7 @@ img.product-image {
   stroke: #fbbf24 !important;
 }
 
-/* Блоки уровней (Базовый, Серебро, Золото, Платина) - желтые с черным текстом */
+/* Блоки уровней (Базовый, Серебро, Золото, Платина) - желтые с БЕЛЫМ текстом */
 .theme-black-friday .loyalty-tier-card {
   background: #fbbf24 !important;
   border: 2px solid #fbbf24 !important;
@@ -1066,7 +1066,7 @@ img.product-image {
 .theme-black-friday .loyalty-tier-card h4,
 .theme-black-friday .loyalty-tier-card p,
 .theme-black-friday .loyalty-tier-card strong {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 .theme-black-friday .loyalty-tier-badge {
@@ -1075,8 +1075,15 @@ img.product-image {
 }
 
 .theme-black-friday .loyalty-tier-info {
-  background-color: #ffffff !important;
-  border: 1px solid #000000 !important;
+  background-color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .loyalty-tier-info p,
+.theme-black-friday .loyalty-tier-info strong,
+.theme-black-friday .loyalty-tier-info .text-gray-600,
+.theme-black-friday .loyalty-tier-info .text-gray-800 {
+  color: #ffffff !important;
 }
 
 .theme-black-friday .loyalty-tier-percent,
@@ -1084,7 +1091,7 @@ img.product-image {
 .theme-black-friday .loyalty-tier-percent.text-blue-600,
 .theme-black-friday .loyalty-tier-percent.text-yellow-600,
 .theme-black-friday .loyalty-tier-percent.text-red-600 {
-  color: #000000 !important;
+  color: #ffffff !important;
 }
 
 /* Блок "Пример" - желтый с черным текстом */
@@ -1171,6 +1178,26 @@ img.product-image {
   border-color: #fbbf24 !important;
   ring-color: #fbbf24 !important;
   box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* 26. Иконка Email Settings в настройках профиля - желтая */
+.theme-black-friday .profile-email-icon,
+.theme-black-friday .profile-email-icon.text-red-600 {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* 27. Нижняя кнопка "Закрыть" в модальном окне истории заказов - желтая с черным текстом */
+.theme-black-friday .order-details-footer-button,
+.theme-black-friday .order-details-footer-button.bg-gray-600 {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-details-footer-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
 }
 
 /* 17. Страница успешного заказа - верхняя кнопка всегда желтая */
