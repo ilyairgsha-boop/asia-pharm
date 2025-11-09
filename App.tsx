@@ -503,13 +503,13 @@ function AppContent() {
   // Handle shared product URL on mount
   useEffect(() => {
     const checkSharedProduct = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const productId = urlParams.get('product');
-      
-      if (productId) {
-        console.log('🔗 Shared product link detected:', productId);
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const productId = urlParams.get('product');
         
-        try {
+        if (productId) {
+          console.log('🔗 Shared product link detected:', productId);
+          
           const supabase = createClient();
           const { data: product, error } = await supabase
             .from('products')
@@ -522,19 +522,36 @@ function AppContent() {
             toast.error(t('productNotFound') || 'Товар не найден');
           } else if (product) {
             console.log('✅ Shared product loaded:', product.name);
-            setSelectedProduct(product as Product);
+            
+            // Map database fields (snake_case) to TypeScript interface (camelCase)
+            const mappedProduct: Product = {
+              ...product,
+              inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
+              isSample: product.is_sample ?? false,
+              saleEnabled: product.sale_enabled ?? false,
+              saleDiscount: product.sale_discount ?? 0,
+              saleEndDate: product.sale_end_date ?? null,
+            };
+            
+            setSelectedProduct(mappedProduct);
             
             // Remove product parameter from URL without reloading
             const newUrl = window.location.pathname;
             window.history.replaceState({}, '', newUrl);
           }
-        } catch (error) {
-          console.error('❌ Error loading shared product:', error);
         }
+      } catch (error) {
+        console.error('❌ Error loading shared product:', error);
+        // Don't show error toast for Safari compatibility
       }
     };
     
-    checkSharedProduct();
+    // Small delay for Safari compatibility
+    const timer = setTimeout(() => {
+      checkSharedProduct();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   const handleNavigate = async (page: string, store?: StoreType) => {
@@ -551,7 +568,17 @@ function AppContent() {
           .single();
         
         if (product) {
-          setSelectedProduct(product as Product);
+          // Map database fields (snake_case) to TypeScript interface (camelCase)
+          const mappedProduct: Product = {
+            ...product,
+            inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
+            isSample: product.is_sample ?? false,
+            saleEnabled: product.sale_enabled ?? false,
+            saleDiscount: product.sale_discount ?? 0,
+            saleEndDate: product.sale_end_date ?? null,
+          };
+          
+          setSelectedProduct(mappedProduct);
         }
       } catch (error) {
         console.error('Error fetching product:', error);
