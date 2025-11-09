@@ -65,6 +65,7 @@ export const translations = {
     addToCart: 'В корзину',
     inStock: 'В наличии',
     outOfStock: 'Нет в наличии',
+    sale: 'Акция',
     shortDescription: 'Краткое описание',
     description: 'Описание',
     
@@ -1029,6 +1030,7 @@ export const translations = {
     addToCart: 'Add to Cart',
     inStock: 'In Stock',
     outOfStock: 'Out of Stock',
+    sale: 'Sale',
     shortDescription: 'Short Description',
     description: 'Description',
     
@@ -1985,6 +1987,7 @@ export const translations = {
     addToCart: '加入购物车',
     inStock: '有货',
     outOfStock: '缺货',
+    sale: '促销',
     shortDescription: '简短描述',
     description: '描述',
     
@@ -2942,6 +2945,7 @@ export const translations = {
     addToCart: 'Thêm vào giỏ',
     inStock: 'Còn hàng',
     outOfStock: 'Hết hàng',
+    sale: 'Khuyến mãi',
     shortDescription: 'Mô tả ngắn',
     description: 'Mô tả',
     
