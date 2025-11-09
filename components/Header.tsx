@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ShoppingCart, User, LogOut, UserPlus, Settings, Menu, X, Activity, Heart, Droplet, Bone, Thermometer, Leaf, Shield, Zap, Baby, Eye, CircleDot, Package, Sparkles, Coffee, Wind, TestTube } from 'lucide-react';
+import { ShoppingCart, User, LogOut, UserPlus, Settings, Menu, X, Activity, Heart, Droplet, Bone, Thermometer, Leaf, Shield, Zap, Baby, Eye, CircleDot, Package, Sparkles, Coffee, Wind, TestTube, Star } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart, type Product } from '../contexts/CartContext';
@@ -35,7 +35,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
 
   // Icon mapping for sidebar categories
   const ICON_MAP: Record<string, any> = {
-    Activity, Heart, Droplet, Bone, Thermometer, Leaf, Shield, Zap, Baby, Eye, CircleDot, Package, Sparkles, Coffee, Wind, TestTube,
+    Activity, Heart, Droplet, Bone, Thermometer, Leaf, Shield, Zap, Baby, Eye, CircleDot, Package, Sparkles, Coffee, Wind, TestTube, Star,
     User: ({ size }: { size?: number }) => (
       <svg width={size || 20} height={size || 20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -54,17 +54,35 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
         try {
           const parsed = JSON.parse(storedCategories);
           console.log('📱 Header: Loading categories from localStorage', parsed);
-          if (parsed.sidebar && Array.isArray(parsed.sidebar)) {
+          if (parsed.sidebar && Array.isArray(parsed.sidebar) && parsed.sidebar.length > 0) {
             console.log('📱 Header: Setting sidebar categories', parsed.sidebar.length, 'items');
             setSidebarCategories(parsed.sidebar);
           } else {
-            console.warn('📱 Header: No sidebar array found in categories');
+            console.warn('📱 Header: No sidebar array found in categories, using defaults');
+            // Use default categories
+            const defaultCategories = [
+              { id: 'popular', translations: { ru: 'Популярное', en: 'Popular', zh: '热门', vi: 'Phổ biến' }, icon: 'Star', order: 0 },
+              { id: 'cold', translations: { ru: 'Простуда', en: 'Cold', zh: '感冒', vi: 'Cảm lạnh' }, icon: 'Thermometer', order: 1 },
+              { id: 'digestive', translations: { ru: 'Пищеварение', en: 'Digestive', zh: '消化', vi: 'Tiêu hóa' }, icon: 'Activity', order: 2 },
+              { id: 'skin', translations: { ru: 'Кожа', en: 'Skin', zh: '皮肤', vi: 'Da' }, icon: 'Droplet', order: 3 },
+              { id: 'joints', translations: { ru: 'Суставы', en: 'Joints', zh: '关节', vi: 'Khớp' }, icon: 'Bone', order: 4 },
+            ];
+            setSidebarCategories(defaultCategories);
           }
         } catch (error) {
           console.error('📱 Header: Error loading sidebar categories:', error);
         }
       } else {
-        console.warn('📱 Header: No categories in localStorage');
+        console.warn('📱 Header: No categories in localStorage, using defaults');
+        // Use default categories
+        const defaultCategories = [
+          { id: 'popular', translations: { ru: 'Популярное', en: 'Popular', zh: '热门', vi: 'Phổ biến' }, icon: 'Star', order: 0 },
+          { id: 'cold', translations: { ru: 'Простуда', en: 'Cold', zh: '感冒', vi: 'Cảm lạnh' }, icon: 'Thermometer', order: 1 },
+          { id: 'digestive', translations: { ru: 'Пищеварение', en: 'Digestive', zh: '消化', vi: 'Tiêu hóa' }, icon: 'Activity', order: 2 },
+          { id: 'skin', translations: { ru: 'Кожа', en: 'Skin', zh: '皮肤', vi: 'Da' }, icon: 'Droplet', order: 3 },
+          { id: 'joints', translations: { ru: 'Суставы', en: 'Joints', zh: '关节', vi: 'Khớp' }, icon: 'Bone', order: 4 },
+        ];
+        setSidebarCategories(defaultCategories);
       }
     };
     
