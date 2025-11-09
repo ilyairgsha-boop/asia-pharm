@@ -377,8 +377,12 @@ img.product-image {
   border: 1px solid #fbbf24 !important;
 }
 
-.theme-black-friday .category-menu-button * {
+.theme-black-friday .category-menu-button *,
+.theme-black-friday .category-menu-button span,
+.theme-black-friday .category-menu-button svg {
   color: #000000 !important;
+  stroke: #000000 !important;
+  fill: none !important;
 }
 
 /* 4. Футер - черный фон, белый текст */
@@ -627,6 +631,12 @@ img.product-image {
   color: #000000 !important;
 }
 
+/* Счетчик количества товаров в кнопках магазинов - желтый с черным текстом ВСЕГДА */
+.theme-black-friday .cart-store-badge {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
 /* 5. Цена белая, кнопки +/- желтые */
 .theme-black-friday .cart-item-price {
   color: #ffffff !important;
@@ -758,6 +768,25 @@ img.product-image {
   color: #000000 !important;
 }
 
+/* 7. Футер - весь текст белого цвета */
+.theme-black-friday footer {
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday footer h3,
+.theme-black-friday footer ul,
+.theme-black-friday footer li,
+.theme-black-friday footer button,
+.theme-black-friday footer p,
+.theme-black-friday footer span {
+  color: #ffffff !important;
+}
+
+.theme-black-friday footer button:hover {
+  color: #fbbf24 !important;
+}
+
 /* 1. Cookies в стиле темы - черный фон, белый текст, желтые кнопки */
 .theme-black-friday .cookie-consent {
   background-color: #000000 !important;
@@ -792,6 +821,11 @@ img.product-image {
 }
 
 /* Общие стили */
+/* Черный фон тела страницы */
+.theme-black-friday .bg-gray-50 {
+  background-color: #000000 !important;
+}
+
 .theme-black-friday .bg-white {
   background-color: #000000 !important;
 }

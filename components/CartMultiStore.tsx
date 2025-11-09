@@ -94,7 +94,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
               >
                 {t(store.nameKey)}
                 {itemCount > 0 && (
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${
+                  <span className={`cart-store-badge px-2 py-0.5 rounded-full text-xs ${
                     selectedStore === store.id
                       ? 'bg-white text-red-600'
                       : 'bg-red-600 text-white'
@@ -125,7 +125,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
             >
               {t(store.nameKey)}
               {itemCount > 0 && (
-                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                <span className={`cart-store-badge px-2 py-0.5 rounded-full text-xs ${
                   selectedStore === store.id
                     ? 'bg-white text-red-600'
                     : 'bg-red-600 text-white'

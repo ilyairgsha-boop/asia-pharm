@@ -443,7 +443,6 @@ export const DiseaseSidebar = ({ selectedDisease, onSelectDisease }: DiseaseSide
 
   return (
     <aside className="hidden lg:block w-64 bg-white border-r-2 border-gray-200 pr-4 py-4">
-      <h3 className="text-red-600 mb-4">{t('diseases')}</h3>
       
       <div className="space-y-2">
         {/* All diseases (including popular and allProducts) */}
