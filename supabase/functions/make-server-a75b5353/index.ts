@@ -236,7 +236,7 @@ app.get('/make-server-a75b5353/', (c) => {
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
-      push: ['/make-server-a75b5353/api/push/send', '/make-server-a75b5353/api/push/stats'],
+      push: ['/make-server-a75b5353/api/push/send', '/make-server-a75b5353/api/push/stats', '/make-server-a75b5353/api/push/auto-notify'],
       kv: ['/make-server-a75b5353/api/kv/*'],
       translate: ['/make-server-a75b5353/api/translate/*'],
       debug: ['/make-server-a75b5353/api/debug/db-check', '/make-server-a75b5353/api/debug/onesignal-check'],
@@ -1033,6 +1033,272 @@ app.delete('/make-server-a75b5353/api/translate/key', requireAdmin, async (c) =>
     return c.json({ success: true });
   } catch (error) {
     return c.json({ error: 'Failed to delete API key' }, 500);
+  }
+});
+
+// ============================================================================
+// Auto Push Notifications (called from database triggers)
+// ============================================================================
+
+// Notification templates (multi-language)
+const PUSH_TEMPLATES: any = {
+  order_pending: {
+    ru: { title: '✅ Заказ оформлен', message: (data: any) => `Вы оформили заказ ${data.orderNumber}` },
+    zh: { title: '✅ 订单已创建', message: (data: any) => `您已下单 ${data.orderNumber}` },
+    en: { title: '✅ Order Created', message: (data: any) => `You have placed order ${data.orderNumber}` },
+    vi: { title: '✅ Đơn hàng đã tạo', message: (data: any) => `Bạn đã đặt đơn hàng ${data.orderNumber}` },
+  },
+  order_processing: {
+    ru: { title: '💳 Оплата получена', message: () => 'Мы получили оплату Вашего заказа' },
+    zh: { title: '💳 已收到付款', message: () => '我们已收到您的订单付款' },
+    en: { title: '💳 Payment Received', message: () => 'We have received payment for your order' },
+    vi: { title: '💳 Đã nhận thanh toán', message: () => 'Chúng tôi đã nhận được thanh toán cho đơn hàng của bạn' },
+  },
+  order_shipped: {
+    ru: { title: '📦 Заказ отправлен', message: () => 'Ваш заказ отправлен' },
+    zh: { title: '📦 订单已发货', message: () => '您的订单已发货' },
+    en: { title: '📦 Order Shipped', message: () => 'Your order has been shipped' },
+    vi: { title: '📦 Đơn hàng đã gửi', message: () => 'Đơn hàng của bạn đã được gửi đi' },
+  },
+  order_delivered: {
+    ru: { title: '🎉 Заказ доставлен', message: () => 'Благодарим Вас за заказ! Ваш заказ выполнен' },
+    zh: { title: '🎉 订单已送达', message: () => '感谢您的订单！您的订单已完成' },
+    en: { title: '🎉 Order Delivered', message: () => 'Thank you for your order! Your order is complete' },
+    vi: { title: '🎉 Đơn hàng đã giao', message: () => 'Cảm ơn bạn đã đặt hàng! Đơn hàng của bạn đã hoàn thành' },
+  },
+  order_cancelled: {
+    ru: { title: '❌ Заказ отменен', message: () => 'К сожалению Ваш заказ был отменен' },
+    zh: { title: '❌ 订单已取消', message: () => '很抱歉，您的订单已被取消' },
+    en: { title: '❌ Order Cancelled', message: () => 'Unfortunately your order has been cancelled' },
+    vi: { title: '❌ Đơn hàng đã hủy', message: () => 'Rất tiếc, đơn hàng của bạn đã bị hủy' },
+  },
+  welcome: {
+    ru: { title: '🎉 Добро пожаловать!', message: () => 'Благодарим Вас за подписку!' },
+    zh: { title: '🎉 欢迎！', message: () => '感谢您的订阅！' },
+    en: { title: '🎉 Welcome!', message: () => 'Thank you for subscribing!' },
+    vi: { title: '🎉 Chào mừng!', message: () => 'Cảm ơn bạn đã đăng ký!' },
+  },
+  loyalty_earned: {
+    ru: { title: '⭐ Баллы начислены', message: (data: any) => `Начислено баллов лояльности: ${data.points}` },
+    zh: { title: '⭐ 积分已添加', message: (data: any) => `已添加忠诚度积分: ${data.points}` },
+    en: { title: '⭐ Points Earned', message: (data: any) => `Loyalty points earned: ${data.points}` },
+    vi: { title: '⭐ Điểm đã thêm', message: (data: any) => `Điểm thưởng đã nhận: ${data.points}` },
+  },
+  loyalty_spent: {
+    ru: { title: '💎 Баллы списаны', message: (data: any) => `Списано баллов лояльности: ${data.points}` },
+    zh: { title: '💎 积分已使用', message: (data: any) => `已使用忠诚度积分: ${data.points}` },
+    en: { title: '💎 Points Spent', message: (data: any) => `Loyalty points spent: ${data.points}` },
+    vi: { title: '💎 Điểm đã dùng', message: (data: any) => `Điểm thưởng đã sử dụng: ${data.points}` },
+  },
+};
+
+// Generate deep link URL
+function generatePushUrl(type: string, data: any): string {
+  const baseUrl = 'https://asia-farm.vercel.app'; // TODO: get from settings
+  
+  switch (type) {
+    case 'order_pending':
+      return `${baseUrl}/checkout?order=${data.orderId}`;
+    case 'order_processing':
+    case 'order_delivered':
+    case 'order_cancelled':
+      return `${baseUrl}/profile?tab=orders`;
+    case 'order_shipped':
+      return data.trackingUrl || `${baseUrl}/profile?tab=orders&order=${data.orderId}`;
+    case 'welcome':
+      return baseUrl;
+    case 'loyalty_earned':
+    case 'loyalty_spent':
+      return `${baseUrl}/profile?tab=loyalty`;
+    default:
+      return baseUrl;
+  }
+}
+
+/**
+ * Auto Push Notification Endpoint
+ * Called from database triggers (no auth required - uses internal calls)
+ * 
+ * POST /make-server-a75b5353/api/push/auto-notify
+ * Body: {
+ *   userId: string (Supabase User ID)
+ *   type: 'order_pending' | 'order_processing' | 'order_shipped' | 'order_delivered' | 'order_cancelled' | 'welcome' | 'loyalty_earned' | 'loyalty_spent'
+ *   orderId?: string
+ *   orderNumber?: string
+ *   trackingNumber?: string
+ *   trackingUrl?: string
+ *   points?: number
+ * }
+ */
+app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
+  try {
+    console.log('🔔 Auto push notification request');
+    const body = await c.req.json();
+    const { userId, type, orderId, orderNumber, trackingNumber, trackingUrl, points } = body;
+
+    console.log('📥 Auto push data:', { userId, type, orderId, orderNumber, points });
+
+    if (!userId || !type) {
+      console.error('❌ Missing required fields:', { userId, type });
+      return c.json({ error: 'userId and type required' }, 400);
+    }
+
+    if (!PUSH_TEMPLATES[type]) {
+      console.error('❌ Unknown notification type:', type);
+      return c.json({ error: 'Unknown notification type' }, 400);
+    }
+
+    const supabase = getSupabaseAdmin();
+
+    // Get user's push subscriptions
+    console.log('🔍 Looking for push subscriptions for user:', userId);
+    const { data: subscriptions, error: subError } = await supabase
+      .from('push_subscriptions')
+      .select('player_id, id')
+      .eq('user_id', userId)
+      .eq('is_subscribed', true);
+
+    if (subError) {
+      console.error('❌ Error fetching subscriptions:', subError);
+      return c.json({ error: 'Failed to fetch subscriptions', details: subError.message }, 500);
+    }
+
+    if (!subscriptions || subscriptions.length === 0) {
+      console.log('ℹ️ No active push subscriptions for user:', userId);
+      return c.json({ 
+        success: false, 
+        message: 'No active push subscriptions',
+        userId,
+        type
+      }, 200);
+    }
+
+    const playerIds = subscriptions.map(s => s.player_id).filter(Boolean);
+    console.log('📱 Found player IDs:', playerIds);
+
+    if (playerIds.length === 0) {
+      console.log('ℹ️ No valid player IDs found');
+      return c.json({ 
+        success: false, 
+        message: 'No valid player IDs'
+      }, 200);
+    }
+
+    // Get user's language
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('language')
+      .eq('id', userId)
+      .single();
+
+    const userLanguage = profile?.language || 'ru';
+    console.log('🌐 User language:', userLanguage);
+
+    // Get notification content
+    const template = PUSH_TEMPLATES[type][userLanguage] || PUSH_TEMPLATES[type]['ru'];
+    const title = template.title;
+    const message = typeof template.message === 'function' 
+      ? template.message({ orderNumber, orderId, points }) 
+      : template.message;
+    
+    const url = generatePushUrl(type, { orderId, orderNumber, trackingUrl });
+
+    console.log('📝 Push content:', { title, message, url });
+
+    // Get OneSignal settings
+    const { settings, source } = await getOneSignalSettings();
+    console.log('OneSignal settings loaded from:', source);
+    
+    const apiKey = settings?.restApiKey || settings?.apiKey;
+
+    if (!settings || !settings.appId || !apiKey) {
+      console.error('❌ OneSignal not configured');
+      return c.json({ 
+        error: 'OneSignal not configured',
+        details: 'Configure OneSignal in Admin Panel'
+      }, 500);
+    }
+
+    // Check for wrong key type
+    if (apiKey.startsWith('os_v2_org_')) {
+      console.error('❌ Wrong API key type detected');
+      return c.json({ 
+        error: 'Wrong OneSignal API Key Type',
+        details: 'User Auth Key detected, need REST API Key'
+      }, 500);
+    }
+
+    console.log('✅ OneSignal configured, sending push...');
+
+    // Prepare notification payload
+    const notificationData: any = {
+      app_id: settings.appId,
+      include_player_ids: playerIds,
+      headings: { en: title },
+      contents: { en: message },
+      url: url,
+      data: {
+        type,
+        orderId,
+        orderNumber,
+        trackingNumber,
+        points,
+      },
+    };
+
+    // Format auth header
+    let authHeader = apiKey;
+    if (apiKey.startsWith('Basic ')) {
+      authHeader = apiKey;
+    } else if (apiKey.startsWith('Basic') && !apiKey.startsWith('Basic ')) {
+      authHeader = apiKey.replace('Basic', 'Basic ');
+    } else {
+      authHeader = `Basic ${apiKey}`;
+    }
+
+    console.log('📤 Sending to OneSignal API...');
+    console.log('App ID:', settings.appId);
+    console.log('Player IDs:', playerIds);
+
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader
+      },
+      body: JSON.stringify(notificationData)
+    });
+
+    console.log('📥 OneSignal response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`❌ OneSignal API error (${response.status}):`, errorData);
+      return c.json({ 
+        error: `Failed to send notification: ${errorData}`,
+        status: response.status 
+      }, 500);
+    }
+
+    const result = await response.json();
+    console.log('✅ Push sent successfully:', result.id);
+    console.log('Recipients:', result.recipients || playerIds.length);
+
+    return c.json({ 
+      success: true, 
+      id: result.id,
+      recipients: result.recipients || playerIds.length,
+      type,
+      userId
+    });
+
+  } catch (error: any) {
+    console.error('❌ Error in auto push:', error);
+    console.error('Error stack:', error.stack);
+    return c.json({ 
+      error: error.message || 'Failed to send auto push',
+      details: error.stack
+    }, 500);
   }
 });
 
