@@ -1,4 +1,4 @@
-import { X, ShoppingCart, Clock } from 'lucide-react';
+import { X, ShoppingCart, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,8 +21,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
 
-  // Sale countdown timer
-  const [timeLeft, setTimeLeft] = useState<string>('');
+  // Sale status
   const [isSaleActive, setIsSaleActive] = useState(false);
 
   useEffect(() => {
@@ -34,7 +33,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // Sale countdown timer effect
+  // Check if sale is active
   useEffect(() => {
     if (!product) return;
 
@@ -46,37 +45,14 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
       return;
     }
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const end = new Date(saleEndDate).getTime();
-      const distance = end - now;
+    const now = new Date().getTime();
+    const end = new Date(saleEndDate).getTime();
 
-      if (distance < 0) {
-        setIsSaleActive(false);
-        setTimeLeft('');
-        return;
-      }
-
+    if (end > now) {
       setIsSaleActive(true);
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      if (days > 0) {
-        setTimeLeft(`${days}д ${hours}ч ${minutes}м`);
-      } else if (hours > 0) {
-        setTimeLeft(`${hours}ч ${minutes}м ${seconds}с`);
-      } else {
-        setTimeLeft(`${minutes}м ${seconds}с`);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
+    } else {
+      setIsSaleActive(false);
+    }
   }, [product]);
 
   if (!product) return null;
@@ -196,11 +172,11 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
             {/* Details */}
             <div className="space-y-4 md:space-y-4">
               <div>
-                {/* Sale countdown timer */}
-                {isSaleActive && timeLeft && (
+                {/* Sale badge */}
+                {isSaleActive && (
                   <div className="mb-3 flex items-center gap-2 text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
-                    <Clock size={18} />
-                    <span className="text-base">{timeLeft}</span>
+                    <Zap size={18} className="fill-orange-600" />
+                    <span className="text-base font-semibold">{t('sale')}</span>
                   </div>
                 )}
 

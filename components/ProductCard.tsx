@@ -1,4 +1,4 @@
-import { ShoppingCart, Heart, Clock } from 'lucide-react';
+import { ShoppingCart, Heart, Zap } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,8 +27,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
 
-  // Sale countdown timer
-  const [timeLeft, setTimeLeft] = useState<string>('');
+  // Sale status
   const [isSaleActive, setIsSaleActive] = useState(false);
 
   useEffect(() => {
@@ -40,7 +39,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  // Sale countdown timer effect
+  // Check if sale is active
   useEffect(() => {
     const saleEnabled = product.saleEnabled;
     const saleEndDate = product.saleEndDate;
@@ -50,37 +49,14 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
       return;
     }
 
-    const updateTimer = () => {
-      const now = new Date().getTime();
-      const end = new Date(saleEndDate).getTime();
-      const distance = end - now;
+    const now = new Date().getTime();
+    const end = new Date(saleEndDate).getTime();
 
-      if (distance < 0) {
-        setIsSaleActive(false);
-        setTimeLeft('');
-        return;
-      }
-
+    if (end > now) {
       setIsSaleActive(true);
-
-      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-      if (days > 0) {
-        setTimeLeft(`${days}д ${hours}ч ${minutes}м`);
-      } else if (hours > 0) {
-        setTimeLeft(`${hours}ч ${minutes}м ${seconds}с`);
-      } else {
-        setTimeLeft(`${minutes}м ${seconds}с`);
-      }
-    };
-
-    updateTimer();
-    const interval = setInterval(updateTimer, 1000);
-
-    return () => clearInterval(interval);
+    } else {
+      setIsSaleActive(false);
+    }
   }, [product]);
 
   useEffect(() => {
@@ -232,11 +208,11 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
       <div className="p-3 md:p-4">
         <h3 className="text-gray-800 mb-3 line-clamp-2 min-h-[3rem] md:min-h-[3rem] text-base md:text-base text-[16px]">{getName()}</h3>
 
-        {/* Sale countdown timer */}
-        {isSaleActive && timeLeft && (
+        {/* Sale badge */}
+        {isSaleActive && (
           <div className="mb-2 flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1 rounded text-sm">
-            <Clock size={14} className="shrink-0" />
-            <span className="truncate">{timeLeft}</span>
+            <Zap size={14} className="shrink-0 fill-orange-600" />
+            <span className="truncate font-semibold">{t('sale')}</span>
           </div>
         )}
 
