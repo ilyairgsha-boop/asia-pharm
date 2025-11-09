@@ -214,7 +214,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
             {originalPrice.toFixed(0)} ₽
           </div>
         ) : (
-          <div className="h-[20px] mb-2"></div>
+          <div className="text-sm mb-2 invisible">0 ₽</div>
         )}
 
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
