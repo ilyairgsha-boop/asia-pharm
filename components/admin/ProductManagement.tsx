@@ -210,6 +210,13 @@ export const ProductManagement = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) {
+      console.log('⚠️ Submission already in progress, ignoring...');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -318,10 +325,10 @@ export const ProductManagement = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    const wholesalePriceValue = (product as any).wholesalePrice;
-    const saleEnabled = (product as any).saleEnabled || false;
-    const saleDiscount = (product as any).saleDiscount;
-    const saleEndDate = (product as any).saleEndDate;
+    const wholesalePriceValue = (product as any).wholesalePrice; // Keep as any for backwards compatibility
+    const saleEnabled = product.saleEnabled || false;
+    const saleDiscount = product.saleDiscount;
+    const saleEndDate = product.saleEndDate;
     
     setFormData({
       name: product.name || '',
@@ -345,7 +352,7 @@ export const ProductManagement = () => {
       description_vi: product.description_vi || '',
       image: product.image || '',
       inStock: product.inStock ?? true,
-      isSample: (product as any).isSample || false,
+      isSample: product.isSample || false,
       saleEnabled: saleEnabled,
       saleDiscount: saleDiscount ? saleDiscount.toString() : '',
       saleEndDate: saleEndDate ? new Date(saleEndDate).toISOString().slice(0, 16) : '',

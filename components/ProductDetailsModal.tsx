@@ -38,8 +38,8 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
   useEffect(() => {
     if (!product) return;
 
-    const saleEnabled = (product as any).saleEnabled;
-    const saleEndDate = (product as any).saleEndDate;
+    const saleEnabled = product.saleEnabled;
+    const saleEndDate = product.saleEndDate;
 
     if (!saleEnabled || !saleEndDate) {
       setIsSaleActive(false);
@@ -82,10 +82,10 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
   if (!product) return null;
   
   const isWholesaler = user?.isWholesaler || false;
-  const wholesalePrice = (product as any).wholesalePrice;
+  const wholesalePrice = (product as any).wholesalePrice; // Keep as any for backwards compatibility
 
   // Calculate discounted price
-  const saleDiscount = (product as any).saleDiscount || 0;
+  const saleDiscount = product.saleDiscount || 0;
   const originalPrice = product.price;
   const discountedPrice = isSaleActive && saleDiscount > 0 
     ? originalPrice * (1 - saleDiscount / 100) 

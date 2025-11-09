@@ -17,7 +17,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
   const { user } = useAuth();
   
   const isWholesaler = user?.isWholesaler || false;
-  const wholesalePrice = (product as any).wholesalePrice;
+  const wholesalePrice = (product as any).wholesalePrice; // Keep as any for backwards compatibility
   
   // Favorites state (stored in localStorage)
   const [isFavorite, setIsFavorite] = useState(false);
@@ -42,8 +42,8 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
 
   // Sale countdown timer effect
   useEffect(() => {
-    const saleEnabled = (product as any).saleEnabled;
-    const saleEndDate = (product as any).saleEndDate;
+    const saleEnabled = product.saleEnabled;
+    const saleEndDate = product.saleEndDate;
 
     if (!saleEnabled || !saleEndDate) {
       setIsSaleActive(false);
@@ -171,7 +171,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
   };
 
   // Calculate discounted price
-  const saleDiscount = (product as any).saleDiscount || 0;
+  const saleDiscount = product.saleDiscount || 0;
   const originalPrice = product.price;
   const discountedPrice = isSaleActive && saleDiscount > 0 
     ? originalPrice * (1 - saleDiscount / 100) 
