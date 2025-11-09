@@ -47,6 +47,19 @@ function AppContent() {
   const { user, loading } = useAuth();
   const { t, currentLanguage } = useLanguage();
   const { totalItemsCount } = useCart();
+  
+  // Read URL parameters synchronously on mount (Safari compatibility)
+  const [sharedProductId] = useState<string | null>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('product');
+    } catch (e) {
+      // Fallback for older browsers
+      const searchParams = window.location.search;
+      const match = searchParams.match(/[?&]product=([^&]+)/);
+      return match ? match[1] : null;
+    }
+  });
 
   // Handlers for exclusive category selection
   const handleCategorySelect = (category: string | null) => {
@@ -502,57 +515,54 @@ function AppContent() {
 
   // Handle shared product URL on mount
   useEffect(() => {
-    const checkSharedProduct = async () => {
+    if (!sharedProductId) return;
+    
+    console.log('🔗 Shared product link detected:', sharedProductId);
+    
+    const loadSharedProduct = async () => {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const productId = urlParams.get('product');
+        const supabase = createClient();
+        const { data: product, error } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', sharedProductId)
+          .single();
         
-        if (productId) {
-          console.log('🔗 Shared product link detected:', productId);
+        if (error) {
+          console.error('❌ Error fetching shared product:', error);
+          toast.error(t('productNotFound') || 'Товар не найден');
+        } else if (product) {
+          console.log('✅ Shared product loaded:', product.name);
           
-          const supabase = createClient();
-          const { data: product, error } = await supabase
-            .from('products')
-            .select('*')
-            .eq('id', productId)
-            .single();
+          // Map database fields (snake_case) to TypeScript interface (camelCase)
+          const mappedProduct: Product = {
+            ...product,
+            inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
+            isSample: product.is_sample ?? false,
+            saleEnabled: product.sale_enabled ?? false,
+            saleDiscount: product.sale_discount ?? 0,
+            saleEndDate: product.sale_end_date ?? null,
+          };
           
-          if (error) {
-            console.error('❌ Error fetching shared product:', error);
-            toast.error(t('productNotFound') || 'Товар не найден');
-          } else if (product) {
-            console.log('✅ Shared product loaded:', product.name);
-            
-            // Map database fields (snake_case) to TypeScript interface (camelCase)
-            const mappedProduct: Product = {
-              ...product,
-              inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
-              isSample: product.is_sample ?? false,
-              saleEnabled: product.sale_enabled ?? false,
-              saleDiscount: product.sale_discount ?? 0,
-              saleEndDate: product.sale_end_date ?? null,
-            };
-            
-            setSelectedProduct(mappedProduct);
-            
-            // Remove product parameter from URL without reloading
-            const newUrl = window.location.pathname;
-            window.history.replaceState({}, '', newUrl);
+          setSelectedProduct(mappedProduct);
+          
+          // Remove product parameter from URL without reloading (Safari compatible)
+          try {
+            const newUrl = window.location.pathname + window.location.hash;
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState({}, document.title, newUrl);
+            }
+          } catch (e) {
+            console.log('Could not update URL (Safari privacy mode)');
           }
         }
       } catch (error) {
         console.error('❌ Error loading shared product:', error);
-        // Don't show error toast for Safari compatibility
       }
     };
     
-    // Small delay for Safari compatibility
-    const timer = setTimeout(() => {
-      checkSharedProduct();
-    }, 100);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    loadSharedProduct();
+  }, [sharedProductId, t]);
 
   const handleNavigate = async (page: string, store?: StoreType) => {
     // Handle product navigation (from order history)
