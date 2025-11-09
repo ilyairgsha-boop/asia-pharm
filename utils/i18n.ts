@@ -2949,6 +2949,17 @@ export const translations = {
     popUpShowOnceDescription: 'Pop Up仅向访问者显示一次',
     popUpDelay: '显示延迟（秒）',
     popUpDelayDescription: '显示Pop Up前的延迟时间',
+    popUpRussian: '俄语版本',
+    popUpEnglish: '英语版本',
+    popUpChinese: '中文版本',
+    popUpVietnamese: '越南语版本',
+    popUpAutoTranslate: '自动翻译自',
+    popUpTranslating: '翻译中...',
+    popUpTranslated: '翻译完成',
+    popUpTranslateError: '翻译错误',
+    popUpTranslateApiKeyMissing: 'Google Translate API密钥未配置',
+    popUpTranslateFrom: '翻译自',
+    popUpSelectSourceLanguage: '选择源语言',
   },
   
   vi: {

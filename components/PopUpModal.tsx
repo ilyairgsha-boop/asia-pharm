@@ -1,17 +1,27 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabase/client';
+import { useLanguage } from '../contexts/LanguageContext';
 import { Dialog, DialogContent } from './ui/dialog';
 import { X } from 'lucide-react';
 import { Button } from './ui/button';
+import type { Language } from '../utils/i18n';
+
+interface PopUpContent {
+  ru: string;
+  en: string;
+  zh: string;
+  vi: string;
+}
 
 interface PopUpSettings {
   enabled: boolean;
-  content: string;
+  content: PopUpContent | string; // Support old format (string) and new format (object)
   showOnce: boolean;
   delay: number;
 }
 
 export const PopUpModal = () => {
+  const { language } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [settings, setSettings] = useState<PopUpSettings | null>(null);
 
@@ -61,7 +71,25 @@ export const PopUpModal = () => {
     setIsOpen(false);
   };
 
-  if (!settings?.enabled || !settings?.content) {
+  // Get content for current language
+  const getContent = (): string => {
+    if (!settings?.content) return '';
+    
+    // Old format support (string)
+    if (typeof settings.content === 'string') {
+      return settings.content;
+    }
+    
+    // New format (multilingual object)
+    const content = settings.content as PopUpContent;
+    
+    // Return content for current language, fallback to Russian if not available
+    return content[language as Language] || content.ru || '';
+  };
+
+  const currentContent = getContent();
+
+  if (!settings?.enabled || !currentContent) {
     return null;
   }
 
@@ -81,7 +109,7 @@ export const PopUpModal = () => {
         {/* Content */}
         <div 
           className="p-8"
-          dangerouslySetInnerHTML={{ __html: settings.content }}
+          dangerouslySetInnerHTML={{ __html: currentContent }}
         />
       </DialogContent>
     </Dialog>
