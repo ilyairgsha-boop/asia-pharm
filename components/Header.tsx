@@ -53,12 +53,18 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
       if (storedCategories) {
         try {
           const parsed = JSON.parse(storedCategories);
+          console.log('📱 Header: Loading categories from localStorage', parsed);
           if (parsed.sidebar && Array.isArray(parsed.sidebar)) {
+            console.log('📱 Header: Setting sidebar categories', parsed.sidebar.length, 'items');
             setSidebarCategories(parsed.sidebar);
+          } else {
+            console.warn('📱 Header: No sidebar array found in categories');
           }
         } catch (error) {
-          console.error('Error loading sidebar categories:', error);
+          console.error('📱 Header: Error loading sidebar categories:', error);
         }
+      } else {
+        console.warn('📱 Header: No categories in localStorage');
       }
     };
     
@@ -210,10 +216,10 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarMenuOpen(!sidebarMenuOpen)}
-              className="h-12 w-12 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center flex-shrink-0"
+              className="mobile-burger-button h-12 w-12 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center flex-shrink-0"
               aria-label="Menu"
             >
-              {sidebarMenuOpen ? <X size={24} strokeWidth={2.5} /> : <Menu size={24} strokeWidth={2.5} />}
+              {sidebarMenuOpen ? <X size={24} strokeWidth={2.5} className="mobile-burger-icon" /> : <Menu size={24} strokeWidth={2.5} className="mobile-burger-icon" />}
             </button>
             
             <button
@@ -369,10 +375,16 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
 
       {/* Mobile sidebar menu - disease categories */}
       {sidebarMenuOpen && (
-        <div className="md:hidden bg-white border-t-2 border-gray-200 shadow-lg">
+        <div className="mobile-sidebar-menu md:hidden bg-white border-t-2 border-gray-200 shadow-lg">
           <div className="container mx-auto px-4 py-4 max-h-[70vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold text-gray-800 mb-3 px-1">{t('categories')}</h3>
+            <h3 className="mobile-categories-title text-xl font-semibold text-gray-800 mb-3 px-1">{t('categories')}</h3>
             <div className="space-y-1">
+              {sidebarCategories.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p>{t('noCategories') || 'Категории не загружены'}</p>
+                  <p className="text-sm mt-2">Обновите страницу или настройте категории в админ панели</p>
+                </div>
+              )}
               {sidebarCategories.map((category) => {
                 const IconComponent = ICON_MAP[category.icon || 'Package'];
                 const label = category.translations?.[currentLanguage] || category.translations?.ru || category.id;
@@ -387,12 +399,12 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
                       }
                       setSidebarMenuOpen(false);
                     }}
-                    className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-red-50 transition-colors text-left group"
+                    className="mobile-category-item w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-red-50 transition-colors text-left group"
                   >
-                    <div className="text-red-600 group-hover:scale-110 transition-transform flex-shrink-0">
+                    <div className="mobile-category-icon text-red-600 group-hover:scale-110 transition-transform flex-shrink-0">
                       {IconComponent && <IconComponent size={22} strokeWidth={1.67} />}
                     </div>
-                    <span className="text-gray-700 group-hover:text-red-600 transition-colors text-lg">
+                    <span className="mobile-category-label text-gray-700 group-hover:text-red-600 transition-colors text-lg">
                       {label}
                     </span>
                   </button>
@@ -411,12 +423,12 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
                     onNavigate('home');
                     setSidebarMenuOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-red-50 transition-colors text-left group border-t-2 border-gray-200 mt-2 pt-4"
+                  className="mobile-category-item w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-red-50 transition-colors text-left group border-t-2 border-gray-200 mt-2 pt-4"
                 >
-                  <div className="text-red-600 group-hover:scale-110 transition-transform flex-shrink-0">
+                  <div className="mobile-category-icon text-red-600 group-hover:scale-110 transition-transform flex-shrink-0">
                     <TestTube size={22} strokeWidth={1.67} />
                   </div>
-                  <span className="text-gray-700 group-hover:text-red-600 transition-colors text-lg">
+                  <span className="mobile-category-label text-gray-700 group-hover:text-red-600 transition-colors text-lg">
                     {t('samples')}
                   </span>
                 </button>

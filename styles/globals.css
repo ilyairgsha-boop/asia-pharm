@@ -1312,6 +1312,69 @@ img.product-image {
   box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.3), 0 2px 4px -1px rgba(251, 191, 36, 0.2);
 }
 
+/* 29. Мобильная версия - кнопка бургер меню */
+.theme-black-friday .mobile-burger-button {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .mobile-burger-button:hover {
+  background-color: #eab308 !important;
+}
+
+.theme-black-friday .mobile-burger-icon {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* 30. Мобильная версия - меню категорий */
+.theme-black-friday .mobile-sidebar-menu {
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .mobile-categories-title {
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .mobile-category-item:hover {
+  background-color: rgba(251, 191, 36, 0.2) !important;
+}
+
+.theme-black-friday .mobile-category-icon {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+.theme-black-friday .mobile-category-label {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .mobile-category-item:hover .mobile-category-label {
+  color: #fbbf24 !important;
+}
+
+/* 31. Мобильная версия - плавающая кнопка корзины */
+.theme-black-friday .mobile-floating-cart {
+  background-color: #fbbf24 !important;
+  border: 3px solid #000000 !important;
+}
+
+.theme-black-friday .mobile-floating-cart:hover {
+  background-color: #eab308 !important;
+}
+
+.theme-black-friday .mobile-floating-cart-icon {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.theme-black-friday .mobile-floating-cart-badge {
+  background-color: #000000 !important;
+  color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
 /* Стили для темы 23 февраля */
 .theme-defenders-day .bg-red-600 {
   background-color: var(--color-primary) !important;
