@@ -1,4 +1,4 @@
-import { ShoppingCart, Heart } from 'lucide-react';
+import { ShoppingCart, Heart, Clock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,10 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
 
+  // Sale countdown timer
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isSaleActive, setIsSaleActive] = useState(false);
+
   useEffect(() => {
     const checkDesktop = () => {
       setIsDesktop(window.innerWidth >= 768);
@@ -35,6 +39,49 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
     window.addEventListener('resize', checkDesktop);
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
+
+  // Sale countdown timer effect
+  useEffect(() => {
+    const saleEnabled = (product as any).saleEnabled;
+    const saleEndDate = (product as any).saleEndDate;
+
+    if (!saleEnabled || !saleEndDate) {
+      setIsSaleActive(false);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const end = new Date(saleEndDate).getTime();
+      const distance = end - now;
+
+      if (distance < 0) {
+        setIsSaleActive(false);
+        setTimeLeft('');
+        return;
+      }
+
+      setIsSaleActive(true);
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeft(`${days}д ${hours}ч ${minutes}м`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}ч ${minutes}м ${seconds}с`);
+      } else {
+        setTimeLeft(`${minutes}м ${seconds}с`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [product]);
 
   useEffect(() => {
     if (user) {
@@ -123,6 +170,13 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
     }
   };
 
+  // Calculate discounted price
+  const saleDiscount = (product as any).saleDiscount || 0;
+  const originalPrice = product.price;
+  const discountedPrice = isSaleActive && saleDiscount > 0 
+    ? originalPrice * (1 - saleDiscount / 100) 
+    : originalPrice;
+
   return (
     <div 
       className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow border border-gray-200 cursor-pointer relative"
@@ -139,6 +193,12 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
         
         {/* Badges container */}
         <div className="absolute top-2 right-2 flex flex-col gap-1.5 md:gap-2 items-end">
+          {isSaleActive && saleDiscount > 0 && (
+            <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-3 py-1 rounded-full text-sm shadow-lg font-semibold">
+              -{saleDiscount}%
+            </div>
+          )}
+          
           {!product.inStock && (
             <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm">
               {t('outOfStock')}
@@ -172,11 +232,30 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
       <div className="p-3 md:p-4">
         <h3 className="text-gray-800 mb-3 line-clamp-2 min-h-[3rem] md:min-h-[3rem] text-base md:text-base text-[16px]">{getName()}</h3>
 
+        {/* Sale countdown timer */}
+        {isSaleActive && timeLeft && (
+          <div className="mb-2 flex items-center gap-1.5 text-orange-600 bg-orange-50 px-2 py-1 rounded text-sm">
+            <Clock size={14} className="shrink-0" />
+            <span className="truncate">{timeLeft}</span>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-          <div>
-            <div className="text-red-600 text-lg md:text-base whitespace-nowrap">
-              {product.price.toFixed(0)} ₽
-            </div>
+          <div className="min-w-0">
+            {isSaleActive && saleDiscount > 0 ? (
+              <div className="flex flex-col gap-1">
+                <div className="text-gray-400 text-sm line-through whitespace-nowrap">
+                  {originalPrice.toFixed(0)} ₽
+                </div>
+                <div className="text-red-600 font-semibold text-lg md:text-base whitespace-nowrap">
+                  {discountedPrice.toFixed(0)} ₽
+                </div>
+              </div>
+            ) : (
+              <div className="text-red-600 text-lg md:text-base whitespace-nowrap">
+                {product.price.toFixed(0)} ₽
+              </div>
+            )}
             {isWholesaler && wholesalePrice && (
               <div className="text-sm md:text-sm text-green-600 mt-1 whitespace-nowrap">
                 {t('wholesalePrice')}: ¥{wholesalePrice.toFixed(2)}

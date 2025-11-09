@@ -74,6 +74,9 @@ export const ProductManagement = () => {
     image: '',
     inStock: true,
     isSample: false,
+    saleEnabled: false,
+    saleDiscount: '',
+    saleEndDate: '',
   });
 
   useEffect(() => {
@@ -220,8 +223,29 @@ export const ProductManagement = () => {
         return;
       }
 
+      // Validate sale fields if sale is enabled
+      if (formData.saleEnabled) {
+        if (!formData.saleDiscount || parseFloat(formData.saleDiscount) <= 0 || parseFloat(formData.saleDiscount) > 100) {
+          toast.error('Укажите скидку от 1% до 100%');
+          setLoading(false);
+          return;
+        }
+        if (!formData.saleEndDate) {
+          toast.error('Укажите дату окончания акции');
+          setLoading(false);
+          return;
+        }
+        const endDate = new Date(formData.saleEndDate);
+        const now = new Date();
+        if (endDate <= now) {
+          toast.error('Дата окончания акции должна быть в будущем');
+          setLoading(false);
+          return;
+        }
+      }
+
       // Exclude frontend-only fields and map to DB column names
-      const { inStock, isSample, wholesalePrice, description_en, description_zh, description_vi, ...restFormData } = formData;
+      const { inStock, isSample, wholesalePrice, description_en, description_zh, description_vi, saleEnabled, saleDiscount, saleEndDate, ...restFormData } = formData;
       
       const productData = {
         name: formData.name,
@@ -243,6 +267,9 @@ export const ProductManagement = () => {
         image: formData.image,
         is_sample: formData.isSample,
         in_stock: formData.inStock,
+        sale_enabled: formData.saleEnabled,
+        sale_discount: formData.saleDiscount ? parseFloat(formData.saleDiscount) : null,
+        sale_end_date: formData.saleEndDate || null,
       };
 
       console.log('📦 Sending product data:', productData);
@@ -289,6 +316,9 @@ export const ProductManagement = () => {
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
     const wholesalePriceValue = (product as any).wholesalePrice;
+    const saleEnabled = (product as any).saleEnabled || false;
+    const saleDiscount = (product as any).saleDiscount;
+    const saleEndDate = (product as any).saleEndDate;
     
     setFormData({
       name: product.name || '',
@@ -313,6 +343,9 @@ export const ProductManagement = () => {
       image: product.image || '',
       inStock: product.inStock ?? true,
       isSample: (product as any).isSample || false,
+      saleEnabled: saleEnabled,
+      saleDiscount: saleDiscount ? saleDiscount.toString() : '',
+      saleEndDate: saleEndDate ? new Date(saleEndDate).toISOString().slice(0, 16) : '',
     });
     setShowForm(true);
   };
@@ -369,6 +402,9 @@ export const ProductManagement = () => {
       image: '',
       inStock: true,
       isSample: false,
+      saleEnabled: false,
+      saleDiscount: '',
+      saleEndDate: '',
     });
     setEditingProduct(null);
     setShowForm(false);
@@ -571,8 +607,31 @@ export const ProductManagement = () => {
                             <span className="text-gray-800">{getProductName(product)}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-700">
-                          {(product.price || 0).toLocaleString()} ₽
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1">
+                            {(() => {
+                              const saleEnabled = (product as any).saleEnabled;
+                              const saleDiscount = (product as any).saleDiscount;
+                              const saleEndDate = (product as any).saleEndDate;
+                              const now = new Date();
+                              const isSaleActive = saleEnabled && saleEndDate && new Date(saleEndDate) > now;
+                              
+                              if (isSaleActive && saleDiscount) {
+                                const originalPrice = product.price || 0;
+                                const discountedPrice = originalPrice * (1 - saleDiscount / 100);
+                                return (
+                                  <>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-gray-400 line-through text-sm">{originalPrice.toLocaleString()} ₽</span>
+                                      <span className="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-semibold">-{saleDiscount}%</span>
+                                    </div>
+                                    <span className="text-red-600 font-semibold">{discountedPrice.toLocaleString()} ₽</span>
+                                  </>
+                                );
+                              }
+                              return <span className="text-gray-700">{(product.price || 0).toLocaleString()} ₽</span>;
+                            })()}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
@@ -849,6 +908,70 @@ export const ProductManagement = () => {
                   )}
                 </label>
               </div>
+            </div>
+
+            {/* Sale / Promotion Section */}
+            <div className="md:col-span-2 border-t pt-6">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">🔥 Акция / Распродажа</h3>
+              
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="saleEnabled"
+                    checked={formData.saleEnabled}
+                    onChange={handleChange}
+                    className="w-5 h-5 text-red-600"
+                  />
+                  <label className="text-gray-700 font-medium">
+                    Включить акцию
+                  </label>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-2">
+                    Скидка (%) {formData.saleEnabled && '*'}
+                  </label>
+                  <input
+                    type="number"
+                    step="1"
+                    min="1"
+                    max="99"
+                    name="saleDiscount"
+                    value={formData.saleDiscount}
+                    onChange={handleChange}
+                    disabled={!formData.saleEnabled}
+                    placeholder="10"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">От 1% до 99%</p>
+                </div>
+
+                <div>
+                  <label className="block text-gray-700 mb-2">
+                    Окончание акции {formData.saleEnabled && '*'}
+                  </label>
+                  <input
+                    type="datetime-local"
+                    name="saleEndDate"
+                    value={formData.saleEndDate}
+                    onChange={handleChange}
+                    disabled={!formData.saleEnabled}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Дата и время окончания</p>
+                </div>
+              </div>
+
+              {formData.saleEnabled && (
+                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <p className="text-sm text-orange-800">
+                    <strong>Превью:</strong> На карточке товара будет показан бейдж "-{formData.saleDiscount || 0}%", 
+                    зачеркнутая старая цена и новая цена со скидкой. 
+                    Таймер обратного отсчета будет показывать время до {formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('ru-RU') : 'окончания акции'}.
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Short Description fields */}
