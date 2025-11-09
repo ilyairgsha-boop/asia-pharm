@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { CartProvider, type StoreType, type Product } from './contexts/CartContext';
+import { CartProvider, useCart, type StoreType, type Product } from './contexts/CartContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { Header } from './components/Header';
 import { CategoryMenu } from './components/CategoryMenu';
@@ -25,6 +25,7 @@ import { ThemeDecorations } from './components/ThemeDecorations';
 import { Footer } from './components/Footer';
 import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
+import { ShoppingCart } from 'lucide-react';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
 import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
@@ -45,6 +46,7 @@ function AppContent() {
   const [showPushPrompt, setShowPushPrompt] = useState(false);
   const { user, loading } = useAuth();
   const { t, currentLanguage } = useLanguage();
+  const { totalItemsCount } = useCart();
 
   // Handlers for exclusive category selection
   const handleCategorySelect = (category: string | null) => {
