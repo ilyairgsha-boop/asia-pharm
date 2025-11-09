@@ -457,9 +457,9 @@ export const DiseaseSidebar = ({ selectedDisease, onSelectDisease }: DiseaseSide
             <button
               key={disease.id}
               onClick={() => onSelectDisease(isAllProducts ? null : disease.id)}
-              className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${
+              className={`sidebar-category-button w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center gap-3 ${
                 isActive
-                  ? 'bg-red-600 text-white'
+                  ? 'bg-red-600 text-white active'
                   : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
               }`}
             >

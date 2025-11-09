@@ -117,7 +117,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
             <button
               key={store.id}
               onClick={() => setSelectedStore(store.id)}
-              className={`px-6 py-3 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap ${
+              className={`cart-store-button px-6 py-3 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap ${
                 selectedStore === store.id
                   ? 'bg-red-600 text-white'
                   : 'bg-white text-gray-700 border border-gray-300 hover:border-red-600'

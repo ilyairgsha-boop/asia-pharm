@@ -346,32 +346,39 @@ img.product-image {
   border-color: #fbbf24 !important;
 }
 
-/* Кнопки выбора магазинов - белые с черным текстом */
+/* 4. Кнопки выбора магазинов - желтые, при наведении/выборе белые, текст всегда черный */
 .theme-black-friday header button[class*="store"],
 .theme-black-friday .store-button {
-  background-color: #ffffff !important;
+  background-color: #fbbf24 !important;
   color: #000000 !important;
   border-color: #fbbf24 !important;
 }
 
 .theme-black-friday header button[class*="store"]:hover,
-.theme-black-friday header button[class*="store"].active {
+.theme-black-friday header button[class*="store"].active,
+.theme-black-friday .store-button:hover,
+.theme-black-friday .store-button.active {
   background-color: #ffffff !important;
   color: #000000 !important;
+  border-color: #fbbf24 !important;
 }
 
-/* 3. Верхнее меню категорий - черный текст в кнопках */
+/* 2. Верхнее меню категорий - желтые кнопки, при наведении/нажатии белые, текст ВСЕГДА черный */
 .theme-black-friday .category-menu-button {
-  background-color: #ffffff !important;
+  background-color: #fbbf24 !important;
   color: #000000 !important;
   border: 1px solid #fbbf24 !important;
 }
 
 .theme-black-friday .category-menu-button:hover,
 .theme-black-friday .category-menu-button.active {
-  background-color: #fbbf24 !important;
+  background-color: #ffffff !important;
   color: #000000 !important;
   border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .category-menu-button * {
+  color: #000000 !important;
 }
 
 /* 4. Футер - черный фон, белый текст */
@@ -601,7 +608,7 @@ img.product-image {
   border: 2px solid #fbbf24 !important;
 }
 
-/* 4. Кнопки магазинов в корзине - желтые с черным текстом */
+/* 4. Кнопки магазинов в корзине - желтые с ВСЕГДА черным текстом, при наведении/выборе белые */
 .theme-black-friday .cart-store-button {
   background-color: #fbbf24 !important;
   color: #000000 !important;
@@ -610,7 +617,13 @@ img.product-image {
 
 .theme-black-friday .cart-store-button:hover,
 .theme-black-friday .cart-store-button.active {
-  background-color: #eab308 !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .cart-store-button *,
+.theme-black-friday .cart-store-button span {
   color: #000000 !important;
 }
 
@@ -636,9 +649,14 @@ img.product-image {
   color: #000000 !important;
 }
 
-/* 8. "Я согласен с" - желтого цвета */
+/* 6. В корзине текст "Я согласен с" - ВЕСЬ текст желтого цвета */
+.theme-black-friday .agreement-section label {
+  color: #fbbf24 !important;
+}
+
 .theme-black-friday .agreement-section label a {
   color: #fbbf24 !important;
+  text-decoration: underline;
 }
 
 /* 9. Кнопка оформить заказ */
@@ -650,6 +668,127 @@ img.product-image {
 .theme-black-friday button[type="submit"]:hover:not(:disabled) {
   background-color: #eab308 !important;
   color: #000000 !important;
+}
+
+/* 3. Боковое меню - желтые кнопки, при наведении/нажатии белые, текст ВСЕГДА черный */
+.theme-black-friday .sidebar-category-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .sidebar-category-button:hover,
+.theme-black-friday .sidebar-category-button.active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #fbbf24 !important;
+}
+
+.theme-black-friday .sidebar-category-button *,
+.theme-black-friday .sidebar-category-button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* 5. Анимация единички добавления в корзину - желтого цвета */
+.theme-black-friday .flying-number {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .flying-number-text {
+  color: #000000 !important;
+}
+
+/* 2. Страница входа/регистрации - белый фон, желтая обводка, белый логотип */
+.theme-black-friday .auth-page {
+  background-color: #000000 !important;
+}
+
+.theme-black-friday .auth-container {
+  background-color: #ffffff !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .auth-logo {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .auth-container input,
+.theme-black-friday .auth-container select {
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .auth-container input:focus,
+.theme-black-friday .auth-container select:focus {
+  border-color: #fbbf24 !important;
+  ring-color: #fbbf24 !important;
+}
+
+.theme-black-friday .auth-no-account,
+.theme-black-friday .auth-have-account {
+  color: #ffffff !important;
+}
+
+/* 3. Промт подписки - желтая кнопка с черным текстом */
+.theme-black-friday .push-prompt-container {
+  background-color: #ffffff !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .push-prompt-enable-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .push-prompt-enable-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .push-prompt-later-button {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .push-prompt-later-button:hover {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+/* 1. Cookies в стиле темы - черный фон, белый текст, желтые кнопки */
+.theme-black-friday .cookie-consent {
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .cookie-message {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .cookie-decline-button {
+  background-color: #000000 !important;
+  color: #ffffff !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .cookie-decline-button:hover {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .cookie-accept-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .cookie-accept-button:hover {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
 }
 
 /* Общие стили */

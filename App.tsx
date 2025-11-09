@@ -633,7 +633,7 @@ function AppContent() {
         return true;
       })() && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
+          <div className="push-prompt-container bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl">
                 🔔
@@ -754,7 +754,7 @@ function AppContent() {
                     );
                   }
                 }}
-                className="flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                className="push-prompt-enable-button flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
               >
                 {currentLanguage === 'ru' && 'Включить'}
                 {currentLanguage === 'en' && 'Enable'}
@@ -769,7 +769,7 @@ function AppContent() {
                   // Mark that we've shown the prompt
                   localStorage.setItem('push_prompt_shown', 'true');
                 }}
-                className="px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                className="push-prompt-later-button px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
               >
                 {currentLanguage === 'ru' && 'Не сейчас'}
                 {currentLanguage === 'en' && 'Not now'}

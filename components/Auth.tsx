@@ -55,10 +55,10 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
+    <div className="auth-page min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4">
+          <div className="auth-logo w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-4">
             中
           </div>
           <h2 className="text-gray-800">
@@ -66,7 +66,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
           </h2>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-8">
+        <div className="auth-container bg-white rounded-lg shadow-md p-8">
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Language Selector - for both login and register */}
             <div>
@@ -169,7 +169,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
             <div className="text-center">
               <button
                 onClick={() => setIsLogin(!isLogin)}
-                className="text-red-600 hover:underline"
+                className={`${isLogin ? 'auth-no-account' : 'auth-have-account'} text-red-600 hover:underline`}
               >
                 {isLogin ? t('noAccount') : t('haveAccount')}
               </button>

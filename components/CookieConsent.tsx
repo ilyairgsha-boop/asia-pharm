@@ -26,23 +26,23 @@ export const CookieConsent = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl p-4 md:p-6" style={{ zIndex: 10000 }}>
+    <div className="cookie-consent fixed bottom-0 left-0 right-0 bg-white border-t-2 border-gray-200 shadow-2xl p-4 md:p-6" style={{ zIndex: 10000 }}>
       <div className="container mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="flex-1">
-          <p className="text-sm text-gray-700">
+          <p className="cookie-message text-sm text-gray-700">
             {t('cookieMessage')}
           </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={handleDecline}
-            className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            className="cookie-decline-button px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
           >
             {t('decline')}
           </button>
           <button
             onClick={handleAccept}
-            className="px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="cookie-accept-button px-4 py-2 text-sm bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
             {t('acceptCookies')}
           </button>

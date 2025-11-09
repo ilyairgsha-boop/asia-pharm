@@ -32,7 +32,7 @@ export const FlyingNumber = ({ startX, startY, onComplete }: FlyingNumberProps) 
 
   return (
     <div
-      className="fixed pointer-events-none z-[100] bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all duration-[800ms] ease-out"
+      className="flying-number fixed pointer-events-none z-[100] bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all duration-[800ms] ease-out"
       style={{
         left: 0,
         top: 0,
@@ -42,7 +42,7 @@ export const FlyingNumber = ({ startX, startY, onComplete }: FlyingNumberProps) 
         opacity: isAnimating ? 0 : 1
       }}
     >
-      <span className="text-sm font-semibold">1</span>
+      <span className="flying-number-text text-sm font-semibold">1</span>
     </div>
   );
 };
