@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect, useRef } from 'react';
 import { FlyingNumber } from './FlyingNumber';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 interface ProductDetailsModalProps {
   product: Product | null;
