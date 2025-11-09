@@ -1020,7 +1020,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                   value={promoCode}
                   onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                   placeholder={t('enterPromoCode')}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                  className="promo-code-input flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
                 <button
                   type="button"

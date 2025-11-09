@@ -912,14 +912,14 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                           </td>
                           <td className="py-3 px-4 text-right text-gray-800">
                             {item.type === 'earned' ? (
-                              <span className="text-green-600">+{item.points.toLocaleString()}</span>
+                              <span className="bonus-history-earned text-green-600">+{item.points.toLocaleString()}</span>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}
                           </td>
                           <td className="py-3 px-4 text-right text-gray-800">
                             {item.type === 'spent' ? (
-                              <span className="text-blue-600">-{item.points.toLocaleString()}</span>
+                              <span className="bonus-history-spent text-blue-600">-{item.points.toLocaleString()}</span>
                             ) : (
                               <span className="text-gray-400">-</span>
                             )}

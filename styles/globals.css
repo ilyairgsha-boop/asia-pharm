@@ -1034,6 +1034,145 @@ img.product-image {
   color: #000000 !important;
 }
 
+/* 21. Страница программы лояльности */
+/* Верхняя кнопка "На главную" - желтая с черным текстом */
+.theme-black-friday .loyalty-back-button,
+.theme-black-friday .loyalty-back-button.text-red-600 {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+}
+
+.theme-black-friday .loyalty-back-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* Иконка программы лояльности - желтая */
+.theme-black-friday .loyalty-icon,
+.theme-black-friday .loyalty-icon.text-red-600 {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* Блоки уровней (Базовый, Серебро, Золото, Платина) - желтые с черным текстом */
+.theme-black-friday .loyalty-tier-card {
+  background: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .loyalty-tier-card h4,
+.theme-black-friday .loyalty-tier-card p,
+.theme-black-friday .loyalty-tier-card strong {
+  color: #000000 !important;
+}
+
+.theme-black-friday .loyalty-tier-badge {
+  background-color: #000000 !important;
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .loyalty-tier-info {
+  background-color: #ffffff !important;
+  border: 1px solid #000000 !important;
+}
+
+.theme-black-friday .loyalty-tier-percent,
+.theme-black-friday .loyalty-tier-percent.text-green-600,
+.theme-black-friday .loyalty-tier-percent.text-blue-600,
+.theme-black-friday .loyalty-tier-percent.text-yellow-600,
+.theme-black-friday .loyalty-tier-percent.text-red-600 {
+  color: #000000 !important;
+}
+
+/* Блок "Пример" - желтый с черным текстом */
+.theme-black-friday .loyalty-example-card,
+.theme-black-friday .loyalty-example-card.bg-blue-50 {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .loyalty-example-card h4,
+.theme-black-friday .loyalty-example-card p,
+.theme-black-friday .loyalty-example-card strong {
+  color: #000000 !important;
+}
+
+.theme-black-friday .loyalty-example-total,
+.theme-black-friday .loyalty-example-total.text-green-600 {
+  color: #000000 !important;
+}
+
+/* Блок "Обратите внимание" - желтый с черным текстом */
+.theme-black-friday .loyalty-note-card,
+.theme-black-friday .loyalty-note-card.bg-yellow-50 {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .loyalty-note-card p,
+.theme-black-friday .loyalty-note-card strong {
+  color: #000000 !important;
+}
+
+/* 22. Модальное окно заказа - блок применённых скидок */
+.theme-black-friday .order-discounts-card,
+.theme-black-friday .order-discounts-card.bg-blue-50 {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-discounts-icon,
+.theme-black-friday .order-discounts-icon.text-blue-600 {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.theme-black-friday .order-discounts-title,
+.theme-black-friday .order-discounts-title.text-gray-800 {
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-discounts-label,
+.theme-black-friday .order-discounts-label.text-gray-600 {
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-discounts-value,
+.theme-black-friday .order-discounts-value.text-gray-800 {
+  color: #000000 !important;
+}
+
+/* 23. Сумма к оплате в модальном окне - БЕЛЫЙ цвет */
+.theme-black-friday .order-total-price,
+.theme-black-friday .order-total-price.text-red-600 {
+  color: #ffffff !important;
+}
+
+/* 24. История списания баллов - белый цвет */
+.theme-black-friday .bonus-history-earned,
+.theme-black-friday .bonus-history-earned.text-green-600 {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .bonus-history-spent,
+.theme-black-friday .bonus-history-spent.text-blue-600 {
+  color: #ffffff !important;
+}
+
+/* 25. Обводка поля промокода - ТОЛЬКО желтая */
+.theme-black-friday .promo-code-input {
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .promo-code-input:focus {
+  border-color: #fbbf24 !important;
+  ring-color: #fbbf24 !important;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+}
+
 /* 17. Страница успешного заказа - верхняя кнопка всегда желтая */
 .theme-black-friday .payment-info-page .profile-button {
   background-color: #fbbf24 !important;

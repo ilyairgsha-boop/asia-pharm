@@ -281,22 +281,22 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
 
           {/* Promo Code and Loyalty Points Used */}
           {((order.promoCode && order.promoDiscount && order.promoDiscount > 0) || (order.loyaltyPointsUsed && order.loyaltyPointsUsed > 0)) && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="order-discounts-card bg-blue-50 border border-blue-200 rounded-lg p-4">
               <div className="flex items-center gap-2 mb-3">
-                <Tag size={20} className="text-blue-600" />
-                <h3 className="text-gray-800">{t('discountsApplied') || 'Применённые скидки'}</h3>
+                <Tag size={20} className="order-discounts-icon text-blue-600" />
+                <h3 className="order-discounts-title text-gray-800">{t('discountsApplied') || 'Применённые скидки'}</h3>
               </div>
               <div className="space-y-2 text-sm">
                 {order.promoCode && order.promoDiscount && order.promoDiscount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{t('promoCode') || 'Промокод'}:</span>
-                    <span className="text-gray-800">{order.promoCode} (-{(order.promoDiscount || 0).toLocaleString()} ₽)</span>
+                    <span className="order-discounts-label text-gray-600">{t('promoCode') || 'Промокод'}:</span>
+                    <span className="order-discounts-value text-gray-800">{order.promoCode} (-{(order.promoDiscount || 0).toLocaleString()} ₽)</span>
                   </div>
                 )}
                 {order.loyaltyPointsUsed && order.loyaltyPointsUsed > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">{t('loyaltyPointsUsed') || 'Использовано баллов'}:</span>
-                    <span className="text-gray-800">{order.loyaltyPointsUsed.toLocaleString()} {t('points')} (-{(order.loyaltyDiscount || order.loyaltyPointsUsed || 0).toLocaleString()} ₽)</span>
+                    <span className="order-discounts-label text-gray-600">{t('loyaltyPointsUsed') || 'Использовано баллов'}:</span>
+                    <span className="order-discounts-value text-gray-800">{order.loyaltyPointsUsed.toLocaleString()} {t('points')} (-{(order.loyaltyDiscount || order.loyaltyPointsUsed || 0).toLocaleString()} ₽)</span>
                   </div>
                 )}
               </div>
@@ -429,7 +429,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
 
               <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                 <span className="text-gray-800">{t('finalTotal')}:</span>
-                <span className="text-red-600 text-xl">
+                <span className="order-total-price text-red-600 text-xl">
                   {(order.totalPrice || 0).toLocaleString()} ₽
                 </span>
               </div>
