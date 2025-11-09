@@ -504,6 +504,43 @@ function AppContent() {
     }
   }, [user, loading]);
 
+  // Handle shared product URL on mount
+  useEffect(() => {
+    const checkSharedProduct = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const productId = urlParams.get('product');
+      
+      if (productId) {
+        console.log('🔗 Shared product link detected:', productId);
+        
+        try {
+          const supabase = createClient();
+          const { data: product, error } = await supabase
+            .from('products')
+            .select('*')
+            .eq('id', productId)
+            .single();
+          
+          if (error) {
+            console.error('❌ Error fetching shared product:', error);
+            toast.error(t('productNotFound') || 'Товар не найден');
+          } else if (product) {
+            console.log('✅ Shared product loaded:', product.name);
+            setSelectedProduct(product as Product);
+            
+            // Remove product parameter from URL without reloading
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, '', newUrl);
+          }
+        } catch (error) {
+          console.error('❌ Error loading shared product:', error);
+        }
+      }
+    };
+    
+    checkSharedProduct();
+  }, []);
+
   const handleNavigate = async (page: string, store?: StoreType) => {
     // Handle product navigation (from order history)
     if (page.startsWith('product-')) {

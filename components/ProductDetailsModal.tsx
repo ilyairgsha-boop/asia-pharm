@@ -1,10 +1,11 @@
-import { X, ShoppingCart, Zap } from 'lucide-react';
+import { X, ShoppingCart, Zap, Share2 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { useState, useEffect, useRef } from 'react';
 import { FlyingNumber } from './FlyingNumber';
+import { toast } from 'sonner@2.0.3';
 
 interface ProductDetailsModalProps {
   product: Product | null;
@@ -121,6 +122,33 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
     }
   };
 
+  const handleShare = async () => {
+    const productUrl = `${window.location.origin}?product=${product.id}`;
+    
+    try {
+      // Try to use native share API if available (mobile devices)
+      if (navigator.share) {
+        await navigator.share({
+          title: getName(),
+          text: getShortDescription(),
+          url: productUrl,
+        });
+      } else {
+        // Fallback: copy to clipboard
+        await navigator.clipboard.writeText(productUrl);
+        toast.success(t('linkCopied') || 'Ссылка скопирована в буфер обмена');
+      }
+    } catch (error) {
+      // If user cancels share or any error occurs, try clipboard
+      try {
+        await navigator.clipboard.writeText(productUrl);
+        toast.success(t('linkCopied') || 'Ссылка скопирована в буфер обмена');
+      } catch (clipboardError) {
+        toast.error(t('shareFailed') || 'Не удалось поделиться');
+      }
+    }
+  };
+
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black bg-opacity-50"
@@ -132,13 +160,22 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
       >
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 p-4 md:p-4 flex items-center justify-between">
-          <h2 className="text-gray-800 text-lg md:text-xl">{getName()}</h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X size={28} className="md:w-6 md:h-6" />
-          </button>
+          <h2 className="text-gray-800 text-lg md:text-xl flex-1">{getName()}</h2>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              className="product-share-button p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              title={t('share') || 'Поделиться'}
+            >
+              <Share2 size={24} className="text-gray-700 md:w-5 md:h-5" />
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <X size={28} className="md:w-6 md:h-6" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}

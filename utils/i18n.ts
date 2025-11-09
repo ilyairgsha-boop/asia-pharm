@@ -68,6 +68,10 @@ export const translations = {
     sale: 'Акция',
     shortDescription: 'Краткое описание',
     description: 'Описание',
+    share: 'Поделиться',
+    linkCopied: 'Ссылка скопирована в буфер обмена',
+    shareFailed: 'Не удалось поделиться',
+    productNotFound: 'Товар не найден',
     
     // Cart & Checkout
     yourCart: 'Ваша корзина',
@@ -1075,6 +1079,10 @@ export const translations = {
     inStock: 'In Stock',
     outOfStock: 'Out of Stock',
     sale: 'Sale',
+    share: 'Share',
+    linkCopied: 'Link copied to clipboard',
+    shareFailed: 'Failed to share',
+    productNotFound: 'Product not found',
     shortDescription: 'Short Description',
     description: 'Description',
     
@@ -2078,6 +2086,10 @@ export const translations = {
     sale: '促销',
     shortDescription: '简短描述',
     description: '描述',
+    share: '分享',
+    linkCopied: '链接已复制到剪贴板',
+    shareFailed: '分享失败',
+    productNotFound: '未找到产品',
     
     // Cart & Checkout
     yourCart: '您的购物车',
@@ -3080,6 +3092,10 @@ export const translations = {
     sale: 'Khuyến mãi',
     shortDescription: 'Mô tả ngắn',
     description: 'Mô tả',
+    share: 'Chia sẻ',
+    linkCopied: 'Đã sao chép liên kết',
+    shareFailed: 'Không thể chia sẻ',
+    productNotFound: 'Không tìm thấy sản phẩm',
     
     // Cart & Checkout
     yourCart: 'Giỏ hàng của bạn',

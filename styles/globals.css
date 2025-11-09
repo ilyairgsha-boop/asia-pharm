@@ -1200,6 +1200,20 @@ img.product-image {
   color: #000000 !important;
 }
 
+/* 28. Кнопка "Поделиться" в модальном окне товара - желтый фон */
+.theme-black-friday .product-share-button {
+  background-color: #fbbf24 !important;
+}
+
+.theme-black-friday .product-share-button:hover {
+  background-color: #eab308 !important;
+}
+
+.theme-black-friday .product-share-button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
 /* 17. Страница успешного заказа - верхняя кнопка всегда желтая */
 .theme-black-friday .payment-info-page .profile-button {
   background-color: #fbbf24 !important;
