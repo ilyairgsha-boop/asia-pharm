@@ -171,7 +171,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="order-details-modal bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <div>
@@ -182,7 +182,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="order-details-close-button p-2 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
           >
             <X size={24} />
           </button>
@@ -219,14 +219,14 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
                 })() : t('invalidDate') || '-'}
               </p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(order.status)}`}>
+            <span className={`order-status-badge px-3 py-1 rounded-full text-sm ${getStatusColor(order.status)}`}>
               {t(order.status)}
             </span>
           </div>
 
           {/* Payment Info Button for pending orders */}
           {order.status === 'pending' && onViewPayment && (
-            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
+            <div className="order-pending-card bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-gray-800 mb-1">⚠️ {t('pending')}</p>
@@ -237,7 +237,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
               </div>
               <button
                 onClick={() => onViewPayment(order.orderNumber, order.totalPrice)}
-                className="w-full mt-3 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
+                className="order-payment-button w-full mt-3 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center gap-2"
               >
                 <CreditCard size={20} />
                 {t('viewPaymentInfo')}
@@ -250,7 +250,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
             <>
               {/* Already Earned Points - when delivered */}
               {order.status === 'delivered' ? (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="order-points-earned-card bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2">
                     <Gift size={20} className="text-green-600" />
                     <p className="text-green-800">
@@ -260,17 +260,17 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
                 </div>
               ) : (
                 /* Points to Be Earned - for all other cases */
-                <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4">
+                <div className="order-points-pending-card bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Gift size={20} className="text-red-600" />
-                    <p className="text-gray-800">{t('loyaltyPointsToEarn') || 'Баллы к начислению'}</p>
+                    <Gift size={20} className="order-points-icon text-red-600" />
+                    <p className="order-points-text text-gray-800">{t('loyaltyPointsToEarn') || 'Баллы к начислению'}</p>
                   </div>
                   <div className="flex items-center justify-between">
                     <p className="text-sm text-gray-600">
                       {t('loyaltyPointsAfterDelivery') || 'После доставки заказа'}
                     </p>
                     <div className="text-right">
-                      <p className="text-2xl text-red-600">+{loyaltyPointsToEarn.toLocaleString()}</p>
+                      <p className="order-points-value text-2xl text-red-600">+{loyaltyPointsToEarn.toLocaleString()}</p>
                       <p className="text-xs text-gray-500">{getTierName(currentTier)}</p>
                     </div>
                   </div>
@@ -441,7 +441,7 @@ export const OrderDetails = ({ order, onClose, onViewPayment, onNavigate }: Orde
         <div className="sticky bottom-0 bg-white border-t border-gray-200 px-6 py-4">
           <button
             onClick={onClose}
-            className="w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+            className="w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors text-center"
           >
             {t('close')}
           </button>

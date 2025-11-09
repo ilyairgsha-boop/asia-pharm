@@ -796,7 +796,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     value={formData.fullName}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                   />
                 </div>
 
@@ -810,7 +810,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     value={formData.phone}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                   />
                 </div>
 
@@ -824,7 +824,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     value={formData.region}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                   />
                 </div>
 
@@ -838,7 +838,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     value={formData.city}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                   />
                 </div>
 
@@ -854,7 +854,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                         value={formData.address}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                        className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                       />
                     </div>
 
@@ -868,7 +868,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                         value={formData.postalCode}
                         onChange={handleChange}
                         required
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                        className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                       />
                     </div>
                   </>
@@ -885,7 +885,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                       value={formData.address}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                      className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                     />
                   </div>
                 )}
@@ -901,7 +901,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                       value={formData.address}
                       onChange={handleChange}
                       required
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                      className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                     />
                   </div>
                 )}
@@ -915,7 +915,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     value={formData.notes}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                    className="checkout-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                   />
                 </div>
               </div>

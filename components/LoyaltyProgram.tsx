@@ -18,7 +18,7 @@ export const LoyaltyProgram = ({ onNavigate }: LoyaltyProgramProps) => {
         ← {t('backToHome')}
       </button>
 
-      <div className="bg-white rounded-lg shadow-md p-8">
+      <div className="loyalty-program-container bg-white rounded-lg shadow-md p-8">
         <div className="flex items-center gap-3 mb-6">
           <Gift className="text-red-600" size={32} />
           <h2 className="text-gray-800">{t('loyaltyProgram')}</h2>

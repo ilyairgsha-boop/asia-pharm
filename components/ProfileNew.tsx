@@ -600,7 +600,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
           )}
 
           {/* Loyalty Program Card */}
-          <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-md p-6 text-white">
+          <div className="profile-loyalty-card bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-md p-6 text-white">
             <div className="flex items-center gap-2 mb-4">
               <Gift size={24} />
               <h3>{t('loyaltyProgram')}</h3>
@@ -670,9 +670,9 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
             <div className="flex border-b border-gray-200">
               <button
                 onClick={() => setSettingsTab('orders')}
-                className={`flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
                   settingsTab === 'orders'
-                    ? 'border-b-2 border-red-600 text-red-600'
+                    ? 'border-b-2 border-red-600 text-red-600 active'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -681,9 +681,9 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               </button>
               <button
                 onClick={() => setSettingsTab('favorites')}
-                className={`flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
                   settingsTab === 'favorites'
-                    ? 'border-b-2 border-red-600 text-red-600'
+                    ? 'border-b-2 border-red-600 text-red-600 active'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -692,9 +692,9 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               </button>
               <button
                 onClick={() => setSettingsTab('bonusHistory')}
-                className={`flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
                   settingsTab === 'bonusHistory'
-                    ? 'border-b-2 border-red-600 text-red-600'
+                    ? 'border-b-2 border-red-600 text-red-600 active'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -703,9 +703,9 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               </button>
               <button
                 onClick={() => setSettingsTab('settings')}
-                className={`flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
                   settingsTab === 'settings'
-                    ? 'border-b-2 border-red-600 text-red-600'
+                    ? 'border-b-2 border-red-600 text-red-600 active'
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
@@ -823,7 +823,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                 <p className="text-gray-600">{t('noFavorites')}</p>
                 <button
                   onClick={() => onNavigate('home')}
-                  className="mt-4 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                  className="profile-favorites-button mt-4 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
                 >
                   {t('continueShopping')}
                 </button>
@@ -973,7 +973,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                           />
                           <button
                             onClick={handleUpdateEmail}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                            className="profile-settings-button px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                           >
                             {t('save')}
                           </button>
@@ -994,7 +994,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                           </div>
                           <button
                             onClick={() => setShowEmailEdit(true)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="profile-settings-button px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                           >
                             {t('changeEmail')}
                           </button>
@@ -1008,7 +1008,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               {/* Push Notification Settings */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Bell size={20} className="text-red-600" />
+                  <Bell size={20} className="profile-settings-icon text-red-600" />
                   <h3 className="text-gray-800">{t('pushNotificationSettings') || 'Push Notifications'}</h3>
                 </div>
 
@@ -1023,7 +1023,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                   </div>
                   <button
                     onClick={handleToggleSubscription}
-                    className={`px-6 py-2 rounded-lg transition-colors ${
+                    className={`profile-settings-button px-6 py-2 rounded-lg transition-colors ${
                       isSubscribed
                         ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         : 'bg-green-600 text-white hover:bg-green-700'
@@ -1037,7 +1037,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
               {/* Email Newsletter Settings */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <Mail size={20} className="text-red-600" />
+                  <Mail size={20} className="profile-settings-icon text-red-600" />
                   <h3 className="text-gray-800">{t('newsletterSettings') || 'Email Newsletter'}</h3>
                 </div>
 
@@ -1052,7 +1052,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                   </div>
                   <button
                     onClick={handleToggleNewsletterSubscription}
-                    className={`px-6 py-2 rounded-lg transition-colors ${
+                    className={`profile-settings-button px-6 py-2 rounded-lg transition-colors ${
                       isSubscribedToNewsletter
                         ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         : 'bg-green-600 text-white hover:bg-green-700'
@@ -1078,7 +1078,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                     <div className="flex gap-2">
                       <button
                         onClick={handleDeleteAccount}
-                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        className="profile-settings-button flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                       >
                         <Trash2 size={16} />
                         {t('confirmDeleteAccount')}
@@ -1093,7 +1093,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                   ) : (
                     <button
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="flex items-center gap-2 px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      className="profile-settings-button flex items-center gap-2 px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
                     >
                       <Trash2 size={16} />
                       {t('deleteAccount')}

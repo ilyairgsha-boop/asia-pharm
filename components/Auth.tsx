@@ -80,7 +80,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                   setSelectedLanguage(newLang);
                   setLanguage(newLang);
                 }}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
               >
                 <option value="ru">🇷🇺 Русский</option>
                 <option value="en">🇬🇧 English</option>
@@ -100,7 +100,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                   value={formData.name}
                   onChange={handleChange}
                   required={!isLogin}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                  className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
               </div>
             )}
@@ -115,7 +115,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                 value={formData.email}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
               />
             </div>
 
@@ -129,7 +129,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                 value={formData.password}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
               />
             </div>
 
@@ -144,7 +144,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   required={!isLogin}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                  className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
               </div>
             )}

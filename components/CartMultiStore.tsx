@@ -58,7 +58,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
           <p className="text-gray-600 mb-6">{t('cartEmpty')}</p>
           <button
             onClick={() => onNavigate('home')}
-            className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors text-center flex items-center justify-center mx-auto"
+            className="continue-shopping-button bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors text-center flex items-center justify-center mx-auto"
           >
             {t('continueShopping')}
           </button>

@@ -118,12 +118,12 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
   const qrCodeUrl = paymentSettings?.qrCodeUrl || null;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="payment-info-page min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Header */}
         <button
           onClick={() => onNavigate('profile')}
-          className="order-success-button flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6"
+          className="profile-button order-success-button flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6 px-4 py-2 rounded-lg"
         >
           <ArrowLeft size={20} />
           {t('backToProfile')}
@@ -150,7 +150,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
             </div>
             <div>
               <span className="text-gray-600">{t('finalTotal')}:</span>
-              <div className="text-2xl text-red-600 mt-1">{totalAmount.toLocaleString()} ₽</div>
+              <div className="payment-total text-2xl text-red-600 mt-1">{totalAmount.toLocaleString()} ₽</div>
             </div>
           </div>
         </div>
@@ -381,13 +381,13 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         <div className="mt-6 flex gap-4">
           <button
             onClick={() => onNavigate('profile')}
-            className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors"
+            className="profile-button flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center"
           >
             {t('backToProfile')}
           </button>
           <button
             onClick={() => onNavigate('home')}
-            className="flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+            className="home-button flex-1 bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center"
           >
             {t('backToHome')}
           </button>

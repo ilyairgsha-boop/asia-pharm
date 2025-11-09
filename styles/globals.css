@@ -377,12 +377,16 @@ img.product-image {
   border: 1px solid #fbbf24 !important;
 }
 
+.theme-black-friday .category-menu-button.text-white,
+.theme-black-friday .category-menu-button.text-gray-700,
 .theme-black-friday .category-menu-button *,
 .theme-black-friday .category-menu-button span,
-.theme-black-friday .category-menu-button svg {
+.theme-black-friday .category-menu-button svg,
+.theme-black-friday .category-menu-button svg path,
+.theme-black-friday .category-menu-button div {
   color: #000000 !important;
-  stroke: #000000 !important;
-  fill: none !important;
+  stroke: currentColor !important;
+  fill: currentColor !important;
 }
 
 /* 4. Футер - черный фон, белый текст */
@@ -632,7 +636,19 @@ img.product-image {
 }
 
 /* Счетчик количества товаров в кнопках магазинов - желтый с черным текстом ВСЕГДА */
-.theme-black-friday .cart-store-badge {
+.theme-black-friday .cart-store-badge,
+.theme-black-friday .cart-store-badge.bg-white,
+.theme-black-friday .cart-store-badge.bg-red-600,
+.theme-black-friday .cart-store-badge.text-red-600,
+.theme-black-friday .cart-store-badge.text-white {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .cart-store-button.active .cart-store-badge,
+.theme-black-friday .cart-store-button.active .cart-store-badge.bg-white,
+.theme-black-friday .cart-store-button.active .cart-store-badge.text-red-600,
+.theme-black-friday .cart-store-button:hover .cart-store-badge {
   background-color: #fbbf24 !important;
   color: #000000 !important;
 }
@@ -766,6 +782,273 @@ img.product-image {
 .theme-black-friday .push-prompt-later-button:hover {
   background-color: #fbbf24 !important;
   color: #000000 !important;
+}
+
+/* 8. Страница оплаты после заказа - текст суммы белым, кнопки желтые */
+.theme-black-friday .payment-info-page .payment-total {
+  color: #ffffff !important;
+}
+
+.theme-black-friday .payment-info-page .profile-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .payment-info-page .profile-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .payment-info-page .home-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .payment-info-page .home-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 10. Кнопка "Продолжить покупки" - желтая с черным текстом */
+.theme-black-friday .continue-shopping-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .continue-shopping-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 12. Окно входа и регистрации - желтая обводка */
+.theme-black-friday .auth-input {
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .auth-input:focus {
+  ring-color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+}
+
+/* 13. Checkout - текст ввода БЕЛЫЙ, обводка желтая */
+.theme-black-friday .checkout-input {
+  color: #ffffff !important;
+  background-color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .checkout-input:focus {
+  ring-color: #fbbf24 !important;
+  border-color: #fbbf24 !important;
+  box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.5) !important;
+}
+
+.theme-black-friday .checkout-input::placeholder {
+  color: #999999 !important;
+}
+
+/* 14. Личный кабинет - программа лояльности черно-желтая */
+.theme-black-friday .profile-loyalty-card {
+  background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%) !important;
+  border: 2px solid #fbbf24 !important;
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .profile-loyalty-card h3,
+.theme-black-friday .profile-loyalty-card p,
+.theme-black-friday .profile-loyalty-card span {
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .profile-loyalty-card svg {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+.theme-black-friday .profile-loyalty-card .text-red-100 {
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .profile-loyalty-card button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .profile-loyalty-card button:hover {
+  background-color: #eab308 !important;
+}
+
+/* 15. Вкладки профиля - желтые вместо красных */
+.theme-black-friday .profile-tab.active {
+  border-bottom-color: #fbbf24 !important;
+  color: #fbbf24 !important;
+}
+
+.theme-black-friday .profile-tab.active svg {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* 16. Кнопки в настройках профиля - желтые с черным текстом */
+.theme-black-friday .profile-settings-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .profile-settings-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .profile-settings-button.bg-gray-200,
+.theme-black-friday .profile-settings-button.bg-green-600,
+.theme-black-friday .profile-settings-button.text-gray-700,
+.theme-black-friday .profile-settings-button.text-white {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+/* 18. Иконки в настройках профиля - желтые */
+.theme-black-friday .profile-settings-icon,
+.theme-black-friday .profile-settings-icon.text-red-600 {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* 19. Кнопка "Продолжить покупки" в избранном - желтая с черным текстом */
+.theme-black-friday .profile-favorites-button,
+.theme-black-friday .profile-favorites-button.bg-red-600,
+.theme-black-friday .profile-favorites-button.text-white {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .profile-favorites-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* 20. Модальное окно истории заказов - черная пятница */
+/* Кнопка закрыть - желтая с черным текстом по центру */
+.theme-black-friday .order-details-close-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border-radius: 8px !important;
+  padding: 8px !important;
+  width: 40px !important;
+  height: 40px !important;
+}
+
+.theme-black-friday .order-details-close-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-details-close-button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Блок статуса - желтый с черным текстом */
+.theme-black-friday .order-status-badge {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+/* Блок баллов к начислению - желтый с черным текстом */
+.theme-black-friday .order-points-pending-card {
+  background: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-points-pending-card .order-points-icon,
+.theme-black-friday .order-points-pending-card .order-points-icon.text-red-600 {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.theme-black-friday .order-points-pending-card .order-points-text,
+.theme-black-friday .order-points-pending-card .order-points-text.text-gray-800 {
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-points-pending-card .order-points-value,
+.theme-black-friday .order-points-pending-card .order-points-value.text-red-600 {
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-points-pending-card p,
+.theme-black-friday .order-points-pending-card span {
+  color: #000000 !important;
+}
+
+/* Блок начисленных баллов - желтый с черным текстом */
+.theme-black-friday .order-points-earned-card,
+.theme-black-friday .order-points-earned-card.bg-green-50 {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-points-earned-card svg,
+.theme-black-friday .order-points-earned-card .text-green-600 {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+.theme-black-friday .order-points-earned-card p,
+.theme-black-friday .order-points-earned-card .text-green-800 {
+  color: #000000 !important;
+}
+
+/* Кнопка "Посмотреть информацию об оплате" - желтая с черным текстом */
+.theme-black-friday .order-payment-button,
+.theme-black-friday .order-payment-button.bg-red-600,
+.theme-black-friday .order-payment-button.text-white {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-payment-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .order-payment-button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Блок ожидания оплаты - желтый с черным текстом */
+.theme-black-friday .order-pending-card,
+.theme-black-friday .order-pending-card.bg-yellow-50 {
+  background-color: #fbbf24 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .order-pending-card p,
+.theme-black-friday .order-pending-card .text-gray-800,
+.theme-black-friday .order-pending-card .text-gray-600 {
+  color: #000000 !important;
+}
+
+/* 17. Страница успешного заказа - верхняя кнопка всегда желтая */
+.theme-black-friday .payment-info-page .profile-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border: 2px solid #fbbf24 !important;
+}
+
+.theme-black-friday .payment-info-page .profile-button:hover {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .payment-info-page .profile-button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
 }
 
 /* 7. Футер - весь текст белого цвета */

@@ -492,7 +492,7 @@ export const CategoryMenu = ({ selectedCategory, onSelectCategory, currentStore 
                       onSelectCategory(category.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`flex items-center gap-[6.5px] px-[10px] py-[16px] rounded-[10px] transition-colors min-h-[51px] ${
+                    className={`category-menu-button flex items-center gap-[6.5px] px-[10px] py-[16px] rounded-[10px] transition-colors min-h-[51px] ${
                       selectedCategory === category.id
                         ? 'bg-red-600 text-white shadow-md'
                         : 'bg-gray-100 hover:bg-gray-200 text-[#364153]'
