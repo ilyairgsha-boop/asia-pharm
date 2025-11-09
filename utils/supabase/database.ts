@@ -28,6 +28,9 @@ function mapProductFromDB(dbProduct: any) {
     weight: dbProduct.weight || 0,
     isSample: dbProduct.is_sample || false,
     wholesalePrice: dbProduct.wholesale_price,
+    saleEnabled: dbProduct.sale_enabled || false,
+    saleDiscount: dbProduct.sale_discount || null,
+    saleEndDate: dbProduct.sale_end_date || null,
   };
 }
 
@@ -63,6 +66,18 @@ function mapProductToDB(product: any) {
   if ('shortDescription_vi' in product) {
     dbProduct.short_description_vi = product.shortDescription_vi;
     delete dbProduct.shortDescription_vi;
+  }
+  if ('saleEnabled' in product) {
+    dbProduct.sale_enabled = product.saleEnabled;
+    delete dbProduct.saleEnabled;
+  }
+  if ('saleDiscount' in product) {
+    dbProduct.sale_discount = product.saleDiscount;
+    delete dbProduct.saleDiscount;
+  }
+  if ('saleEndDate' in product) {
+    dbProduct.sale_end_date = product.saleEndDate;
+    delete dbProduct.saleEndDate;
   }
   
   return dbProduct;

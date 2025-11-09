@@ -1,4 +1,4 @@
-import { X, ShoppingCart } from 'lucide-react';
+import { X, ShoppingCart, Clock } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, Product } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +21,10 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
 
+  // Sale countdown timer
+  const [timeLeft, setTimeLeft] = useState<string>('');
+  const [isSaleActive, setIsSaleActive] = useState(false);
+
   useEffect(() => {
     const checkDesktop = () => {
       setIsDesktop(window.innerWidth >= 768);
@@ -30,10 +34,62 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
+  // Sale countdown timer effect
+  useEffect(() => {
+    if (!product) return;
+
+    const saleEnabled = (product as any).saleEnabled;
+    const saleEndDate = (product as any).saleEndDate;
+
+    if (!saleEnabled || !saleEndDate) {
+      setIsSaleActive(false);
+      return;
+    }
+
+    const updateTimer = () => {
+      const now = new Date().getTime();
+      const end = new Date(saleEndDate).getTime();
+      const distance = end - now;
+
+      if (distance < 0) {
+        setIsSaleActive(false);
+        setTimeLeft('');
+        return;
+      }
+
+      setIsSaleActive(true);
+
+      const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+      if (days > 0) {
+        setTimeLeft(`${days}д ${hours}ч ${minutes}м`);
+      } else if (hours > 0) {
+        setTimeLeft(`${hours}ч ${minutes}м ${seconds}с`);
+      } else {
+        setTimeLeft(`${minutes}м ${seconds}с`);
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(interval);
+  }, [product]);
+
   if (!product) return null;
   
   const isWholesaler = user?.isWholesaler || false;
   const wholesalePrice = (product as any).wholesalePrice;
+
+  // Calculate discounted price
+  const saleDiscount = (product as any).saleDiscount || 0;
+  const originalPrice = product.price;
+  const discountedPrice = isSaleActive && saleDiscount > 0 
+    ? originalPrice * (1 - saleDiscount / 100) 
+    : originalPrice;
 
   const getName = () => {
     switch (language) {
@@ -121,19 +177,47 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
                 onContextMenu={(e) => e.preventDefault()}
                 draggable={false}
               />
-              {!product.inStock && (
-                <div className="absolute top-4 right-4 bg-red-600 text-white px-4 py-2 rounded-full text-base md:text-base">
-                  {t('outOfStock')}
-                </div>
-              )}
+              
+              {/* Badges */}
+              <div className="absolute top-4 right-4 flex flex-col gap-2 items-end">
+                {isSaleActive && saleDiscount > 0 && (
+                  <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-2 rounded-full text-base shadow-lg font-semibold">
+                    -{saleDiscount}%
+                  </div>
+                )}
+                {!product.inStock && (
+                  <div className="bg-red-600 text-white px-4 py-2 rounded-full text-base">
+                    {t('outOfStock')}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Details */}
             <div className="space-y-4 md:space-y-4">
               <div>
-                <div className="text-3xl md:text-3xl text-red-600 mb-3 md:mb-2">
-                  {product.price.toFixed(0)} ₽
-                </div>
+                {/* Sale countdown timer */}
+                {isSaleActive && timeLeft && (
+                  <div className="mb-3 flex items-center gap-2 text-orange-600 bg-orange-50 px-3 py-2 rounded-lg">
+                    <Clock size={18} />
+                    <span className="text-base">{timeLeft}</span>
+                  </div>
+                )}
+
+                {isSaleActive && saleDiscount > 0 ? (
+                  <div className="mb-3">
+                    <div className="text-gray-400 text-xl line-through mb-2">
+                      {originalPrice.toFixed(0)} ₽
+                    </div>
+                    <div className="text-3xl md:text-3xl text-red-600 font-semibold">
+                      {discountedPrice.toFixed(0)} ₽
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-3xl md:text-3xl text-red-600 mb-3 md:mb-2">
+                    {product.price.toFixed(0)} ₽
+                  </div>
+                )}
                 {isWholesaler && wholesalePrice && (
                   <div className="text-xl md:text-lg text-green-600 mb-4">
                     {t('wholesalePrice')}: ¥{wholesalePrice.toFixed(2)}

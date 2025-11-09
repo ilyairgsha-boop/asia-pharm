@@ -166,6 +166,9 @@ export const ProductManagement = () => {
           isSample: p.is_sample ?? p.isSample ?? false,
           wholesalePrice: p.wholesale_price ?? p.wholesalePrice ?? '',
           diseaseCategories: p.disease_categories ?? p.diseaseCategories ?? [p.disease],
+          saleEnabled: p.sale_enabled ?? false,
+          saleDiscount: p.sale_discount ?? null,
+          saleEndDate: p.sale_end_date ?? null,
         }));
         setProducts(mappedProducts);
       } else {
