@@ -595,6 +595,25 @@ img.product-image {
   background-color: #eab308 !important;
 }
 
+/* 13. Плавающая кнопка корзины LiveChat - желтая с черной иконкой */
+.theme-black-friday .live-chat-cart-button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+}
+
+.theme-black-friday .live-chat-cart-button:hover {
+  background-color: #eab308 !important;
+}
+
+.theme-black-friday .live-chat-cart-icon {
+  color: #000000 !important;
+}
+
+.theme-black-friday .live-chat-cart-badge {
+  background-color: #000000 !important;
+  color: #fbbf24 !important;
+}
+
 /* Карточки товаров */
 /* 2. Цена белая, кнопка в корзину желтая */
 .theme-black-friday .product-price {
@@ -1354,25 +1373,19 @@ img.product-image {
   color: #fbbf24 !important;
 }
 
-/* 31. Мобильная версия - плавающая кнопка корзины */
-.theme-black-friday .mobile-floating-cart {
+/* 31. Мобильная версия - кнопка выпадающего меню "Категории" */
+.theme-black-friday .mobile-category-menu-button {
   background-color: #fbbf24 !important;
-  border: 3px solid #000000 !important;
+  border-color: #fbbf24 !important;
 }
 
-.theme-black-friday .mobile-floating-cart:hover {
+.theme-black-friday .mobile-category-menu-button:hover {
   background-color: #eab308 !important;
 }
 
-.theme-black-friday .mobile-floating-cart-icon {
+.theme-black-friday .mobile-category-menu-text,
+.theme-black-friday .mobile-category-menu-arrow {
   color: #000000 !important;
-  stroke: #000000 !important;
-}
-
-.theme-black-friday .mobile-floating-cart-badge {
-  background-color: #000000 !important;
-  color: #fbbf24 !important;
-  border: 2px solid #fbbf24 !important;
 }
 
 /* Стили для темы 23 февраля */

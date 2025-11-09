@@ -475,10 +475,10 @@ export const CategoryMenu = ({ selectedCategory, onSelectCategory, currentStore 
         <div className="md:hidden py-2.5 px-[6px]">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="w-full px-[13px] py-3 bg-red-600 text-white rounded-[10px] flex items-center justify-between hover:bg-red-700 transition-colors shadow-md border-2 border-red-600"
+            className="mobile-category-menu-button w-full px-[13px] py-3 rounded-[10px] flex items-center justify-between transition-colors shadow-md border-2 bg-red-600 text-white hover:bg-red-700 border-red-600"
           >
-            <span className="font-medium text-[20px] leading-[36px] tracking-[-0.47px]">{t('productTypes')}</span>
-            <span className={`text-[19.5px] leading-[29.25px] tracking-[-0.11px] transform transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`}>▼</span>
+            <span className="mobile-category-menu-text font-medium text-[20px] leading-[36px] tracking-[-0.47px]">{t('productTypes')}</span>
+            <span className={`mobile-category-menu-arrow text-[19.5px] leading-[29.25px] tracking-[-0.11px] transform transition-transform ${mobileMenuOpen ? 'rotate-180' : ''}`}>▼</span>
           </button>
 
           {mobileMenuOpen && (

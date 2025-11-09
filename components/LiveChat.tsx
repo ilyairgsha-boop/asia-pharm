@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { MessageCircle, X, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { createClient } from '../utils/supabase/client';
 
 interface LiveChatProps {
@@ -12,6 +13,7 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { t } = useLanguage();
   const { totalItemsCount } = useCart();
+  const { currentTheme } = useTheme();
   const [chatSettings, setChatSettings] = useState({
     enabled: true,
     telegram: '@asiapharm',
@@ -75,14 +77,22 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
       {/* Cart Button - Mobile only - always visible */}
       <button
         onClick={() => onNavigate?.('cart')}
-        className="md:hidden fixed bottom-[30px] right-[84px] bg-red-600 text-white w-[54px] h-[54px] rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] hover:bg-red-700 transition-all hover:scale-110 flex items-center justify-center p-0"
+        className={`live-chat-cart-button md:hidden fixed bottom-[30px] right-[84px] w-[54px] h-[54px] rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all hover:scale-110 flex items-center justify-center p-0 ${
+          currentTheme === 'blackfriday' 
+            ? 'bg-yellow-400 text-black hover:bg-yellow-500' 
+            : 'bg-red-600 text-white hover:bg-red-700'
+        }`}
         aria-label="Cart"
         style={{ zIndex: 9999, position: 'fixed' }}
       >
         <div className="relative w-full h-full flex items-center justify-center">
-          <ShoppingCart size={24} strokeWidth={2} />
+          <ShoppingCart size={24} strokeWidth={2} className="live-chat-cart-icon" />
           {totalItemsCount > 0 && (
-            <span className="absolute top-1 right-1 bg-white text-red-600 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">
+            <span className={`live-chat-cart-badge absolute top-1 right-1 rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold ${
+              currentTheme === 'blackfriday'
+                ? 'bg-black text-yellow-400'
+                : 'bg-white text-red-600'
+            }`}>
               {totalItemsCount}
             </span>
           )}

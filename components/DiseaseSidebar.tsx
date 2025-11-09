@@ -332,17 +332,6 @@ export const DiseaseSidebar = ({ selectedDisease, onSelectDisease }: DiseaseSide
           },
           icon: 'Wind',
           order: 16
-        },
-        {
-          id: 'samples',
-          translations: {
-            ru: 'Пробники',
-            en: 'Samples',
-            zh: '样品',
-            vi: 'Mẫu thử'
-          },
-          icon: 'TestTube',
-          order: 17
         }
       ]
     };
@@ -377,7 +366,7 @@ export const DiseaseSidebar = ({ selectedDisease, onSelectDisease }: DiseaseSide
     }
 
     // Use default categories as fallback (don't try API)
-    console.log('⚠️ DiseaseSidebar: No categories in localStorage, using defaults');
+    console.log('ℹ️ DiseaseSidebar: Loading default categories');
     setSidebarCategories(defaultCategories.sidebar);
     localStorage.setItem('categories', JSON.stringify(defaultCategories));
   };

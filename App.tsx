@@ -183,18 +183,12 @@ function AppContent() {
     // Listen for OneSignal settings changes (from admin panel)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'oneSignalSettings') {
-        console.log('🔄 OneSignal settings changed in localStorage, reloading...');
+        console.log('🔄 OneSignal settings changed in localStorage, reloading settings...');
         oneSignalService.reloadSettings();
         
-        // Re-initialize if now enabled
-        if (oneSignalService.isEnabled() && !oneSignalService['isInitialized']) {
-          console.log('🔔 OneSignal now enabled, initializing...');
-          oneSignalService.initializeSDK().then(() => {
-            console.log('✅ OneSignal re-initialized successfully');
-          }).catch(error => {
-            console.warn('⚠️ OneSignal re-initialization failed:', error);
-          });
-        }
+        // Note: Don't re-initialize SDK here to avoid "SDK already initialized" error
+        // The SDK will pick up new settings on next page load
+        console.log('💡 OneSignal settings updated. Please refresh the page to apply changes.');
       }
     };
     
@@ -653,21 +647,6 @@ function AppContent() {
       {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
 
       {currentPage === 'loyalty-program' && <LoyaltyProgram onNavigate={handleNavigate} />}
-
-      {/* Mobile Floating Cart Button */}
-      {currentPage === 'home' && (
-        <button
-          onClick={() => handleNavigate('cart')}
-          className="mobile-floating-cart md:hidden fixed bottom-6 right-6 w-16 h-16 rounded-full shadow-lg flex items-center justify-center z-40 transition-all hover:scale-110 bg-red-600 hover:bg-red-700 text-white"
-        >
-          <ShoppingCart size={28} strokeWidth={1.5} className="mobile-floating-cart-icon" />
-          {totalItemsCount > 0 && (
-            <span className="mobile-floating-cart-badge absolute -top-1 -right-1 rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold bg-yellow-400 text-black">
-              {totalItemsCount}
-            </span>
-          )}
-        </button>
-      )}
 
       {/* Live Chat Widget */}
       <LiveChat onNavigate={setCurrentPage} />

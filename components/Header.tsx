@@ -67,8 +67,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
         { id: 'hemorrhoids', translations: { ru: 'Геморрой', en: 'Hemorrhoids', zh: '痔疮', vi: 'Trĩ' }, icon: 'CircleDot', order: 13 },
         { id: 'oncology', translations: { ru: 'Онкология', en: 'Oncology', zh: '肿瘤', vi: 'Ung thư' }, icon: 'Shield', order: 14 },
         { id: 'thyroid', translations: { ru: 'Щитовидная железа', en: 'Thyroid', zh: '甲状腺', vi: 'Tuyến giáp' }, icon: 'Coffee', order: 15 },
-        { id: 'lungs', translations: { ru: 'Легкие', en: 'Lungs', zh: '肺', vi: 'Phổi' }, icon: 'Wind', order: 16 },
-        { id: 'samples', translations: { ru: 'Пробники', en: 'Samples', zh: '样品', vi: 'Mẫu thử' }, icon: 'TestTube', order: 17 }
+        { id: 'lungs', translations: { ru: 'Легкие', en: 'Lungs', zh: '肺', vi: 'Phổi' }, icon: 'Wind', order: 16 }
       ];
       
       const storedCategories = localStorage.getItem('categories');
@@ -98,7 +97,7 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
           localStorage.setItem('categories', JSON.stringify({ sidebar: defaultCategories, topMenu: [] }));
         }
       } else {
-        console.warn('📱 Header: No categories in localStorage, using defaults');
+        console.log('ℹ️ Header: Loading default categories');
         setSidebarCategories(defaultCategories);
         localStorage.setItem('categories', JSON.stringify({ sidebar: defaultCategories, topMenu: [] }));
       }
