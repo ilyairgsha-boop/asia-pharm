@@ -49,40 +49,58 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
   // Load sidebar categories from localStorage
   useEffect(() => {
     const loadSidebarCategories = () => {
+      // Default categories (same as DiseaseSidebar)
+      const defaultCategories = [
+        { id: 'popular', translations: { ru: 'Популярные товары', en: 'Popular Products', zh: '热门产品', vi: 'Sản phẩm phổ biến' }, icon: 'Sparkles', order: 0 },
+        { id: 'allProducts', translations: { ru: 'Все товары', en: 'All Products', zh: '所有产品', vi: 'Tất cả sản phẩm' }, icon: 'Package', order: 1 },
+        { id: 'cold', translations: { ru: 'Простуда', en: 'Cold & Flu', zh: '感冒', vi: 'Cảm lạnh' }, icon: 'Thermometer', order: 2 },
+        { id: 'digestive', translations: { ru: 'ЖКТ', en: 'Digestive System', zh: '消化系统', vi: 'Hệ tiêu hóa' }, icon: 'Activity', order: 3 },
+        { id: 'skin', translations: { ru: 'Кожа', en: 'Skin', zh: '皮肤', vi: 'Da' }, icon: 'Droplet', order: 4 },
+        { id: 'joints', translations: { ru: 'Суставы', en: 'Joints', zh: '关节', vi: 'Khớp' }, icon: 'Bone', order: 5 },
+        { id: 'heart', translations: { ru: 'Сердце и сосуды', en: 'Heart & Vessels', zh: '心脏和血管', vi: 'Tim mạch' }, icon: 'Heart', order: 6 },
+        { id: 'liverKidneys', translations: { ru: 'Печень и почки', en: 'Liver & Kidneys', zh: '肝肾', vi: 'Gan thận' }, icon: 'Leaf', order: 7 },
+        { id: 'nervous', translations: { ru: 'Нервная система', en: 'Nervous System', zh: '神经系统', vi: 'Hệ thần kinh' }, icon: 'Zap', order: 8 },
+        { id: 'womensHealth', translations: { ru: 'Женское здоровье', en: 'Women\'s Health', zh: '女性健康', vi: 'Sức khỏe phụ nữ' }, icon: 'User', order: 9 },
+        { id: 'mensHealth', translations: { ru: 'Мужское здоровье', en: 'Men\'s Health', zh: '男性健康', vi: 'Sức khỏe nam giới' }, icon: 'User', order: 10 },
+        { id: 'forChildren', translations: { ru: 'Для детей', en: 'For Children', zh: '儿童', vi: 'Cho trẻ em' }, icon: 'Baby', order: 11 },
+        { id: 'vision', translations: { ru: 'Зрение', en: 'Vision', zh: '视力', vi: 'Thị lực' }, icon: 'Eye', order: 12 },
+        { id: 'hemorrhoids', translations: { ru: 'Геморрой', en: 'Hemorrhoids', zh: '痔疮', vi: 'Trĩ' }, icon: 'CircleDot', order: 13 },
+        { id: 'oncology', translations: { ru: 'Онкология', en: 'Oncology', zh: '肿瘤', vi: 'Ung thư' }, icon: 'Shield', order: 14 },
+        { id: 'thyroid', translations: { ru: 'Щитовидная железа', en: 'Thyroid', zh: '甲状腺', vi: 'Tuyến giáp' }, icon: 'Coffee', order: 15 },
+        { id: 'lungs', translations: { ru: 'Легкие', en: 'Lungs', zh: '肺', vi: 'Phổi' }, icon: 'Wind', order: 16 },
+        { id: 'samples', translations: { ru: 'Пробники', en: 'Samples', zh: '样品', vi: 'Mẫu thử' }, icon: 'TestTube', order: 17 }
+      ];
+      
       const storedCategories = localStorage.getItem('categories');
       if (storedCategories) {
         try {
           const parsed = JSON.parse(storedCategories);
           console.log('📱 Header: Loading categories from localStorage', parsed);
-          if (parsed.sidebar && Array.isArray(parsed.sidebar) && parsed.sidebar.length > 0) {
-            console.log('📱 Header: Setting sidebar categories', parsed.sidebar.length, 'items');
+          
+          // Check if categories have proper structure (new format with popular category)
+          const hasPopular = parsed.sidebar && parsed.sidebar.some((cat: any) => cat.id === 'popular');
+          const hasTranslations = parsed.sidebar && parsed.sidebar.length > 0 && 
+            parsed.sidebar[0].translations && 
+            typeof parsed.sidebar[0].translations === 'object';
+          
+          if (parsed.sidebar && Array.isArray(parsed.sidebar) && parsed.sidebar.length > 0 && hasPopular && hasTranslations) {
+            console.log('📱 Header: Setting sidebar categories from localStorage', parsed.sidebar.length, 'items');
             setSidebarCategories(parsed.sidebar);
           } else {
-            console.warn('📱 Header: No sidebar array found in categories, using defaults');
-            // Use default categories
-            const defaultCategories = [
-              { id: 'popular', translations: { ru: 'Популярное', en: 'Popular', zh: '热门', vi: 'Phổ biến' }, icon: 'Star', order: 0 },
-              { id: 'cold', translations: { ru: 'Простуда', en: 'Cold', zh: '感冒', vi: 'Cảm lạnh' }, icon: 'Thermometer', order: 1 },
-              { id: 'digestive', translations: { ru: 'Пищеварение', en: 'Digestive', zh: '消化', vi: 'Tiêu hóa' }, icon: 'Activity', order: 2 },
-              { id: 'skin', translations: { ru: 'Кожа', en: 'Skin', zh: '皮肤', vi: 'Da' }, icon: 'Droplet', order: 3 },
-              { id: 'joints', translations: { ru: 'Суставы', en: 'Joints', zh: '关节', vi: 'Khớp' }, icon: 'Bone', order: 4 },
-            ];
+            console.warn('📱 Header: Categories in localStorage missing "popular" or translations, using defaults');
             setSidebarCategories(defaultCategories);
+            // Save defaults to localStorage
+            localStorage.setItem('categories', JSON.stringify({ sidebar: defaultCategories, topMenu: [] }));
           }
         } catch (error) {
           console.error('📱 Header: Error loading sidebar categories:', error);
+          setSidebarCategories(defaultCategories);
+          localStorage.setItem('categories', JSON.stringify({ sidebar: defaultCategories, topMenu: [] }));
         }
       } else {
         console.warn('📱 Header: No categories in localStorage, using defaults');
-        // Use default categories
-        const defaultCategories = [
-          { id: 'popular', translations: { ru: 'Популярное', en: 'Popular', zh: '热门', vi: 'Phổ biến' }, icon: 'Star', order: 0 },
-          { id: 'cold', translations: { ru: 'Простуда', en: 'Cold', zh: '感冒', vi: 'Cảm lạnh' }, icon: 'Thermometer', order: 1 },
-          { id: 'digestive', translations: { ru: 'Пищеварение', en: 'Digestive', zh: '消化', vi: 'Tiêu hóa' }, icon: 'Activity', order: 2 },
-          { id: 'skin', translations: { ru: 'Кожа', en: 'Skin', zh: '皮肤', vi: 'Da' }, icon: 'Droplet', order: 3 },
-          { id: 'joints', translations: { ru: 'Суставы', en: 'Joints', zh: '关节', vi: 'Khớp' }, icon: 'Bone', order: 4 },
-        ];
         setSidebarCategories(defaultCategories);
+        localStorage.setItem('categories', JSON.stringify({ sidebar: defaultCategories, topMenu: [] }));
       }
     };
     
@@ -234,10 +252,10 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarMenuOpen(!sidebarMenuOpen)}
-              className="mobile-burger-button h-12 w-12 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center flex-shrink-0"
+              className="mobile-burger-button h-12 w-12 rounded-lg transition-colors flex items-center justify-center flex-shrink-0 bg-gray-100 hover:bg-gray-200"
               aria-label="Menu"
             >
-              {sidebarMenuOpen ? <X size={24} strokeWidth={2.5} className="mobile-burger-icon" /> : <Menu size={24} strokeWidth={2.5} className="mobile-burger-icon" />}
+              {sidebarMenuOpen ? <X size={24} strokeWidth={2.5} className="mobile-burger-icon text-gray-700" /> : <Menu size={24} strokeWidth={2.5} className="mobile-burger-icon text-gray-700" />}
             </button>
             
             <button
@@ -406,23 +424,25 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               {sidebarCategories.map((category) => {
                 const IconComponent = ICON_MAP[category.icon || 'Package'];
                 const label = category.translations?.[currentLanguage] || category.translations?.ru || category.id;
+                // "allProducts" should set selectedDisease to null (show all)
+                const isAllProducts = category.id === 'allProducts';
                 
                 return (
                   <button
                     key={category.id}
                     onClick={() => {
                       if (onSelectDisease) {
-                        onSelectDisease(category.id);
+                        onSelectDisease(isAllProducts ? null : category.id);
                         onNavigate('home');
                       }
                       setSidebarMenuOpen(false);
                     }}
-                    className="mobile-category-item w-full flex items-center gap-3 px-4 py-3.5 rounded-lg hover:bg-red-50 transition-colors text-left group"
+                    className="mobile-category-item w-full flex items-center gap-3 px-4 py-3.5 rounded-lg transition-colors text-left group bg-transparent hover:bg-red-50"
                   >
-                    <div className="mobile-category-icon text-red-600 group-hover:scale-110 transition-transform flex-shrink-0">
+                    <div className="mobile-category-icon group-hover:scale-110 transition-transform flex-shrink-0 text-red-600">
                       {IconComponent && <IconComponent size={22} strokeWidth={1.67} />}
                     </div>
-                    <span className="mobile-category-label text-gray-700 group-hover:text-red-600 transition-colors text-lg">
+                    <span className="mobile-category-label transition-colors text-lg text-gray-700 group-hover:text-red-600">
                       {label}
                     </span>
                   </button>
