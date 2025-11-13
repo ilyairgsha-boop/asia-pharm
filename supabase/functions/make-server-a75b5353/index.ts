@@ -282,8 +282,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.8.0 - Multi-Language Email & Push Notifications',
-    version: '2.8.0-MULTILANG-NOTIFICATIONS',
+    message: 'Asia-Pharm API v2.8.2 - Email Loyalty Points for All Statuses',
+    version: '2.8.2-EMAIL-LOYALTY-POINTS',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -1447,22 +1447,25 @@ const PUSH_TEMPLATES: any = {
 
 // Generate deep link URL
 function generatePushUrl(type: string, data: any): string {
-  const baseUrl = 'https://asia-farm.vercel.app'; // TODO: get from settings
+  const baseUrl = 'https://asia-farm.vercel.app'; // Production URL
   
+  // Since the app uses SPA navigation without real URL routes,
+  // we'll just link to the home page and let users navigate from there
+  // In the future, we can add URL parameters that the app can parse
   switch (type) {
     case 'order_pending':
-      return `${baseUrl}/checkout?order=${data.orderId}`;
     case 'order_processing':
     case 'order_delivered':
     case 'order_cancelled':
-      return `${baseUrl}/profile?tab=orders`;
     case 'order_shipped':
-      return data.trackingUrl || `${baseUrl}/profile?tab=orders&order=${data.orderId}`;
+      // Link to home page - users can access orders from profile menu
+      return baseUrl;
     case 'welcome':
       return baseUrl;
     case 'loyalty_earned':
     case 'loyalty_spent':
-      return `${baseUrl}/profile?tab=loyalty`;
+      // Link to home page - users can access loyalty info from profile
+      return baseUrl;
     default:
       return baseUrl;
   }

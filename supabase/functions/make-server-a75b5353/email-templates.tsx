@@ -20,6 +20,7 @@ const translations = {
     paymentMethod: 'Способ оплаты',
     promoCode: 'Применен промокод',
     loyaltyPoints: 'Будет начислено баллов',
+    loyaltyPointsEarned: 'Начислено баллов',
     loyaltyUsed: 'Списано баллов',
     currentBalance: 'Текущий баланс баллов',
     footer: 'Китайская Аптека Азия Фарм',
@@ -63,6 +64,7 @@ const translations = {
     paymentMethod: 'Payment Method',
     promoCode: 'Promo Code Applied',
     loyaltyPoints: 'Points to be credited',
+    loyaltyPointsEarned: 'Points earned',
     loyaltyUsed: 'Points used',
     currentBalance: 'Current Points Balance',
     footer: 'Chinese Pharmacy Asia Pharm',
@@ -106,6 +108,7 @@ const translations = {
     paymentMethod: '付款方式',
     promoCode: '已应用促销代码',
     loyaltyPoints: '将获得积分',
+    loyaltyPointsEarned: '获得积分',
     loyaltyUsed: '已使用积分',
     currentBalance: '当前积分余额',
     footer: '中国药房亚洲药房',
@@ -124,7 +127,7 @@ const translations = {
     messages: {
       pending: '您的订单已收到，正在等待处理。请使用以下方式之一付款。',
       processing: '我们已收到您的付款！您的订单正在处理中，即将发货。',
-      shipped: '您的订单已发货！点击下面的��钮跟踪您的包裹。',
+      shipped: '您的订单已发货！点击下面的钮跟踪您的包裹。',
       delivered: '感谢您使用亚洲药房服务！您的订单已成功送达。',
       cancelled: '很遗憾，您的订单已被取消。'
     },
@@ -149,6 +152,7 @@ const translations = {
     paymentMethod: 'Phương thức thanh toán',
     promoCode: 'Đã áp dụng mã khuyến mãi',
     loyaltyPoints: 'Điểm sẽ được tích lũy',
+    loyaltyPointsEarned: 'Điểm đã tích lũy',
     loyaltyUsed: 'Điểm đã sử dụng',
     currentBalance: 'Số dư điểm hiện tại',
     footer: 'Nhà thuốc Trung Quốc Asia Pharm',
@@ -259,7 +263,7 @@ export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 
       benefit4: 'Quick order checkout'
     },
     zh: {
-      welcome: '欢迎来到亚洲药房！',
+      welcome: '欢迎来到亚���药房！',
       greeting: '您好',
       registered: '您已成功在我们的网站上注册。您的注册信息：',
       name: '姓名',
@@ -505,10 +509,20 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
   // Loyalty points information
   let loyaltyInfo = '';
   if (data.status === 'pending' || data.status === 'processing') {
+    // For pending and processing: show points that WILL be earned
     if (data.loyaltyPointsEarned) {
       loyaltyInfo += `
         <p style="font-size: 18px; color: #28a745; margin: 10px 0;">
           <strong>${t.loyaltyPoints}: ${data.loyaltyPointsEarned}</strong>
+        </p>
+      `;
+    }
+  } else if (data.status === 'delivered') {
+    // For delivered: show points that WERE earned
+    if (data.loyaltyPointsEarned) {
+      loyaltyInfo += `
+        <p style="font-size: 18px; color: #28a745; margin: 10px 0;">
+          <strong>${t.loyaltyPointsEarned}: ${data.loyaltyPointsEarned}</strong>
         </p>
       `;
     }
