@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
 import { createClient } from '../utils/supabase/client';
+import type { Language } from '../utils/i18n';
 
 interface PrivacyPolicyProps {
   onNavigate: (page: string) => void;
+  language?: Language;
+  t?: (key: string) => string;
+  embedded?: boolean; // Для встраивания в Dialog
 }
 
-export const PrivacyPolicy = ({ onNavigate }: PrivacyPolicyProps) => {
-  const { language, t } = useLanguage();
+export const PrivacyPolicy = ({ onNavigate, language = 'ru', t = (key) => key, embedded = false }: PrivacyPolicyProps) => {
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export const PrivacyPolicy = ({ onNavigate }: PrivacyPolicyProps) => {
   const getDefaultContent = () => {
     const defaults = {
       ru: `
-        <h2>Политика конфиденциальности</h2>
+        <h2>Политика конфиденциаль��ости</h2>
         <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей сайта.</p>
         
         <h3>1. Сбор информации</h3>
@@ -121,6 +123,15 @@ export const PrivacyPolicy = ({ onNavigate }: PrivacyPolicyProps) => {
   };
 
   if (loading) {
+    if (embedded) {
+      return (
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+          <div className="h-4 bg-gray-200 rounded"></div>
+          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        </div>
+      );
+    }
     return (
       <div className="container mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow-md p-8">
@@ -134,6 +145,17 @@ export const PrivacyPolicy = ({ onNavigate }: PrivacyPolicyProps) => {
     );
   }
 
+  // Встроенный режим для Dialog
+  if (embedded) {
+    return (
+      <div 
+        className="prose max-w-none"
+        dangerouslySetInnerHTML={{ __html: content }}
+      />
+    );
+  }
+
+  // Полностраничный режим
   return (
     <div className="container mx-auto px-4 py-8">
       <button

@@ -1,3 +1,9 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useCart, type StoreType } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { createClient } from '../utils/supabase/client';
+import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X, QrCode, Building2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
@@ -779,7 +785,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               </div>
             </div>
 
-            {/* Соглашения */}
+            {/* Соглашеня */}
             <div className="agreement-section bg-white rounded-lg shadow-md p-6 space-y-3">
               <div className="flex items-start gap-2">
                 <input
@@ -980,7 +986,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             <DialogTitle>{t('privacyPolicy')}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <PrivacyPolicy onNavigate={() => {}} />
+            <PrivacyPolicy onNavigate={() => {}} language={language} t={t} embedded={true} />
           </div>
         </DialogContent>
       </Dialog>
@@ -992,7 +998,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             <DialogTitle>{t('termsOfService')}</DialogTitle>
           </DialogHeader>
           <div className="py-4">
-            <TermsOfService onNavigate={() => {}} />
+            <TermsOfService onNavigate={() => {}} language={language} t={t} embedded={true} />
           </div>
         </DialogContent>
       </Dialog>
