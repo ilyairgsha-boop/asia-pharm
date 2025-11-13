@@ -117,6 +117,7 @@ export const translations = {
     forgotPassword: 'Забыли пароль?',
     noAccount: 'Нет аккаунта?',
     haveAccount: 'Уже есть аккаунт?',
+    captcha: 'Проверка (введите результат)',
     
     // Profile
     myProfile: 'Мой профиль',
@@ -1158,6 +1159,7 @@ export const translations = {
     forgotPassword: 'Forgot Password?',
     noAccount: 'No account?',
     haveAccount: 'Already have an account?',
+    captcha: 'Verification (enter result)',
     
     // Profile
     myProfile: 'My Profile',
@@ -2192,6 +2194,7 @@ export const translations = {
     forgotPassword: '忘记密码？',
     noAccount: '没有账户？',
     haveAccount: '已有账户？',
+    captcha: '验证（输入结果）',
     
     // Profile
     myProfile: '我的资料',
@@ -3227,6 +3230,7 @@ export const translations = {
     forgotPassword: 'Quên mật khẩu?',
     noAccount: 'Chưa có tài khoản?',
     haveAccount: 'Đã có tài khoản?',
+    captcha: 'Xác minh (nhập kết quả)',
     
     // Profile
     myProfile: 'Hồ sơ của tôi',

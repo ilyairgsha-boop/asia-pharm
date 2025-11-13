@@ -8,6 +8,7 @@ import { ProductCard } from './ProductCard';
 import { Product } from '../contexts/CartContext';
 import { getMockProducts, getMockOrders } from '../utils/mockData';
 import { toast } from 'sonner';
+import { pluralizePoints } from '../utils/pluralize';
 
 interface Order {
   id: string;
@@ -273,7 +274,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
         }));
         setOrders(mappedOrders);
       } else {
-        console.warn('⚠️ No orders found or error:', error);
+        console.warn('⚠�� No orders found or error:', error);
         setOrders([]);
       }
     } catch (error) {
@@ -609,7 +610,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
             <div className="space-y-3">
               <div>
                 <p className="text-red-100 text-sm">{t('availablePoints')}</p>
-                <p className="text-2xl">{(loyaltyPoints || 0).toLocaleString()} {t('points')}</p>
+                <p className="text-2xl">{pluralizePoints(loyaltyPoints || 0, language)}</p>
               </div>
 
               <div>
@@ -834,6 +835,13 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                   <ProductCard
                     key={product.id}
                     product={product}
+                    onProductClick={(product) => {
+                      // Open product details
+                      if (typeof window !== 'undefined') {
+                        const event = new CustomEvent('openProductDetails', { detail: product });
+                        window.dispatchEvent(event);
+                      }
+                    }}
                   />
                 ))}
               </div>

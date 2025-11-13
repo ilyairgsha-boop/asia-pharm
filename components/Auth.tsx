@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
-import { Loader2, Home } from 'lucide-react';
+import { Loader2, Home, RefreshCw } from 'lucide-react';
 
 interface AuthProps {
   mode: 'login' | 'register';
@@ -15,12 +15,23 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
   const [isLogin, setIsLogin] = useState(mode === 'login');
   const [selectedLanguage, setSelectedLanguage] = useState(language);
 
+  // Captcha state
+  const [captchaNum1, setCaptchaNum1] = useState(() => Math.floor(Math.random() * 10) + 1);
+  const [captchaNum2, setCaptchaNum2] = useState(() => Math.floor(Math.random() * 10) + 1);
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     confirmPassword: '',
     name: '',
   });
+
+  const refreshCaptcha = () => {
+    setCaptchaNum1(Math.floor(Math.random() * 10) + 1);
+    setCaptchaNum2(Math.floor(Math.random() * 10) + 1);
+    setCaptchaAnswer('');
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -40,6 +51,11 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
       } else {
         if (formData.password !== formData.confirmPassword) {
           alert('Passwords do not match');
+          setLoading(false);
+          return;
+        }
+        if (parseInt(captchaAnswer) !== captchaNum1 + captchaNum2) {
+          alert('Captcha answer is incorrect');
           setLoading(false);
           return;
         }
@@ -146,6 +162,34 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
                   required={!isLogin}
                   className="auth-input w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
+              </div>
+            )}
+
+            {!isLogin && (
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  {t('captcha')} *
+                </label>
+                <div className="flex items-center">
+                  <span className="text-gray-700 mr-2">
+                    {captchaNum1} + {captchaNum2} =
+                  </span>
+                  <input
+                    type="text"
+                    name="captchaAnswer"
+                    value={captchaAnswer}
+                    onChange={(e) => setCaptchaAnswer(e.target.value)}
+                    required={!isLogin}
+                    className="auth-input w-20 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={refreshCaptcha}
+                    className="ml-2 text-gray-500 hover:text-red-600"
+                  >
+                    <RefreshCw size={18} />
+                  </button>
+                </div>
               </div>
             )}
 

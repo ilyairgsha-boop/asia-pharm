@@ -441,6 +441,33 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
       }
     }
     
+    // Load payment settings from settings table
+    const { data: paymentSettings } = await supabase
+      .from('settings')
+      .select('*')
+      .eq('key', 'payment_settings')
+      .single();
+    
+    console.log('💳 Payment settings loaded:', !!paymentSettings);
+    
+    let paymentDetails = undefined;
+    if (paymentSettings && paymentSettings.value) {
+      try {
+        const settings = typeof paymentSettings.value === 'string' 
+          ? JSON.parse(paymentSettings.value) 
+          : paymentSettings.value;
+        
+        paymentDetails = {
+          cardNumber: settings.sberbankCard || '2202 2004 3395 7386',
+          contractNumber: settings.tbankContract || '505 518 5408',
+          qrCodeUrl: settings.qrCodeUrl || undefined
+        };
+        console.log('💳 Payment details prepared:', { hasQrCode: !!paymentDetails.qrCodeUrl });
+      } catch (e) {
+        console.error('❌ Error parsing payment settings:', e);
+      }
+    }
+    
     // Transform order data to match OrderEmailData interface
     const orderEmailData = {
       orderId: orderNumber,
@@ -469,7 +496,8 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
       loyaltyPointsEarned: loyaltyPointsEarned,
       currentLoyaltyBalance: currentLoyaltyBalance,
       trackingNumber: order.tracking_number,
-      trackingUrl: order.tracking_url
+      trackingUrl: order.tracking_url,
+      paymentDetails: paymentDetails
     };
     
     console.log('📝 Order data prepared:', {

@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, type StoreType } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-import { createOrder, fetchLoyaltyInfo, validatePromoCode } from '../utils/supabase/database';
 import { createClient } from '../utils/supabase/client';
-import { Loader2, Tag, CreditCard, QrCode, Building2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { PrivacyPolicy } from './PrivacyPolicy';
+import { TermsOfService } from './TermsOfService';
+import { Dialog, DialogContent } from './ui/dialog';
+import { pluralizePoints } from '../utils/pluralize';
 
 interface CheckoutProps {
   onNavigate: (page: string) => void;
@@ -29,7 +31,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const regularItems = cart.filter(item => !item.isSample);
   const sampleItems = cart.filter(item => item.isSample);
   
-  // Сумма без п��обников (для расчета бесплатной доставки и баллов)
+  // Сумма без пробников (для расчета бесплатной доставки и баллов)
   const subtotalWithoutSamples = regularItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const samplesTotal = sampleItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -482,194 +484,6 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
     return null;
   }
 
-  const getPrivacyContent = () => {
-    const defaults: any = {
-      ru: `
-        <h2>Политика конфиденциальности</h2>
-        <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных анных пол��зователей сайта.</p>
-        
-        <h3>1. Сбор информации</h3>
-        <p>Мы собираем только ту информацию, которую вы предоставляете добровольно при регистрации и оформлении заказов.</p>
-        
-        <h3>2. Использование информации</h3>
-        <p>Ваши данные используются исключительно для обработки заказов и улучшения качества обслуживания.</p>
-        
-        <h3>3. Защита данных</h3>
-        <p>Мы применяем современные методы шифрования для защиты ваших персональных данных.</p>
-        
-        <h3>4. Передача третьим лицам</h3>
-        <p>Мы не передаем ваши персональные данные третьим лицам без вашего согласия.</p>
-        
-        <h3>5. Контакты</h3>
-        <p>По вопросам обработки персональных данных обращайтесь: info@asia-pharm.ru</p>
-      `,
-      en: `
-        <h2>Privacy Policy</h2>
-        <p>This Privacy Policy defines the procedure for processing and protecting personal data of website users.</p>
-        
-        <h3>1. Information Collection</h3>
-        <p>We collect only the information you voluntarily provide during registration and ordering.</p>
-        
-        <h3>2. Use of Information</h3>
-        <p>Your data is used exclusively for order processing and service quality improvement.</p>
-        
-        <h3>3. Data Protection</h3>
-        <p>We use modern encryption methods to protect your personal data.</p>
-        
-        <h3>4. Third Party Disclosure</h3>
-        <p>We do not share your personal data with third parties without your consent.</p>
-        
-        <h3>5. Contact</h3>
-        <p>For questions about personal data processing, contact: info@asia-pharm.ru</p>
-      `,
-      zh: `
-        <h2>隐私政策</h2>
-        <p>本隐私政策定义了网站用户个人数据的处理和保护程序。</p>
-        
-        <h3>1. 信息收集</h3>
-        <p>我们仅收集您在注册和下订单时自愿提供的信息。</p>
-        
-        <h3>2. 信息使用</h3>
-        <p>您的数据仅用于订单处理和服务质量改进。</p>
-        
-        <h3>3. 数据保护</h3>
-        <p>我们使用现代加密方法保护您的个人数据。</p>
-        
-        <h3>4. 第三方披露</h3>
-        <p>未经您同意，我们不会与第三方共享您的个人数据。</p>
-        
-        <h3>5. 联系方式</h3>
-        <p>有关个人据处理的问题，请联���：info@asia-pharm.ru</p>
-      `,
-      vi: `
-        <h2>Chính sách bảo mật</h2>
-        <p>Chính sách bảo mật này xác định quy trình xử lý và bảo vệ dữ liệu cá nhân của người dùng trang web.</p>
-        
-        <h3>1. Thu thập thông tin</h3>
-        <p>Chúng tôi chỉ thu thập thông tin mà bạn cung cấp tự nguyện khi đăng ký và đặt hàng.</p>
-        
-        <h3>2. Sử dụng thông tin</h3>
-        <p>Dữ liệu của bạn chỉ được sử dụng để xử lý đơn hàng và cải thiện chất lượng dịch vụ.</p>
-        
-        <h3>3. Bảo vệ dữ liệu</h3>
-        <p>Chúng tôi sử dụng các phương pháp mã hóa hiện đại để bảo vệ dữ liệu cá nhân của bạn.</p>
-        
-        <h3>4. Tiết lộ cho bên thứ ba</h3>
-        <p>Chúng tôi không chia sẻ dữ liệu cá nhân của bạn với bên thứ ba mà không có sự đồng ý của bạn.</p>
-        
-        <h3>5. Liên hệ</h3>
-        <p>Đối với các câu hỏi về xử lý dữ liệu cá nhân, liên hệ: info@asia-pharm.ru</p>
-      `
-    };
-    return defaults[language] || defaults.ru;
-  };
-
-  const getTermsContent = () => {
-    const defaults: any = {
-      ru: `
-        <h2>Правила и условия сайта</h2>
-        <p>Настоящие Правила определяют условия использования интернет-магазина и порядок взаимоотношений между пользователем и администрацией сайта.</p>
-        
-        <h3>1. Общие положения</h3>
-        <p>Используя сайт, вы соглашаетесь с настоящими Правилами и обязуетесь их соблюдать.</p>
-        
-        <h3>2. Регистрация и учетная запись</h3>
-        <p>Для оформленя заказов необходима регистрация. Вы обязуетесь предоставлять актуальную информацию.</p>
-        
-        <h3>3. Оформление заказов</h3>
-        <p>Заказ считается принятым после подтверждения администрацией. Цены и наличие товаров могут изменяться.</p>
-        
-        <h3>4. Оплата и доставка</h3>
-        <p>Информация об оплате и доставке указывается при оформлении заказа.</p>
-        
-        <h3>5. Возврат товара</h3>
-        <p>Возврат товара осуществляется в соответствии с законодательством РФ.</p>
-        
-        <h3>6. Ответственность</h3>
-        <p>Администрация не несет ответственности за неправильное использование препаратов. Перед применением проконсультируйтесь с врачом.</p>
-        
-        <h3>7. Контакты</h3>
-        <p>По всем вопросам обращайтесь: info@asia-pharm.ru</p>
-      `,
-      en: `
-        <h2>Terms of Service</h2>
-        <p>These Terms define the conditions for using the online store and the relationship between the user and the site administration.</p>
-        
-        <h3>1. General Provisions</h3>
-        <p>By using the site, you agree to these Terms and undertake to comply with them.</p>
-        
-        <h3>2. Registration and Account</h3>
-        <p>Registration is required to place orders. You undertake to provide current information.</p>
-        
-        <h3>3. Placing Orders</h3>
-        <p>An order is considered accepted after confirmation by the administration. Prices and product availability may change.</p>
-        
-        <h3>4. Payment and Delivery</h3>
-        <p>Payment and delivery information is provided when placing an order.</p>
-        
-        <h3>5. Product Returns</h3>
-        <p>Product returns are carried out in accordance with Russian legislation.</p>
-        
-        <h3>6. Liability</h3>
-        <p>The administration is not responsible for improper use of products. Consult a doctor before use.</p>
-        
-        <h3>7. Contact</h3>
-        <p>For all questions, contact: info@asia-pharm.ru</p>
-      `,
-      zh: `
-        <h2>服务条款</h2>
-        <p>本条款定义了使用在线商店的条件以及用户与网站管理部门之间的关系。</p>
-        
-        <h3>1. 总则</h3>
-        <p>使用本网站即表示您同意这些条款并承诺遵守它们。</p>
-        
-        <h3>2. 注册和账户</h3>
-        <p>下订单需要注册。您承诺提供最新信息。</p>
-        
-        <h3>3. 下订单</h3>
-        <p>订单在管理部门确认后视为已接受。价格和产品供应情况可能会发生变化。</p>
-        
-        <h3>4. 付款和交付</h3>
-        <p>付款和交付信息在下订单时提供。</p>
-        
-        <h3>5. 产品退货</h3>
-        <p>产品退货按照俄罗斯法律进行。</p>
-        
-        <h3>6. 责任</h3>
-        <p>管理部门对不当使用产品不承担责任。使用前请咨询医生。</p>
-        
-        <h3>7. 联系方式</h3>
-        <p>如有任何问题，请联系：info@asia-pharm.ru</p>
-      `,
-      vi: `
-        <h2>Điều khoản dịch vụ</h2>
-        <p>Các Điều khoản này xác định điу kiện sử dụng cửa hàng trực tuyến và mối quan hệ giữa người dùng và ban quản trị trang web.</p>
-        
-        <h3>1. Quy định chung</h3>
-        <p>Bằng cách sử dụng trang web, bạn đồng ý với các Điều khoản này và cam kết tuân thủ chúng.</p>
-        
-        <h3>2. Đăng ký và tài khoản</h3>
-        <p>Cần đăng ký để đặt hàng. Bạn cam kết cung cấp thông tin hiện tại.</p>
-        
-        <h3>3. Đặt hàng</h3>
-        <p>Đơn hàng được coi là đã chấp nhận sau khi ban quản trị xác nhận. Giá cả và tình trạng sản phẩm có thể thay đổi.</p>
-        
-        <h3>4. Thanh toán và giao hàng</h3>
-        <p>Thông tin thanh toán và giao hàng được cung cấp khi đặt hàng.</p>
-        
-        <h3>5. Trả hàng</h3>
-        <p>Việc trả hàng được thực hiện theo pháp luật Nga.</p>
-        
-        <h3>6. Trách nhiệm</h3>
-        <p>Ban quản trị không chịu trách nhiệm về việc sử dụng sản phẩm không đúng cách. Hãy tham khảo ý kiến bác sĩ trước khi sử dụng.</p>
-        
-        <h3>7. Liên hệ</h3>
-        <p>Đối với mọi câu hỏi, liên hệ: info@asia-pharm.ru</p>
-      `
-    };
-    return defaults[language] || defaults.ru;
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-gray-800 mb-6">{t('checkout')} - {t(`${store}Store`)}</h2>
@@ -1105,7 +919,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                     }}
                   />
                   <span className="text-sm text-gray-700">
-                    {t('useLoyaltyPoints')}: {availableLoyaltyPoints} {t('points')}
+                    {t('useLoyaltyPoints')}: {pluralizePoints(availableLoyaltyPoints, language)}
                   </span>
                 </label>
                 {useLoyaltyPoints && (
