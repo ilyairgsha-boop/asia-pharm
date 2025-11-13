@@ -146,6 +146,15 @@ export const translations = {
     filter: 'Фильтр',
     actions: 'Действия',
     
+    // Sale/Promotion
+    salePromotion: 'Акция / Распродажа',
+    enableSale: 'Включить акцию',
+    saleDiscount: 'Скидка (%)',
+    saleEndDate: 'Окончание акции',
+    saleDiscountRange: 'От 1% до 99%',
+    saleDateTimeEnd: 'Дата и время окончания',
+    salePreview: 'Превью',
+    
     // Cookie consent
     cookieMessage: 'Мы используем файлы cookie для улучшения работы сайта. Продолжая использовать сайт, вы соглашаетесь с использованием cookie.',
     acceptCookies: 'Принять',
@@ -1158,6 +1167,15 @@ export const translations = {
     filter: 'Filter',
     actions: 'Actions',
     
+    // Sale/Promotion
+    salePromotion: 'Sale / Promotion',
+    enableSale: 'Enable Sale',
+    saleDiscount: 'Discount (%)',
+    saleEndDate: 'Sale End Date',
+    saleDiscountRange: 'From 1% to 99%',
+    saleDateTimeEnd: 'End date and time',
+    salePreview: 'Preview',
+    
     // Cookie consent
     cookieMessage: 'We use cookies to improve the site. By continuing to use the site, you agree to the use of cookies.',
     acceptCookies: 'Accept',
@@ -2161,6 +2179,15 @@ export const translations = {
     search: '搜索',
     filter: '筛选',
     actions: '操作',
+    
+    // Sale/Promotion
+    salePromotion: '促销活动',
+    enableSale: '启用促销',
+    saleDiscount: '折扣（%）',
+    saleEndDate: '促销结束日期',
+    saleDiscountRange: '从 1% 到 99%',
+    saleDateTimeEnd: '结束日期和时间',
+    salePreview: '预览',
     
     // Cookie consent
     cookieMessage: '我们使用cookies来改善网站。继续使用网站即表示您同意使用cookies。',
@@ -3167,6 +3194,15 @@ export const translations = {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     actions: 'Hành động',
+    
+    // Sale/Promotion
+    salePromotion: 'Khuyến mãi / Giảm giá',
+    enableSale: 'Bật khuyến mãi',
+    saleDiscount: 'Giảm giá (%)',
+    saleEndDate: 'Ngày kết thúc khuyến mãi',
+    saleDiscountRange: 'Từ 1% đến 99%',
+    saleDateTimeEnd: 'Ngày và giờ kết thúc',
+    salePreview: 'Xem trước',
     
     // Cookie consent
     cookieMessage: 'Chúng tôi sử dụng cookie để cải thiện trang web. Tiếp tục sử dụng trang web đồng nghĩa với việc bạn đồng ý sử dụng cookie.',

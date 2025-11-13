@@ -274,6 +274,9 @@ export const ProductManagement = () => {
         short_description_zh: formData.shortDescription_zh,
         short_description_vi: formData.shortDescription_vi,
         description: formData.description,
+        description_en: formData.description_en,
+        description_zh: formData.description_zh,
+        description_vi: formData.description_vi,
         image: formData.image,
         is_sample: formData.isSample,
         in_stock: formData.inStock,
@@ -922,7 +925,7 @@ export const ProductManagement = () => {
 
             {/* Sale / Promotion Section */}
             <div className="md:col-span-2 border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">🔥 Акция / Распродажа</h3>
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">🔥 {t('salePromotion')}</h3>
               
               <div className="grid md:grid-cols-3 gap-4">
                 <div className="flex items-center gap-2">
@@ -934,13 +937,13 @@ export const ProductManagement = () => {
                     className="w-5 h-5 text-red-600"
                   />
                   <label className="text-gray-700 font-medium">
-                    Включить акцию
+                    {t('enableSale')}
                   </label>
                 </div>
 
                 <div>
                   <label className="block text-gray-700 mb-2">
-                    Скидка (%) {formData.saleEnabled && '*'}
+                    {t('saleDiscount')} {formData.saleEnabled && '*'}
                   </label>
                   <input
                     type="number"
@@ -954,12 +957,12 @@ export const ProductManagement = () => {
                     placeholder="10"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
                   />
-                  <p className="text-xs text-gray-500 mt-1">От 1% до 99%</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('saleDiscountRange')}</p>
                 </div>
 
                 <div>
                   <label className="block text-gray-700 mb-2">
-                    Окончание акции {formData.saleEnabled && '*'}
+                    {t('saleEndDate')} {formData.saleEnabled && '*'}
                   </label>
                   <input
                     type="datetime-local"
@@ -969,16 +972,17 @@ export const ProductManagement = () => {
                     disabled={!formData.saleEnabled}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
                   />
-                  <p className="text-xs text-gray-500 mt-1">Дата и время окончания</p>
+                  <p className="text-xs text-gray-500 mt-1">{t('saleDateTimeEnd')}</p>
                 </div>
               </div>
 
               {formData.saleEnabled && (
                 <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                   <p className="text-sm text-orange-800">
-                    <strong>Превью:</strong> На карточке товара будет показан бейдж "-{formData.saleDiscount || 0}%", 
-                    зачеркнутая старая цена и новая цена со скидкой. 
-                    Таймер обратного отсчета будет показывать время до {formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('ru-RU') : 'окончания акции'}.
+                    <strong>{t('salePreview')}:</strong> {currentLanguage === 'ru' && `На карточке товара будет показан бейдж "-${formData.saleDiscount || 0}%", зачеркнутая старая цена и новая цена со скидкой. Таймер обратного отсчета будет показывать время до ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('ru-RU') : 'окончания акции'}.`}
+                    {currentLanguage === 'en' && `The product card will show a "-${formData.saleDiscount || 0}%" badge, crossed out old price and new discounted price. Countdown timer will show time until ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('en-US') : 'sale end'}.`}
+                    {currentLanguage === 'zh' && `产品卡片将显示 "-${formData.saleDiscount || 0}%" 徽章、划掉的旧价格和新的折扣价格。倒计时器将显示距 ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('zh-CN') : '促销结束'} 的时间。`}
+                    {currentLanguage === 'vi' && `Thẻ sản phẩm sẽ hiển thị huy hiệu "-${formData.saleDiscount || 0}%", giá cũ gạch bỏ và giá mới được giảm giá. Bộ đếm ngược sẽ hiển thị thời gian đến ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('vi-VN') : 'kết thúc khuyến mãi'}.`}
                   </p>
                 </div>
               )}
