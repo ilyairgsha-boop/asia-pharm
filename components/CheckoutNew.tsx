@@ -408,6 +408,36 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         // Don't fail the whole order if email fails
       }
       
+      // Send push notification
+      try {
+        console.log('📱 Sending order push notification...');
+        if (user?.id) {
+          const serverUrl = import.meta.env.VITE_SUPABASE_URL + '/functions/v1';
+          const pushResponse = await fetch(`${serverUrl}/make-server-a75b5353/api/push/auto-notify`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              type: 'order_pending',
+              orderId: order.id,
+              orderNumber: order.order_number
+            }),
+          });
+          
+          if (pushResponse.ok) {
+            console.log('✅ Push notification sent successfully');
+          } else {
+            const errorData = await pushResponse.json().catch(() => ({}));
+            console.warn('⚠️ Failed to send push notification:', errorData);
+          }
+        }
+      } catch (pushError) {
+        console.warn('⚠️ Error sending push notification:', pushError);
+        // Don't fail the whole order if push fails
+      }
+      
       // Save order payment info to localStorage
       const paymentInfo = {
         orderNumber: order.order_number,

@@ -254,6 +254,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.warn('⚠️ Profile creation exception:', profileError);
       }
 
+      // Отправляем welcome email
+      try {
+        console.log('📧 Sending welcome email...');
+        const { getServerUrl } = await import('../utils/supabase/client');
+        const welcomeEmailUrl = getServerUrl('/api/email/welcome');
+        
+        const welcomeResponse = await fetch(welcomeEmailUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email,
+            name: name || email,
+            language: localStorage.getItem('preferredLanguage') || 'ru',
+          }),
+        });
+
+        if (welcomeResponse.ok) {
+          console.log('✅ Welcome email sent successfully');
+        } else {
+          const errorData = await welcomeResponse.json().catch(() => ({}));
+          console.warn('⚠️ Failed to send welcome email:', errorData);
+        }
+      } catch (emailError) {
+        console.warn('⚠️ Error sending welcome email:', emailError);
+        // Не критично - продолжаем регистрацию
+      }
+
       // Пытаемся войти сразу после регистрации
       console.log('🔄 Attempting auto-login after registration...');
       try {

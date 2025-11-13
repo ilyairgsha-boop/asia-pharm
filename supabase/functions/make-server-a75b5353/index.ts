@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.5.0-EXTERNAL-USER-IDS - Use External User IDs (Supabase User IDs) for reliable push delivery
-// Build: 2025-01-05 23:00:00 UTC
+// Version: 2.6.0-CUSTOMER-EMAIL-PUSH-FIX - Fixed email/push for customers, added welcome email
+// Build: 2025-01-13 12:00:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.2.9-SETTINGS-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.6.0-CUSTOMER-EMAIL-PUSH-FIX...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -92,7 +92,58 @@ const getOneSignalSettings = async (): Promise<{ settings: OneSignalSettings | n
   return { settings: null, source: 'not_found' };
 };
 
-// Auth middleware
+// Auth middleware - require authenticated user (not necessarily admin)
+const requireAuth = async (c: any, next: any) => {
+  console.log('🔐 requireAuth middleware called');
+  
+  const authHeader = c.req.header('Authorization');
+  
+  if (!authHeader) {
+    console.error('❌ No Authorization header provided');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'No Authorization header'
+    }, 401);
+  }
+
+  const token = authHeader.split(' ')[1];
+  
+  if (!token) {
+    console.error('❌ Authorization header malformed');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'Malformed Authorization header'
+    }, 401);
+  }
+  
+  const supabaseWithToken = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    {
+      global: {
+        headers: {
+          Authorization: authHeader,
+        },
+      },
+    }
+  );
+  
+  const { data: { user }, error } = await supabaseWithToken.auth.getUser();
+
+  if (error || !user) {
+    console.error('❌ Token verification failed');
+    return c.json({ 
+      error: 'Unauthorized',
+      details: 'Invalid or expired token'
+    }, 401);
+  }
+  
+  console.log('✅ User authenticated:', user.id, user.email);
+  c.set('user', user);
+  await next();
+};
+
+// Auth middleware - require admin
 const requireAdmin = async (c: any, next: any) => {
   console.log('🔐 requireAdmin middleware called');
   console.log('📍 Path:', c.req.path);
@@ -231,11 +282,11 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.5.0 - External User IDs for reliable push',
-    version: '2.5.0-EXTERNAL-USER-IDS',
+    message: 'Asia-Pharm API v2.6.0 - Fixed Email & Push for customers',
+    version: '2.6.0-CUSTOMER-EMAIL-PUSH-FIX',
     timestamp: new Date().toISOString(),
     routes: {
-      email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
+      email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
       push: ['/make-server-a75b5353/api/push/send', '/make-server-a75b5353/api/push/stats', '/make-server-a75b5353/api/push/auto-notify'],
       kv: ['/make-server-a75b5353/api/kv/*'],
       translate: ['/make-server-a75b5353/api/translate/*'],
@@ -254,8 +305,8 @@ app.get('/make-server-a75b5353', (c) => c.redirect('/make-server-a75b5353/'));
 // Email API Endpoints  
 // ============================================================================
 
-// Send order status email
-app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c) => {
+// Send order status email (accessible by authenticated users for their own orders)
+app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) => {
   try {
     console.log('📧 Order status email request');
     const { orderId, email, status } = await c.req.json();
@@ -402,6 +453,80 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAdmin, async (c)
 
   } catch (error: any) {
     console.error('❌ Error sending order email:', error);
+    console.error('Error stack:', error.stack);
+    return c.json({ error: error.message || 'Failed to send email', details: error.stack }, 500);
+  }
+});
+
+// Send welcome email to new user
+app.post('/make-server-a75b5353/api/email/welcome', async (c) => {
+  try {
+    console.log('📧 Welcome email request');
+    const { email, name, language } = await c.req.json();
+    console.log('Request params:', { email, name, language });
+
+    if (!email) {
+      console.error('❌ Missing email');
+      return c.json({ error: 'Email is required' }, 400);
+    }
+
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    if (!resendApiKey) {
+      console.error('❌ RESEND_API_KEY not configured');
+      return c.json({ error: 'Email service not configured' }, 500);
+    }
+
+    const { generateWelcomeEmailHTML } = await import('./email-templates.tsx');
+    const userLanguage = language || 'ru';
+    
+    const subjects = {
+      ru: 'Добро пожаловать на сайт Азия Фарм!',
+      en: 'Welcome to Asia Pharm!',
+      zh: '欢迎来到亚洲药房！',
+      vi: 'Chào mừng đến với Asia Pharm!'
+    };
+
+    const subject = subjects[userLanguage as keyof typeof subjects] || subjects.ru;
+    console.log('📬 Email subject:', subject);
+    
+    const htmlMessage = generateWelcomeEmailHTML({
+      name: name || email,
+      email: email,
+      language: userLanguage
+    }, userLanguage as any);
+    
+    console.log('✅ HTML generated, length:', htmlMessage.length);
+
+    console.log('📤 Sending to Resend API...');
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${resendApiKey}`
+      },
+      body: JSON.stringify({
+        from: 'Азия Фарм <info@asia-pharm.com>',
+        to: [email],
+        subject: subject,
+        html: htmlMessage
+      })
+    });
+
+    console.log('Resend response status:', response.status);
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error(`❌ Resend API error (${response.status}):`, errorData);
+      return c.json({ error: `Failed to send email: ${errorData}`, status: response.status }, 500);
+    }
+
+    const result = await response.json();
+    console.log('✅ Welcome email sent successfully:', result.id);
+
+    return c.json({ success: true, emailId: result.id });
+
+  } catch (error: any) {
+    console.error('❌ Error sending welcome email:', error);
     console.error('Error stack:', error.stack);
     return c.json({ error: error.message || 'Failed to send email', details: error.stack }, 500);
   }
