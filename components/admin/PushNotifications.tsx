@@ -337,8 +337,8 @@ export const PushNotifications = () => {
         <div className="flex items-center gap-3">
           <Send className="w-8 h-8 text-red-600" />
           <div>
-            <h2 className="text-2xl font-semibold">{t('pushNotifications')}</h2>
-            <p className="text-gray-600">{t('sendPushNotificationsToUsers')}</p>
+            <h2 className="text-white text-2xl font-semibold">{t('pushNotifications')}</h2>
+            <p className="text-white">{t('sendPushNotificationsToUsers')}</p>
           </div>
         </div>
         {subscriberCount !== null && (

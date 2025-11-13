@@ -13,8 +13,8 @@ export const ThemeDecorations = () => {
   switch (theme.decorations.type) {
     case 'snow':
       return <SnowEffect />;
-    case 'ribbon':
-      return <RibbonDecoration />;
+    case 'stars':
+      return <StarsEffect />;
     case 'flowers':
       return <FlowersDecoration />;
     case 'leaves':
@@ -84,46 +84,63 @@ const SnowEffect = () => {
   );
 };
 
-// Георгиевская лента для 23 февраля
-const RibbonDecoration = () => {
-  return (
-    <>
-      {/* Левый верхний угол */}
-      <div className="fixed top-0 left-0 z-40 w-40 h-40 pointer-events-none">
-        <svg viewBox="0 0 200 200" className="w-full h-full">
-          <defs>
-            <pattern id="georgeRibbonLeft" x="0" y="0" width="6" height="100" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="2" height="100" fill="#f97316"/>
-              <rect x="2" y="0" width="2" height="100" fill="#000000"/>
-              <rect x="4" y="0" width="2" height="100" fill="#f97316"/>
-            </pattern>
-          </defs>
-          <g transform="rotate(-45 100 100)">
-            <rect x="80" y="0" width="40" height="200" fill="url(#georgeRibbonLeft)"/>
-          </g>
-        </svg>
-        {/* Звезда */}
-        <div className="absolute top-6 left-6 text-red-600 text-4xl animate-pulse" style={{ animationDuration: '2s' }}>⭐</div>
-      </div>
+// Падающие звезды для 23 февраля - падают 30 сек, перерыв 3 минуты
+const StarsEffect = () => {
+  const [stars, setStars] = useState<Array<{ id: number; left: number; delay: number; duration: number }>>([]);
+  const [isActive, setIsActive] = useState(true);
 
-      {/* Правый верхний угол */}
-      <div className="fixed top-0 right-0 z-40 w-40 h-40 pointer-events-none">
-        <svg viewBox="0 0 200 200" className="w-full h-full">
-          <defs>
-            <pattern id="georgeRibbonRight" x="0" y="0" width="6" height="100" patternUnits="userSpaceOnUse">
-              <rect x="0" y="0" width="2" height="100" fill="#f97316"/>
-              <rect x="2" y="0" width="2" height="100" fill="#000000"/>
-              <rect x="4" y="0" width="2" height="100" fill="#f97316"/>
-            </pattern>
-          </defs>
-          <g transform="rotate(45 100 100)">
-            <rect x="80" y="0" width="40" height="200" fill="url(#georgeRibbonRight)"/>
-          </g>
-        </svg>
-        {/* Звезда */}
-        <div className="absolute top-6 right-6 text-red-600 text-4xl animate-pulse" style={{ animationDuration: '2s' }}>⭐</div>
-      </div>
-    </>
+  useEffect(() => {
+    const items = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: 6 + Math.random() * 8,
+    }));
+    setStars(items);
+
+    // Цикл: 30 секунд звезды, 3 минуты пауза
+    const interval = setInterval(() => {
+      setIsActive(false);
+      setTimeout(() => {
+        setIsActive(true);
+      }, 180000); // 3 минуты = 180 секунд
+    }, 30000); // 30 секунд
+
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!isActive) return null;
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="falling-star absolute text-yellow-400 opacity-80"
+          style={{
+            left: `${star.left}%`,
+            animationDelay: `${star.delay}s`,
+            animationDuration: `${star.duration}s`,
+            fontSize: `${12 + Math.random() * 8}px`,
+          }}
+        >
+          ★
+        </div>
+      ))}
+      <style>{`
+        .falling-star {
+          animation: star-fall linear infinite;
+        }
+        @keyframes star-fall {
+          from {
+            transform: translateY(-10vh) rotate(0deg);
+          }
+          to {
+            transform: translateY(110vh) rotate(720deg);
+          }
+        }
+      `}</style>
+    </div>
   );
 };
 

@@ -6,8 +6,7 @@ export type ThemeType =
   | 'new-year' 
   | 'womens-day' 
   | 'defenders-day' 
-  | 'autumn' 
-  | 'summer';
+  | 'autumn';
 
 export interface ThemeConfig {
   id: ThemeType;
@@ -90,10 +89,10 @@ export const themes: Record<ThemeType, ThemeConfig> = {
   'new-year': {
     id: 'new-year',
     name: {
-      ru: 'Новый год',
-      en: 'New Year',
-      zh: '新年',
-      vi: 'Năm Mới',
+      ru: 'Падающий снег',
+      en: 'Falling Snow',
+      zh: '飘雪',
+      vi: 'Tuyết Rơi',
     },
     description: {
       ru: 'Новогодняя атмосфера со снегом',
@@ -118,16 +117,16 @@ export const themes: Record<ThemeType, ThemeConfig> = {
   'womens-day': {
     id: 'womens-day',
     name: {
-      ru: '8 Марта',
-      en: "Women's Day",
-      zh: '妇女节',
-      vi: 'Ngày Phụ Nữ',
+      ru: 'Тюльпаны',
+      en: 'Tulips',
+      zh: '郁金香',
+      vi: 'Hoa Tulip',
     },
     description: {
       ru: 'Весенняя тема с тюльпанами',
       en: 'Spring theme with tulips',
       zh: '春天主题与郁金香',
-      vi: 'Chủ đề mùa xuân với hoa tulip',
+      vi: 'Chủ đề mùa xuân với hoа tulip',
     },
     colors: {
       primary: '#dc2626',
@@ -146,16 +145,16 @@ export const themes: Record<ThemeType, ThemeConfig> = {
   'defenders-day': {
     id: 'defenders-day',
     name: {
-      ru: '23 Февраля',
-      en: "Defender's Day",
-      zh: '祖国保卫者日',
-      vi: 'Ngày Bảo Vệ Tổ Quốc',
+      ru: 'Звезды',
+      en: 'Stars',
+      zh: '星星',
+      vi: 'Ngôi Sao',
     },
     description: {
-      ru: 'Патриотическая тема с георгиевской лентой',
-      en: 'Patriotic theme with St. George ribbon',
-      zh: '爱国主题与乔治丝带',
-      vi: 'Chủ đề yêu nước với ruy băng St. George',
+      ru: 'Патриотическая тема со звездами',
+      en: 'Patriotic theme with stars',
+      zh: '爱国主题与星星',
+      vi: 'Chủ đề yêu nước với ngôi sao',
     },
     colors: {
       primary: '#dc2626',
@@ -167,17 +166,17 @@ export const themes: Record<ThemeType, ThemeConfig> = {
       border: '#e5e7eb',
     },
     decorations: {
-      type: 'ribbon',
+      type: 'stars',
       enabled: true,
     },
   },
   autumn: {
     id: 'autumn',
     name: {
-      ru: 'Осень',
-      en: 'Autumn',
-      zh: '秋天',
-      vi: 'Mùa Thu',
+      ru: 'Листья',
+      en: 'Leaves',
+      zh: '落叶',
+      vi: 'Lá Cây',
     },
     description: {
       ru: 'Осенняя тема с падающими листьями',
@@ -197,30 +196,6 @@ export const themes: Record<ThemeType, ThemeConfig> = {
     decorations: {
       type: 'leaves',
       enabled: true,
-    },
-  },
-  summer: {
-    id: 'summer',
-    name: {
-      ru: 'Лето',
-      en: 'Summer',
-      zh: '夏天',
-      vi: 'Mùa Hè',
-    },
-    description: {
-      ru: 'Летняя тема с солнцем',
-      en: 'Summer theme with sunshine',
-      zh: '夏季主题与阳光',
-      vi: 'Chủ đề mùa hè với ánh nắng',
-    },
-    colors: {
-      primary: '#dc2626',
-      secondary: '#991b1b',
-      accent: '#f87171',
-      background: '#ffffff',
-      surface: '#f9fafb',
-      text: '#1f2937',
-      border: '#e5e7eb',
     },
   },
 };

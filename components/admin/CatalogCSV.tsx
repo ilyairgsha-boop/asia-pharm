@@ -585,11 +585,11 @@ export const CatalogCSV = () => {
   return (
     <div>
       <div className="mb-6">
-        <h3 className="text-gray-800 flex items-center gap-2">
+        <h3 className="text-white flex items-center gap-2">
           <FileText size={24} />
           {t('catalogCSV')}
         </h3>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-white text-sm mt-2">
           {t('catalogCSVDescription')}
         </p>
       </div>

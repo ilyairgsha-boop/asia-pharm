@@ -201,7 +201,7 @@ export const OneSignalSettings = () => {
         return;
       }
 
-      console.log('💾 Saving OneSignal settings...');
+      console.log('���� Saving OneSignal settings...');
       
       // 1️⃣ Save to Supabase (primary storage - syncs across devices)
       try {
@@ -398,8 +398,8 @@ export const OneSignalSettings = () => {
       {/* Setup Instructions */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('setupInstructions')}</CardTitle>
-          <CardDescription>{t('oneSignalSetupDescription')}</CardDescription>
+          <CardTitle className="text-white">{t('setupInstructions')}</CardTitle>
+          <CardDescription className="text-white">{t('oneSignalSetupDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2 text-sm">

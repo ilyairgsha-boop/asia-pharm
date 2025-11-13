@@ -1057,7 +1057,7 @@ app.post('/make-server-a75b5353/orders', requireAuth, async (c) => {
     
     // If loyalty points were used, deduct them
     if (loyaltyPointsUsed && loyaltyPointsUsed > 0) {
-      await updateUserLoyalty(user.id, loyaltyPointsUsed, 'spent', `Использова��о при заказе #${orderNumber}`);
+      await updateUserLoyalty(user.id, loyaltyPointsUsed, 'spent', `Использовано при заказе #${orderNumber}`);
     }
 
     // Send email notification
@@ -1871,7 +1871,7 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
         store: 'china',
         description: 'Согревающий пластырь с травяными экстрактами для облегчения боли в суставах',
         description_en: 'Warming patch with herbal extracts for joint pain relief',
-        description_zh: '含草药提取物的��热贴膏，缓解关节疼痛',
+        description_zh: '含草药提取物的温热贴膏，缓解关节疼痛',
         description_vi: 'Miếng dán ấm với chiết xuất thảo dược giảm đau khớp',
         composition: 'Камфора, ментол, экстракт перца',
         composition_en: 'Camphor, menthol, pepper extract',
@@ -1942,7 +1942,7 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
       },
       {
         id: crypto.randomUUID(),
-        name: 'Тайски�� зеленый бальзам',
+        name: 'Тайский зеленый бальзам',
         name_en: 'Thai Green Balm',
         name_zh: '泰国绿色香膏',
         name_vi: 'Dầu xanh Thái Lan',
@@ -1962,14 +1962,14 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
         composition_vi: 'Bạch đàn, bạc hà, menthol, long não',
         usage: 'Втирать в виски и переносицу при головной боли',
         usage_en: 'Rub on temples and bridge of nose for headaches',
-        usage_zh: '��痛时擦在太阳穴和鼻梁上',
+        usage_zh: '头痛时擦在太阳穴和鼻梁上',
         usage_vi: 'Xoa lên thái dương và sống mũi khi đau đầu',
         image: 'https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx0aGFpJTIwYmFsbXxlbnwxfHx8fDE3NjA4OTQ2MTd8MA&ixlib=rb-4.1.0&q=80&w=1080',
         inStock: true,
       },
       {
         id: crypto.randomUUID(),
-        name: '��айское масло для массажа',
+        name: 'Тайское масло для массажа',
         name_en: 'Thai Massage Oil',
         name_zh: '泰式按摩油',
         name_vi: 'Dầu mát-xa Thái',
@@ -2022,7 +2022,7 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
         inStock: true,
       },
       
-      // ТОВАРЫ ИЗ ВЬЕТ��АМА
+      // ТОВАРЫ ИЗ ВЬЕТНАМА
       {
         id: crypto.randomUUID(),
         name: 'Лечебный пластырь',
@@ -2072,7 +2072,7 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
         composition_vi: 'Long não, menthol, dầu bạch đàn, bạc hà',
         usage: 'Втирать небольшое количество в грудь, спину, виски',
         usage_en: 'Rub a small amount on chest, back, temples',
-        usage_zh: '将少��擦在胸部、背部、太阳穴',
+        usage_zh: '将少量擦在胸部、背部、太阳穴',
         usage_vi: 'Xoa một lượng nhỏ lên ngực, lưng, thái dương',
         image: 'https://images.unsplash.com/photo-1585435557343-3b092031a831?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHx2aWV0bmFtZXNlJTIwYmFsbXxlbnwxfHx8fDE3NjA4OTQ2MTh8MA&ixlib=rb-4.1.0&q=80&w=1080',
         inStock: true,
@@ -2097,7 +2097,7 @@ app.post('/make-server-a75b5353/init-demo-data', requireAdmin, async (c) => {
         composition_en: 'Snake fat, vitamin E',
         composition_zh: '蛇脂、维生素E',
         composition_vi: 'Mỡ rắn, vitamin E',
-        usage: 'Принимать по 2 капсулы 2 раза в д��нь',
+        usage: 'Принимать по 2 капсулы 2 раза в день',
         usage_en: 'Take 2 capsules twice daily',
         usage_zh: '每天两次，每次2粒',
         usage_vi: 'Uống 2 viên mỗi ngày 2 lần',
@@ -2529,7 +2529,7 @@ app.get('/make-server-a75b5353/admin/categories', async (c) => {
           {
             id: 'elixirs',
             translations: {
-              ru: 'Э��иксиры',
+              ru: 'Эликсиры',
               en: 'Elixirs',
               zh: '灵丹妙药',
               vi: 'Thuốc tiên'
@@ -3895,6 +3895,194 @@ app.post('/make-server-a75b5353/admin/catalog/import', requireAdmin, async (c) =
   } catch (error) {
     console.error('❌ Error importing catalog:', error);
     return c.json({ error: 'Failed to import catalog', details: String(error) }, 500);
+  }
+});
+
+// ============================================================================
+// Google Translate API Endpoints
+// ============================================================================
+
+// Get Google Translate API key
+app.get('/api/translate/key', requireAdmin, async (c) => {
+  try {
+    const apiKey = await kv.get('google_translate_api_key');
+    return c.json({ 
+      success: true, 
+      hasKey: !!apiKey,
+      keyPreview: apiKey ? `${apiKey.substring(0, 10)}...` : null
+    });
+  } catch (error) {
+    console.error('❌ Error getting Google Translate API key:', error);
+    return c.json({ error: 'Failed to get API key', details: String(error) }, 500);
+  }
+});
+
+// Set Google Translate API key
+app.post('/api/translate/key', requireAdmin, async (c) => {
+  try {
+    const { apiKey } = await c.req.json();
+    
+    if (!apiKey || typeof apiKey !== 'string') {
+      return c.json({ error: 'API key is required' }, 400);
+    }
+    
+    // Validate API key by making a test request
+    const testUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}&q=test&target=en`;
+    const testResponse = await fetch(testUrl, { method: 'POST' });
+    
+    if (!testResponse.ok) {
+      return c.json({ error: 'Invalid API key' }, 400);
+    }
+    
+    await kv.set('google_translate_api_key', apiKey);
+    
+    console.log('✅ Google Translate API key saved successfully');
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error saving Google Translate API key:', error);
+    return c.json({ error: 'Failed to save API key', details: String(error) }, 500);
+  }
+});
+
+// Delete Google Translate API key
+app.delete('/api/translate/key', requireAdmin, async (c) => {
+  try {
+    await kv.del('google_translate_api_key');
+    console.log('✅ Google Translate API key deleted successfully');
+    return c.json({ success: true });
+  } catch (error) {
+    console.error('❌ Error deleting Google Translate API key:', error);
+    return c.json({ error: 'Failed to delete API key', details: String(error) }, 500);
+  }
+});
+
+// Translate text
+app.post('/api/translate/text', requireAdmin, async (c) => {
+  try {
+    const { text, targetLanguage, sourceLanguage } = await c.req.json();
+    
+    if (!text || !targetLanguage) {
+      return c.json({ error: 'Text and target language are required' }, 400);
+    }
+    
+    const apiKey = await kv.get('google_translate_api_key');
+    if (!apiKey) {
+      return c.json({ error: 'Google Translate API key not configured' }, 400);
+    }
+    
+    // Map language codes
+    const langMap: Record<string, string> = {
+      'ru': 'ru',
+      'en': 'en',
+      'zh': 'zh-CN',
+      'vi': 'vi'
+    };
+    
+    const params = new URLSearchParams({
+      key: apiKey,
+      q: text,
+      target: langMap[targetLanguage] || targetLanguage,
+      format: 'text',
+    });
+    
+    if (sourceLanguage) {
+      params.append('source', langMap[sourceLanguage] || sourceLanguage);
+    }
+    
+    const response = await fetch(`https://translation.googleapis.com/language/translate/v2?${params.toString()}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Google Translate API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.data?.translations?.[0]) {
+      throw new Error('Invalid response from Google Translate API');
+    }
+    
+    return c.json({
+      success: true,
+      translatedText: data.data.translations[0].translatedText,
+      detectedSourceLanguage: data.data.translations[0].detectedSourceLanguage,
+    });
+  } catch (error) {
+    console.error('❌ Error translating text:', error);
+    return c.json({ error: 'Translation failed', details: String(error) }, 500);
+  }
+});
+
+// Translate batch
+app.post('/api/translate/batch', requireAdmin, async (c) => {
+  try {
+    const { texts, targetLanguage, sourceLanguage } = await c.req.json();
+    
+    if (!texts || !Array.isArray(texts) || !targetLanguage) {
+      return c.json({ error: 'Texts array and target language are required' }, 400);
+    }
+    
+    const apiKey = await kv.get('google_translate_api_key');
+    if (!apiKey) {
+      return c.json({ error: 'Google Translate API key not configured' }, 400);
+    }
+    
+    // Map language codes
+    const langMap: Record<string, string> = {
+      'ru': 'ru',
+      'en': 'en',
+      'zh': 'zh-CN',
+      'vi': 'vi'
+    };
+    
+    const params = new URLSearchParams({
+      key: apiKey,
+      target: langMap[targetLanguage] || targetLanguage,
+      format: 'text',
+    });
+    
+    if (sourceLanguage) {
+      params.append('source', langMap[sourceLanguage] || sourceLanguage);
+    }
+    
+    // Add all texts as separate 'q' parameters
+    texts.forEach((text: string) => {
+      params.append('q', text);
+    });
+    
+    const response = await fetch(`https://translation.googleapis.com/language/translate/v2?${params.toString()}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Google Translate API error: ${response.status} - ${errorData.error?.message || response.statusText}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.data?.translations) {
+      throw new Error('Invalid response from Google Translate API');
+    }
+    
+    return c.json({
+      success: true,
+      translations: data.data.translations.map((t: any) => ({
+        translatedText: t.translatedText,
+        detectedSourceLanguage: t.detectedSourceLanguage,
+      })),
+    });
+  } catch (error) {
+    console.error('❌ Error in batch translation:', error);
+    return c.json({ error: 'Batch translation failed', details: String(error) }, 500);
   }
 });
 

@@ -172,8 +172,8 @@ export const SEOSettings = () => {
         <div className="flex items-center gap-3">
           <Globe className="text-red-600" size={28} />
           <div>
-            <h2 className="text-gray-800">{t('seoSettings')}</h2>
-            <p className="text-sm text-gray-600">
+            <h2 className="text-white">{t('seoSettings')}</h2>
+            <p className="text-white text-sm">
               {t('seoSettingsDescription')}
             </p>
           </div>

@@ -333,7 +333,7 @@ export const OrderManagement = () => {
       // Validate UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(orderId)) {
-        console.warn('���️ Invalid UUID format for order ID:', orderId);
+        console.warn('️ Invalid UUID format for order ID:', orderId);
         toast.error(t('invalidOrderId'));
         setUpdatingOrder(null);
         return;
@@ -498,7 +498,7 @@ export const OrderManagement = () => {
                         setSelectedOrder(order);
                         setDetailsOpen(true);
                       }}
-                      className="flex items-center gap-2 text-green-600 hover:text-green-700"
+                      className="flex items-center gap-2 text-green-600 hover:text-green-700 bg-white"
                       title="Детали заказа"
                     >
                       <Eye size={18} />
@@ -506,7 +506,7 @@ export const OrderManagement = () => {
                     <button
                       onClick={() => sendTrackingNumber(order.id)}
                       disabled={updatingOrder === order.id}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:text-gray-400"
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:text-gray-400 bg-white"
                       title={t('sendTrackingNumber')}
                     >
                       <Send size={18} />
@@ -517,7 +517,7 @@ export const OrderManagement = () => {
                         setDeleteConfirmOpen(true);
                       }}
                       disabled={updatingOrder === order.id}
-                      className="flex items-center gap-2 text-red-600 hover:text-red-700 disabled:text-gray-400"
+                      className="flex items-center gap-2 text-red-600 hover:text-red-700 disabled:text-gray-400 bg-white"
                       title={t('deleteOrder')}
                     >
                       <Trash2 size={18} />

@@ -280,7 +280,7 @@ export const Analytics = () => {
 
         <div className="grid md:grid-cols-3 gap-6">
           {/* China Store */}
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h4 className="text-gray-800 mb-3">{t('chinaStore')}</h4>
             <div className="space-y-2">
               <div className="flex justify-between">
@@ -297,7 +297,7 @@ export const Analytics = () => {
           </div>
 
           {/* Thailand Store */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <h4 className="text-gray-800 mb-3">{t('thailandStore')}</h4>
             <div className="space-y-2">
               <div className="flex justify-between">

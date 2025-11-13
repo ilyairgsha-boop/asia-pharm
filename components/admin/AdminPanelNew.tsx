@@ -116,7 +116,7 @@ export const AdminPanelNew = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="admin-panel-container container mx-auto px-4 py-8">
       <h2 className="text-gray-800 mb-6">{t('adminPanel')}</h2>
 
       {/* Edge Function Status */}

@@ -131,11 +131,11 @@ export const UserManagement = () => {
   return (
     <div>
       <div className="mb-6">
-        <h3 className="text-gray-800 flex items-center gap-2">
+        <h3 className="text-white flex items-center gap-2">
           <Users size={24} />
           {t('userManagement')}
         </h3>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-white text-sm mt-2">
           {t('userManagementDescription')}
         </p>
       </div>

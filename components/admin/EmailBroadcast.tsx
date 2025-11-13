@@ -137,12 +137,6 @@ export const EmailBroadcast = () => {
               <Mail className="w-6 h-6 text-red-600" />
               {t('broadcastToSubscribers')}
             </h2>
-            {subscriberCount !== null && (
-              <p className="text-gray-600 mt-2 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                {t('subscribersCount')}: <strong>{subscriberCount}</strong>
-              </p>
-            )}
           </div>
           <button
             onClick={loadSubscriberCount}

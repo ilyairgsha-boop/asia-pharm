@@ -298,6 +298,219 @@ img.product-image {
   }
 }
 
+/* Black Friday Admin Panel Styles */
+
+/* Кнопки - желтый фон с черным текстом */
+.theme-black-friday .admin-panel-container button:not(.bg-gray-200):not(.bg-gray-500):not([role="switch"]),
+.theme-black-friday .admin-panel-container .bg-red-600,
+.theme-black-friday .admin-panel-container .bg-green-600,
+.theme-black-friday .admin-panel-container .bg-blue-600,
+.theme-black-friday .admin-panel-container .bg-orange-600 {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  border-color: #fbbf24 !important;
+}
+
+.theme-black-friday .admin-panel-container button:hover:not(.bg-gray-200):not(.bg-gray-500):not([role="switch"]) {
+  background-color: #eab308 !important;
+  color: #000000 !important;
+}
+
+/* Иконки в кнопках - черные */
+.theme-black-friday .admin-panel-container button svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* + значок в кнопках - черный */
+.theme-black-friday .admin-panel-container button::before,
+.theme-black-friday .admin-panel-container button .text-white,
+.theme-black-friday .admin-panel-container button .text-red-600 {
+  color: #000000 !important;
+}
+
+/* Иконки действий (редактировать, удалить и т.д.) - ПРОСТО ЧЕРНЫЕ без желтого */
+.theme-black-friday .admin-panel-container table svg,
+.theme-black-friday .admin-panel-container .actions svg,
+.theme-black-friday .admin-panel-container [class*="action"] svg,
+.theme-black-friday .admin-panel-container td button svg,
+.theme-black-friday .admin-panel-container td svg {
+  color: #000000 !important;
+  stroke: #000000 !important;
+}
+
+/* Тексты в таблицах - черные (emails, суммы, номера заказов) */
+.theme-black-friday .admin-panel-container table td,
+.theme-black-friday .admin-panel-container table th,
+.theme-black-friday .admin-panel-container table td *,
+.theme-black-friday .admin-panel-container table span,
+.theme-black-friday .admin-panel-container table p,
+.theme-black-friday .admin-panel-container table a,
+.theme-black-friday .admin-panel-container table a:hover {
+  color: #000000 !important;
+}
+
+/* Суммы, номера заказов - черные */
+.theme-black-friday .admin-panel-container .text-red-500,
+.theme-black-friday .admin-panel-container .text-green-500,
+.theme-black-friday .admin-panel-container .text-blue-500 {
+  color: #000000 !important;
+}
+
+/* Большинство текстов - черные */
+.theme-black-friday .admin-panel-container .text-red-600,
+.theme-black-friday .admin-panel-container .text-blue-600,
+.theme-black-friday .admin-panel-container .text-green-600,
+.theme-black-friday .admin-panel-container .text-orange-600,
+.theme-black-friday .admin-panel-container .text-gray-700,
+.theme-black-friday .admin-panel-container .text-gray-600,
+.theme-black-friday .admin-panel-container p:not(.text-white),
+.theme-black-friday .admin-panel-container span:not(.text-white),
+.theme-black-friday .admin-panel-container label,
+.theme-black-friday .admin-panel-container li,
+.theme-black-friday .admin-panel-container .text-sm,
+.theme-black-friday .admin-panel-container h3:not(.text-white),
+.theme-black-friday .admin-panel-container h4:not(.text-white),
+.theme-black-friday .admin-panel-container strong {
+  color: #000000 !important;
+}
+
+/* Заголовки и описания - белые (где указано) */
+.theme-black-friday .admin-panel-container h2.text-white,
+.theme-black-friday .admin-panel-container h3.text-white,
+.theme-black-friday .admin-panel-container h4.text-white,
+.theme-black-friday .admin-panel-container p.text-white,
+.theme-black-friday .admin-panel-container span.text-white {
+  color: #ffffff !important;
+}
+
+/* Card заголовки - ЧЕРНЫЕ (по умолчанию) */
+.theme-black-friday .admin-panel-container [class*="CardTitle"]:not(.text-white),
+.theme-black-friday .admin-panel-container [class*="card-title"]:not(.text-white) {
+  color: #000000 !important;
+}
+
+/* Card заголовки - БЕЛЫЕ (где указано) */
+.theme-black-friday .admin-panel-container [class*="CardTitle"].text-white,
+.theme-black-friday .admin-panel-container [class*="card-title"].text-white {
+  color: #ffffff !important;
+}
+
+/* Card описания - ВСЕГДА БЕЛЫЕ */
+.theme-black-friday .admin-panel-container [class*="CardDescription"],
+.theme-black-friday .admin-panel-container [class*="card-description"] {
+  color: #ffffff !important;
+}
+
+/* Панель администратора - белым */
+.theme-black-friday .admin-panel-container > h2 {
+  color: #ffffff !important;
+}
+
+/* Иконки в разделах - желтые (кроме кнопок и таблиц) */
+.theme-black-friday .admin-panel-container svg:not(button svg):not(table svg):not([class*="action"] svg):not(td svg):not(th svg),
+.theme-black-friday .admin-panel-container .lucide:not(button .lucide):not(table .lucide):not(td .lucide) {
+  color: #fbbf24 !important;
+  stroke: #fbbf24 !important;
+}
+
+/* Цифры в аналитике - черные */
+.theme-black-friday .admin-panel-container .text-3xl,
+.theme-black-friday .admin-panel-container .text-4xl,
+.theme-black-friday .admin-panel-container .text-2xl {
+  color: #000000 !important;
+}
+
+/* Белый фон для блоков */
+.theme-black-friday .admin-panel-container .bg-white,
+.theme-black-friday .admin-panel-container .bg-gray-50 {
+  background-color: #ffffff !important;
+}
+
+/* Поля ввода */
+.theme-black-friday .admin-panel-container input,
+.theme-black-friday .admin-panel-container textarea,
+.theme-black-friday .admin-panel-container select {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #e5e7eb !important;
+}
+
+/* Границы */
+.theme-black-friday .admin-panel-container .border-red-600,
+.theme-black-friday .admin-panel-container .border-blue-600,
+.theme-black-friday .admin-panel-container .border-green-600 {
+  border-color: #fbbf24 !important;
+}
+
+/* Переключатели (Switch/Toggle) - черно-желтые */
+.theme-black-friday .admin-panel-container button[role="switch"] {
+  background-color: #e5e7eb !important;
+}
+
+.theme-black-friday .admin-panel-container button[role="switch"][data-state="checked"] {
+  background-color: #fbbf24 !important;
+}
+
+.theme-black-friday .admin-panel-container button[role="switch"] span {
+  background-color: #000000 !important;
+}
+
+/* Блок "Включить push-уведомления" - желтый с черным текстом */
+.theme-black-friday .admin-panel-container .bg-blue-50,
+.theme-black-friday .admin-panel-container .bg-green-50,
+.theme-black-friday .admin-panel-container .bg-yellow-50 {
+  background-color: #fbbf24 !important;
+}
+
+.theme-black-friday .admin-panel-container .bg-blue-50 p,
+.theme-black-friday .admin-panel-container .bg-green-50 p,
+.theme-black-friday .admin-panel-container .bg-yellow-50 p,
+.theme-black-friday .admin-panel-container .bg-blue-50 span,
+.theme-black-friday .admin-panel-container .bg-green-50 span,
+.theme-black-friday .admin-panel-container .bg-yellow-50 span {
+  color: #000000 !important;
+}
+
+/* Табы переключателей - желтые с черным текстом, отцентрированне */
+.theme-black-friday .admin-panel-container [role="tablist"] button {
+  background-color: #fbbf24 !important;
+  color: #000000 !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.theme-black-friday .admin-panel-container [role="tablist"] button[data-state="active"] {
+  background-color: #eab308 !important;
+  font-weight: 600 !important;
+}
+
+.theme-black-friday .admin-panel-container [role="tablist"] button:not([data-state="active"]) {
+  background-color: #fbbf24 !important;
+}
+
+/* Убрать цветные полосы слева у блоков информации */
+.theme-black-friday .admin-panel-container .border-l-4,
+.theme-black-friday .admin-panel-container .border-l-blue-500,
+.theme-black-friday .admin-panel-container .border-l-green-500,
+.theme-black-friday .admin-panel-container .border-l-yellow-400,
+.theme-black-friday .admin-panel-container .border-l-red-500 {
+  border-left: none !important;
+}
+
+/* Убрать желтый фон у информационных блоков без bg-*-50 */
+.theme-black-friday .admin-panel-container .bg-blue-50:not(:has(button[role="switch"])),
+.theme-black-friday .admin-panel-container .bg-green-50:not(:has(button[role="switch"])),
+.theme-black-friday .admin-panel-container .bg-yellow-50:not(:has(button[role="switch"])) {
+  border-left: none !important;
+}
+
+/* Убрать желтый фон у определенных кнопок в Email Broadcast */
+.theme-black-friday .admin-panel-container button:has(+ button + button),
+.theme-black-friday .admin-panel-container button + button + button {
+  background-color: #fbbf24 !important;
+}
+
 /* Theme-specific styles */
 
 /* BLACK FRIDAY - черно-бело-желтая тема */
@@ -704,7 +917,7 @@ img.product-image {
   text-decoration: underline;
 }
 
-/* 9. Кнопка оформить заказ */
+/* 9. Кнпка оформить заказ */
 .theme-black-friday button[type="submit"] {
   background-color: #fbbf24 !important;
   color: #000000 !important;
@@ -951,7 +1164,7 @@ img.product-image {
 }
 
 /* 20. Модальное окно истории заказов - черная пятница */
-/* Кнопка закрыть - желтая с черным текстом по центру */
+/* Кнопа закрыть - желтая с черным текстом по центру */
 .theme-black-friday .order-details-close-button {
   background-color: #fbbf24 !important;
   color: #000000 !important;

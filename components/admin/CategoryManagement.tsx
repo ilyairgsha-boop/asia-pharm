@@ -385,11 +385,11 @@ export const CategoryManagement = () => {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h3 className="text-gray-800 flex items-center gap-2">
+        <h3 className="text-white flex items-center gap-2">
           <Layers size={24} />
           {t('categoryManagement')}
         </h3>
-        <p className="text-sm text-gray-600 mt-2">
+        <p className="text-white text-sm mt-2">
           {t('categoryManagementDescription')}
         </p>
       </div>

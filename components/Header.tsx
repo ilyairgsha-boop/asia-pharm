@@ -129,20 +129,8 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
 
   // Функция для получения декорации логотипа в зависимости от темы
   const getLogoDecoration = () => {
-    switch (currentTheme) {
-      case 'new-year':
-        return <span className="ml-2 text-3xl">❄️</span>;
-      case 'womens-day':
-        return <span className="ml-2 text-3xl">🌷</span>;
-      case 'autumn':
-        return <span className="ml-2 text-3xl">🍁</span>;
-      case 'defenders-day':
-        return <span className="ml-2 text-2xl">⭐🎗️</span>;
-      case 'summer':
-        return <span className="ml-2 text-3xl">☀️</span>;
-      default:
-        return null;
-    }
+    // Убираем эмодзи из названия сайта для всех тем
+    return null;
   };
 
   return (
