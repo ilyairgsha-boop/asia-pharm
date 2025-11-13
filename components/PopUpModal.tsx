@@ -95,12 +95,12 @@ export const PopUpModal = () => {
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-2xl p-0 gap-0">
+      <DialogContent className="max-w-full sm:max-w-2xl p-0 gap-0 mx-2 sm:mx-auto">
         {/* Close button */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute right-4 top-4 z-10 rounded-full bg-white/80 hover:bg-white"
+          className="absolute right-2 top-2 sm:right-4 sm:top-4 z-10 rounded-full bg-white/80 hover:bg-white"
           onClick={handleClose}
         >
           <X size={20} />
@@ -108,7 +108,7 @@ export const PopUpModal = () => {
 
         {/* Content */}
         <div 
-          className="p-8"
+          className="p-4 sm:p-8"
           dangerouslySetInnerHTML={{ __html: currentContent }}
         />
       </DialogContent>

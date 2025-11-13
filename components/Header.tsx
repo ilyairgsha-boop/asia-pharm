@@ -171,9 +171,9 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               onClick={() => onNavigate('home')}
               className="flex items-center gap-3"
             >
-              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden bg-red-50">
                 <ImageWithFallback
-                  src="figma:asset/91639b3a178dd4f8b1175415cada262c7237f110.png"
+                  src="https://images.unsplash.com/photo-1638366170204-d5b084f93872?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaGFybWFjeSUyMG1lZGljaW5lJTIwbG9nb3xlbnwxfHx8fDE3NjMwNTkzODd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                   alt="Asia Pharm Logo"
                   className="w-full h-full object-cover"
                 />
@@ -276,9 +276,9 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
             onClick={() => onNavigate('home')}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-red-50">
               <ImageWithFallback
-                src="figma:asset/91639b3a178dd4f8b1175415cada262c7237f110.png"
+                src="https://images.unsplash.com/photo-1638366170204-d5b084f93872?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaGFybWFjeSUyMG1lZGljaW5lJTIwbG9nb3xlbnwxfHx8fDE3NjMwNTkzODd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
                 alt="Asia Pharm Logo"
                 className="w-full h-full object-cover"
               />

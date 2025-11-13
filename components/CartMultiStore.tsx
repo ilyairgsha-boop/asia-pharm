@@ -51,8 +51,8 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
 
   if (allCartsEmpty) {
     return (
-      <div className="container mx-auto px-4 py-12">
-        <div className="max-w-2xl mx-auto text-center">
+      <div className="container mx-auto px-4 py-12 max-w-full md:max-w-2xl">
+        <div className="mx-auto text-center">
           <ShoppingCart size={64} className="mx-auto text-gray-400 mb-4" />
           <h2 className="text-gray-800 mb-4">{t('yourCart')}</h2>
           <p className="text-gray-600 mb-6">{t('cartEmpty')}</p>

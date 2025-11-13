@@ -702,20 +702,20 @@ function AppContent() {
         console.log('🎨 RENDERING PUSH PROMPT!');
         return true;
       })() && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4">
-          <div className="push-prompt-container bg-white rounded-lg shadow-xl max-w-md w-full p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-2 sm:p-4">
+          <div className="push-prompt-container bg-white rounded-lg shadow-xl max-w-full sm:max-w-md w-full mx-2 sm:mx-auto p-4 sm:p-6 space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center text-xl sm:text-2xl">
                 🔔
               </div>
               <div>
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                   {currentLanguage === 'ru' && 'Включить уведомления?'}
                   {currentLanguage === 'en' && 'Enable Notifications?'}
                   {currentLanguage === 'zh' && '启用通知？'}
                   {currentLanguage === 'vi' && 'Bật thông báo?'}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {currentLanguage === 'ru' && 'Будьте в курсе всех новостей'}
                   {currentLanguage === 'en' && 'Stay updated on your orders'}
                   {currentLanguage === 'zh' && '及时了解您的订单'}
@@ -724,13 +724,13 @@ function AppContent() {
               </div>
             </div>
             
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
               {currentLanguage === 'ru' && (
                 <>
                   <p>✅ Статусы заказов в реальном времени</p>
                   <p>✅ Эксклюзивные предложения и акции</p>
                   <p>✅ Новинки и рекомендации</p>
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-2 sm:mt-3">
                     Вы можете отключить уведомления в любое время в настройках профиля
                   </p>
                 </>
@@ -740,7 +740,7 @@ function AppContent() {
                   <p>✅ Real-time order status updates</p>
                   <p>✅ Exclusive offers and promotions</p>
                   <p>✅ New products and recommendations</p>
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-2 sm:mt-3">
                     You can disable notifications anytime in profile settings
                   </p>
                 </>
@@ -750,7 +750,7 @@ function AppContent() {
                   <p>✅ 实时订单状态更新</p>
                   <p>✅ 独家优惠和促销</p>
                   <p>✅ 新产品和推荐</p>
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-2 sm:mt-3">
                     您可以随时在个人资料设置中禁用通知
                   </p>
                 </>
@@ -760,14 +760,14 @@ function AppContent() {
                   <p>✅ Cập nhật trạng thái đơn hàng theo thời gian thực</p>
                   <p>✅ Ưu đãi và khuyến mãi độc quyền</p>
                   <p>✅ Sản phẩm mới và đề xuất</p>
-                  <p className="text-xs text-gray-500 mt-3">
+                  <p className="text-xs text-gray-500 mt-2 sm:mt-3">
                     Bạn có thể tắt thông báo bất cứ lúc nào trong cài đặt hồ sơ
                   </p>
                 </>
               )}
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-2 sm:gap-3 pt-1 sm:pt-2">
               <button
                 onClick={async () => {
                   console.log('🔔 User clicked "Subscribe" on custom prompt');
@@ -824,7 +824,7 @@ function AppContent() {
                     );
                   }
                 }}
-                className="push-prompt-enable-button flex-1 bg-red-600 text-white px-4 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                className="push-prompt-enable-button flex-1 bg-red-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg hover:bg-red-700 transition-colors font-medium text-sm sm:text-base"
               >
                 {currentLanguage === 'ru' && 'Включить'}
                 {currentLanguage === 'en' && 'Enable'}
@@ -839,7 +839,7 @@ function AppContent() {
                   // Mark that we've shown the prompt
                   localStorage.setItem('push_prompt_shown', 'true');
                 }}
-                className="push-prompt-later-button px-4 py-3 text-gray-600 hover:text-gray-800 transition-colors"
+                className="push-prompt-later-button px-3 sm:px-4 py-2 sm:py-3 text-gray-600 hover:text-gray-800 transition-colors text-sm sm:text-base"
               >
                 {currentLanguage === 'ru' && 'Не сейчас'}
                 {currentLanguage === 'en' && 'Not now'}

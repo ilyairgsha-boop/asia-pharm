@@ -785,8 +785,8 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               </div>
             </div>
 
-            {/* Соглашеня */}
-            <div className="agreement-section bg-white rounded-lg shadow-md p-6 space-y-3">
+            {/* Соглашеня - Desktop only */}
+            <div className="agreement-section hidden lg:block bg-white rounded-lg shadow-md p-6 space-y-3">
               <div className="flex items-start gap-2">
                 <input
                   type="checkbox"
@@ -830,10 +830,11 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               </div>
             </div>
 
+            {/* Submit button - Desktop only */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2"
+              className="hidden lg:flex w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -974,6 +975,68 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                   {total.toLocaleString()} ₽
                 </span>
               </div>
+            </div>
+
+            {/* Соглашеня - Mobile only */}
+            <div className="agreement-section lg:hidden pt-4 border-t border-gray-200 space-y-3">
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="privacyPolicyMobile"
+                  checked={agreedToPrivacy}
+                  onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                  className="agreement-checkbox mt-1"
+                />
+                <label htmlFor="privacyPolicyMobile" className="text-sm text-gray-700">
+                  {t('iAgreeWith')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowPrivacyDialog(true)}
+                    className="text-red-600 hover:underline"
+                  >
+                    {t('privacyPolicyInstrumental')}
+                  </button>{' '}
+                  *
+                </label>
+              </div>
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="termsOfServiceMobile"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="agreement-checkbox mt-1"
+                />
+                <label htmlFor="termsOfServiceMobile" className="text-sm text-gray-700">
+                  {t('iAgreeWith')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setShowTermsDialog(true)}
+                    className="text-red-600 hover:underline"
+                  >
+                    {t('termsOfServiceInstrumental')}
+                  </button>{' '}
+                  *
+                </label>
+              </div>
+
+              {/* Submit button - Mobile only */}
+              <button
+                type="submit"
+                disabled={loading}
+                onClick={handleSubmit}
+                className="w-full bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 flex items-center justify-center gap-2 mt-4"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="animate-spin" size={20} />
+                    <span>{t('processing')}</span>
+                  </>
+                ) : (
+                  t('placeOrder')
+                )}
+              </button>
             </div>
           </div>
         </div>
