@@ -227,7 +227,8 @@ function formatCurrency(amount: number | undefined | null): string {
 
 // Generate welcome email HTML
 export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/assets/logo.png';
+  // Updated logo URL to use correct path
+  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
   
   const welcomeTranslations = {
     ru: {
@@ -410,7 +411,8 @@ function translateDeliveryMethod(method: string, language: 'ru' | 'en' | 'zh' | 
 // Generate email HTML template
 export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
   const t = translations[language];
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/assets/logo.png';
+  // Updated logo URL to use correct public path
+  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
   
   // Language flags
   const flags = {
@@ -468,7 +470,7 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
           <!-- Center: QR Code -->
           <div style="flex: 1; min-width: 250px; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
             <h4 style="color: #0088cc; margin: 0 0 15px 0; font-size: 16px;">📱 ${language === 'ru' ? 'QR-код (СБП)' : language === 'en' ? 'QR Code (SBP)' : language === 'zh' ? '二维码 (SBP)' : 'Mã QR (SBP)'}</h4>
-            ${data.paymentDetails?.qrCodeUrl ? `
+            ${data.paymentDetails?.qrCodeUrl && data.paymentDetails.qrCodeUrl.trim() !== '' ? `
               <img src="${data.paymentDetails.qrCodeUrl}" alt="QR Code" style="max-width: 180px; max-height: 180px; margin: 10px auto; display: block; border: 2px solid #0088cc; border-radius: 8px;" />
               <p style="margin: 10px 0 0 0; color: #666; font-size: 12px; line-height: 1.4;">${language === 'ru' ? 'Отсканируйте в приложении банка' : language === 'en' ? 'Scan in bank app' : language === 'zh' ? '在银行应用中扫描' : 'Quét trong ứng dụng ngân hàng'}</p>
             ` : `
@@ -754,7 +756,8 @@ export function generateBroadcastEmailHTML(
   language: 'ru' | 'en' | 'zh' | 'vi' = 'ru',
   unsubscribeUrl?: string
 ): string {
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/assets/logo.png';
+  // Updated logo URL to use correct public path
+  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
   
   const flags = {
     ru: '🇷🇺',
