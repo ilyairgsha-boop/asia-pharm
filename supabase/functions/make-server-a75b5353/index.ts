@@ -282,8 +282,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.8.2 - Email Loyalty Points for All Statuses',
-    version: '2.8.2-EMAIL-LOYALTY-POINTS',
+    message: 'Asia-Pharm API v2.8.3 - Email with Loyalty Points Calculation',
+    version: '2.8.3-EMAIL-LOYALTY-CALC',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -381,6 +381,66 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
     const subject = subjects[language as keyof typeof subjects]?.[status] || subjects.ru[status];
     console.log('📬 Email subject:', subject);
     
+    // Calculate loyalty points to earn based on order amount
+    let loyaltyPointsEarned = 0;
+    let currentLoyaltyBalance = 0;
+    
+    if (order.user_id) {
+      // Get user's current loyalty balance
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('loyalty_points')
+        .eq('id', order.user_id)
+        .single();
+      
+      currentLoyaltyBalance = profile?.loyalty_points || 0;
+      
+      // Calculate subtotal without samples
+      const subtotalWithoutSamples = (order.items || [])
+        .filter((item: any) => !item.isSample)
+        .reduce((sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0), 0);
+      
+      // Calculate amount eligible for cashback (subtract used loyalty points)
+      const loyaltyPointsUsed = order.loyalty_points_used || 0;
+      const amountForCashback = Math.max(0, subtotalWithoutSamples - loyaltyPointsUsed);
+      
+      if (amountForCashback > 0) {
+        // Calculate user's loyalty tier based on lifetime spending
+        const { data: ordersData } = await supabase
+          .from('orders')
+          .select('subtotal, total')
+          .eq('user_id', order.user_id)
+          .in('status', ['delivered', 'shipped', 'processing']);
+        
+        let lifetimeSpending = 0;
+        if (ordersData && ordersData.length > 0) {
+          lifetimeSpending = ordersData.reduce((sum: number, o: any) => {
+            return sum + ((o.subtotal || o.total) || 0);
+          }, 0);
+        }
+        
+        // Determine tier
+        let tier: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
+        if (lifetimeSpending >= 200000) {
+          tier = 'platinum';
+        } else if (lifetimeSpending >= 100000) {
+          tier = 'gold';
+        } else if (lifetimeSpending >= 50000) {
+          tier = 'silver';
+        }
+        
+        // Calculate cashback percentage based on tier
+        const cashbackPercentage = 
+          tier === 'platinum' ? 0.10 :
+          tier === 'gold' ? 0.07 :
+          tier === 'silver' ? 0.05 :
+          0.03; // basic
+        
+        loyaltyPointsEarned = Math.floor(amountForCashback * cashbackPercentage);
+        console.log(`💎 Loyalty points to earn: ${loyaltyPointsEarned} (tier: ${tier}, cashback: ${cashbackPercentage * 100}%)`);
+      }
+    }
+    
     // Transform order data to match OrderEmailData interface
     const orderEmailData = {
       orderId: orderNumber,
@@ -406,6 +466,8 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
       promoCode: order.promo_code,
       promoDiscount: order.promo_discount,
       loyaltyPointsUsed: order.loyalty_points_used,
+      loyaltyPointsEarned: loyaltyPointsEarned,
+      currentLoyaltyBalance: currentLoyaltyBalance,
       trackingNumber: order.tracking_number,
       trackingUrl: order.tracking_url
     };
