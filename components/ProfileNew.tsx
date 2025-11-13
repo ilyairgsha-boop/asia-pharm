@@ -5,7 +5,6 @@ import { createClient } from '../utils/supabase/client';
 import { Package, Loader2, Gift, TrendingUp, Calendar, Heart, Mail, Bell, Trash2, AlertTriangle, Settings } from 'lucide-react';
 import { OrderDetails } from './OrderDetails';
 import { ProductCard } from './ProductCard';
-import { ProductModal } from './ProductModal';
 import { Product } from '../contexts/CartContext';
 import { getMockProducts, getMockOrders } from '../utils/mockData';
 import { toast } from 'sonner';
@@ -46,9 +45,10 @@ interface LoyaltyHistory {
 
 interface ProfileNewProps {
   onNavigate: (page: string) => void;
+  onProductClick?: (product: Product) => void;
 }
 
-export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
+export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
   const { language, t } = useLanguage();
   const { user, accessToken } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -837,10 +837,13 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                   <ProductCard
                     key={product.id}
                     product={product}
-                    onProductClick={(product) => {
-                      // Open product modal
-                      setSelectedProduct(product);
-                    }}
+                    onProductClick={onProductClick || ((product) => {
+                      // Fallback: dispatch event if onProductClick is not provided
+                      if (typeof window !== 'undefined') {
+                        const event = new CustomEvent('openProductDetails', { detail: product });
+                        window.dispatchEvent(event);
+                      }
+                    })}
                   />
                 ))}
               </div>
@@ -1175,14 +1178,6 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
             setSelectedOrder(null);
             onNavigate('payment-info');
           }}
-        />
-      )}
-
-      {/* Product Modal */}
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
         />
       )}
     </div>

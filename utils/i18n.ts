@@ -3872,8 +3872,7 @@ export const translations = {
     // Product Management
     pleaseSelectCategory: 'Vui lòng chọn ít nhất một danh mục bệnh',
     
-    // Category Management
-    categoryManagement: 'Quản lý danh mục',
+    // Category Management (Extended)
     categoryManagementDescription: 'Thêm và chỉnh sửa danh mục cho menu trên cùng và thanh bên',
     topMenu: 'Menu trên cùng',
     sidebarMenu: 'Menu thanh bên',

@@ -675,7 +675,7 @@ function AppContent() {
 
       {currentPage === 'payment-info' && <PaymentInfo onNavigate={handleNavigate} />}
 
-      {currentPage === 'profile' && user && <ProfileNew onNavigate={handleNavigate} />}
+      {currentPage === 'profile' && user && <ProfileNew onNavigate={handleNavigate} onProductClick={setSelectedProduct} />}
 
       {currentPage === 'admin' && user?.isAdmin && <AdminPanelNew />}
 
@@ -795,7 +795,7 @@ function AppContent() {
                           currentLanguage === 'ru' ? '✅ Уведомления включены!' :
                           currentLanguage === 'en' ? '✅ Notifications enabled!' :
                           currentLanguage === 'zh' ? '✅ 通知已启用！' :
-                          '✅ Thông báo đã бật!'
+                          '✅ Thông báo đã bật!'
                         );
                       } else {
                         console.warn('⚠️ Subscription failed - no Player ID returned');
