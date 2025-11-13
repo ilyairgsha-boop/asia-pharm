@@ -282,8 +282,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.7.1 - Fixed Push Subscriptions Table',
-    version: '2.7.1-PUSH-TABLE-FIX',
+    message: 'Asia-Pharm API v2.8.0 - Multi-Language Email & Push Notifications',
+    version: '2.8.0-MULTILANG-NOTIFICATIONS',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],

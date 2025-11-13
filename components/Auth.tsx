@@ -43,7 +43,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
           setLoading(false);
           return;
         }
-        await register(formData.email, formData.password, formData.name);
+        await register(formData.email, formData.password, formData.name, selectedLanguage);
         onNavigate('home');
       }
     } catch (error: any) {

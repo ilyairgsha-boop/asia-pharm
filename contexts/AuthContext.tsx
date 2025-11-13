@@ -14,7 +14,7 @@ interface AuthContextType {
   user: User | null;
   accessToken: string | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string, name: string) => Promise<void>;
+  register: (email: string, password: string, name: string, language?: string) => Promise<void>;
   logout: () => Promise<void>;
   loading: boolean;
 }
@@ -146,7 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (email: string, password: string, name: string, language?: string) => {
     try {
       if (MOCK_MODE) {
         // Mock registration
@@ -242,13 +242,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             total_spent: 0,
             push_notifications_enabled: true, // Автоподписка на push
             email_notifications_enabled: true, // Автоподписка на email
+            language: language || 'ru', // Сохраняем выбранный язык пользователя
           });
 
         if (profileError) {
           console.warn('⚠️ Profile creation error:', profileError);
           // Не критично - профиль можно создать позже
         } else {
-          console.log('✅ Profile created with auto-subscriptions enabled');
+          console.log('✅ Profile created with auto-subscriptions enabled and language:', language || 'ru');
         }
       } catch (profileError) {
         console.warn('⚠️ Profile creation exception:', profileError);
@@ -268,7 +269,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           body: JSON.stringify({
             email,
             name: name || email,
-            language: localStorage.getItem('preferredLanguage') || 'ru',
+            language: language || localStorage.getItem('preferredLanguage') || 'ru',
           }),
         });
 

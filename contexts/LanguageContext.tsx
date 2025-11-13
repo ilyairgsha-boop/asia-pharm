@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, ReactNode, useCallback, useMemo, useEffect } from 'react';
 import { Language, translations } from '../utils/i18n';
+import { createClient } from '../utils/supabase/client';
 
 interface LanguageContextType {
   language: Language;
@@ -12,9 +13,58 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   const [language, setLanguage] = useState<Language>('ru');
 
-  const handleSetLanguage = useCallback((lang: Language) => {
+  // Загружаем язык из профиля при монтировании
+  useEffect(() => {
+    const loadUserLanguage = async () => {
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('language')
+            .eq('id', session.user.id)
+            .single();
+          
+          if (profile?.language) {
+            console.log('🌐 Loading user language from profile:', profile.language);
+            setLanguage(profile.language as Language);
+          }
+        }
+      } catch (error) {
+        console.warn('⚠️ Error loading user language:', error);
+      }
+    };
+    
+    loadUserLanguage();
+  }, []);
+
+  const handleSetLanguage = useCallback(async (lang: Language) => {
     console.log(`🌐 Language changed to: ${lang}`);
     setLanguage(lang);
+    
+    // Сохраняем язык в профиль пользователя, если он авторизован
+    try {
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        console.log('💾 Saving language to user profile:', lang);
+        const { error } = await supabase
+          .from('profiles')
+          .update({ language: lang })
+          .eq('id', session.user.id);
+        
+        if (error) {
+          console.warn('⚠️ Failed to save language to profile:', error);
+        } else {
+          console.log('✅ Language saved to profile successfully');
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error saving language:', error);
+    }
   }, []);
 
   // Функция t должна пересоздаваться при изменении языка

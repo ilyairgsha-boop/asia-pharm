@@ -29,7 +29,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const regularItems = cart.filter(item => !item.isSample);
   const sampleItems = cart.filter(item => item.isSample);
   
-  // Сумма без ��робников (для расчета бесплатной доставки и баллов)
+  // Сумма без ��обников (для расчета бесплатной доставки и баллов)
   const subtotalWithoutSamples = regularItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const samplesTotal = sampleItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -322,6 +322,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
           total,
           status: 'pending',
           order_number: orderNumber,
+          language: language, // Сохраняем язык пользователя для email и push
         };
 
         const { data, error } = await supabase
@@ -485,7 +486,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
     const defaults: any = {
       ru: `
         <h2>Политика конфиденциальности</h2>
-        <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей сайта.</p>
+        <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных ��анных пользователей сайта.</p>
         
         <h3>1. Сбор информации</h3>
         <p>Мы собираем только ту информацию, которую вы предоставляете добровольно при регистрации и оформлении заказов.</p>
@@ -538,7 +539,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         <p>未经您同意，我们不会与第三方共享您的个人数据。</p>
         
         <h3>5. 联系方式</h3>
-        <p>有关个人数据处理的问题，请联系：info@asia-pharm.ru</p>
+        <p>有关个人��据处理的问题，请联系：info@asia-pharm.ru</p>
       `,
       vi: `
         <h2>Chính sách bảo mật</h2>
@@ -573,7 +574,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         <p>Используя сайт, вы соглашаетесь с настоящими Правилами и обязуетесь их соблюдать.</p>
         
         <h3>2. Регистрация и учетная запись</h3>
-        <p>Для оформлен��я заказов необходима регистрация. Вы обязуетесь предоставлять актуальную информацию.</p>
+        <p>Для оформленя заказов необходима регистрация. Вы обязуетесь предоставлять актуальную информацию.</p>
         
         <h3>3. Оформление заказов</h3>
         <p>Заказ считается принятым после подтверждения администрацией. Цены и наличие товаров могут изменяться.</p>
@@ -642,7 +643,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
       `,
       vi: `
         <h2>Điều khoản dịch vụ</h2>
-        <p>Các Điều khoản này xác định điều kiện sử dụng cửa hàng trực tuyến và mối quan hệ giữa người dùng và ban quản trị trang web.</p>
+        <p>Các Điều khoản này xác định đi��u kiện sử dụng cửa hàng trực tuyến và mối quan hệ giữa người dùng và ban quản trị trang web.</p>
         
         <h3>1. Quy định chung</h3>
         <p>Bằng cách sử dụng trang web, bạn đồng ý với các Điều khoản này và cam kết tuân thủ chúng.</p>
