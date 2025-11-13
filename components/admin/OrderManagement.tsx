@@ -311,6 +311,17 @@ export const OrderManagement = () => {
         .update({ loyalty_points: newPoints })
         .eq('id', order.user_id);
       
+      // Add loyalty history record
+      await supabase
+        .from('loyalty_history')
+        .insert([{
+          user_id: order.user_id,
+          points: pointsEarned,
+          type: 'earned',
+          description: `Начислено за заказ #${order.order_number || order.id.slice(0, 8)}`,
+          order_id: order.id
+        }]);
+      
       // Mark order as loyalty points earned
       await supabase
         .from('orders')

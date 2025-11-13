@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useCart, type StoreType } from '../contexts/CartContext';
+import { useCart, type StoreType, getCurrentPrice } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { createClient } from '../utils/supabase/client';
 import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X, QrCode, Building2, Loader2 } from 'lucide-react';
@@ -372,6 +372,17 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             loyalty_points: newLoyaltyPoints
           })
           .eq('id', user.id);
+        
+        // Add loyalty history record for points spent
+        await supabase
+          .from('loyalty_history')
+          .insert([{
+            user_id: user.id,
+            points: -loyaltyDiscount, // Negative value for spent points
+            type: 'spent',
+            description: `Списано за заказ #${orderNumber}`,
+            order_id: order.id
+          }]);
         
         console.log(`✅ Loyalty points subtracted: ${availableLoyaltyPoints} - ${loyaltyDiscount} = ${newLoyaltyPoints}`);
         console.log(`ℹ️ Cashback points will be earned when order is delivered`);

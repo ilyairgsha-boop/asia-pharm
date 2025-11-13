@@ -30,8 +30,28 @@ export interface Product {
   saleEndDate?: string | null; // Дата окончания акции (ISO string)
 }
 
+// Helper function to get current price (with discount if applicable)
+export const getCurrentPrice = (product: Product): number => {
+  if (product.saleEnabled && product.saleDiscount && product.saleDiscount > 0) {
+    // Check if sale is still valid
+    if (product.saleEndDate) {
+      const now = new Date();
+      const endDate = new Date(product.saleEndDate);
+      if (now > endDate) {
+        // Sale expired
+        return product.price;
+      }
+    }
+    // Apply discount
+    const discountAmount = (product.price * product.saleDiscount) / 100;
+    return Math.round(product.price - discountAmount);
+  }
+  return product.price;
+};
+
 export interface CartItem extends Product {
   quantity: number;
+  actualPrice?: number; // Цена на момент добавления в корзину (с учетом скидки)
 }
 
 interface CartContextType {
@@ -135,7 +155,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
             : item
         );
       }
-      return [...prev, { ...product, quantity: 1 }];
+      return [...prev, { ...product, quantity: 1, actualPrice: getCurrentPrice(product) }];
     });
   };
 
@@ -172,7 +192,11 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
 
   const getTotalByStore = (store: StoreType): number => {
     const cart = getCartByStore(store);
-    return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    return cart.reduce((sum, item) => {
+      // Use actualPrice if available (price at time of adding to cart), otherwise calculate current price
+      const itemPrice = item.actualPrice ?? getCurrentPrice(item);
+      return sum + itemPrice * item.quantity;
+    }, 0);
   };
 
   const totalItemsCount = 

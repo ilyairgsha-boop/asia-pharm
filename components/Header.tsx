@@ -6,7 +6,7 @@ import { useCart, type Product } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Language } from '../utils/i18n';
 import { SmartSearch } from './SmartSearch';
-import { ImageWithFallback } from './figma/ImageWithFallback';
+import logoImage from 'figma:asset/91639b3a178dd4f8b1175415cada262c7237f110.png';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
@@ -171,12 +171,8 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               onClick={() => onNavigate('home')}
               className="flex items-center gap-3"
             >
-              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden bg-red-50">
-                <ImageWithFallback
-                  src="https://images.unsplash.com/photo-1638366170204-d5b084f93872?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaGFybWFjeSUyMG1lZGljaW5lJTIwbG9nb3xlbnwxfHx8fDE3NjMwNTkzODd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                  alt="Asia Pharm Logo"
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden">
+                <img src={logoImage} alt="Asia Pharm Logo" className="w-full h-full object-cover" />
               </div>
               <div className="flex items-center">
                 <h1 
@@ -276,12 +272,8 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
             onClick={() => onNavigate('home')}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg overflow-hidden bg-red-50">
-              <ImageWithFallback
-                src="https://images.unsplash.com/photo-1638366170204-d5b084f93872?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaGFybWFjeSUyMG1lZGljaW5lJTIwbG9nb3xlbnwxfHx8fDE3NjMwNTkzODd8MA&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                alt="Asia Pharm Logo"
-                className="w-full h-full object-cover"
-              />
+            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <img src={logoImage} alt="Asia Pharm Logo" className="w-full h-full object-cover" />
             </div>
             <div className="flex items-center">
               <h1 
