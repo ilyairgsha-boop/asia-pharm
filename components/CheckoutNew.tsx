@@ -1,13 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useCart, type StoreType } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { createClient } from '../utils/supabase/client';
-import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X, QrCode, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
-import { Dialog, DialogContent } from './ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { pluralizePoints } from '../utils/pluralize';
 
 interface CheckoutProps {
@@ -170,7 +164,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
       : Math.min(appliedPromo.discount_value, subtotalAfterLoyalty) // фиксированная скидка не больше оставшейся суммы
     : 0;
 
-  // Итоговая сумма: subtotal (включая пробники) - баллы - промокод + дост��вка
+  // Итоговая сумма: subtotal (включая пробники) - баллы - промокод + доствка
   const total = Math.max(0, subtotal - loyaltyDiscount - promoDiscount + shippingCost);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -985,10 +979,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
           <DialogHeader>
             <DialogTitle>{t('privacyPolicy')}</DialogTitle>
           </DialogHeader>
-          <div 
-            className="prose max-w-none py-4"
-            dangerouslySetInnerHTML={{ __html: getPrivacyContent() }}
-          />
+          <div className="py-4">
+            <PrivacyPolicy onNavigate={() => {}} />
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -998,10 +991,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
           <DialogHeader>
             <DialogTitle>{t('termsOfService')}</DialogTitle>
           </DialogHeader>
-          <div 
-            className="prose max-w-none py-4"
-            dangerouslySetInnerHTML={{ __html: getTermsContent() }}
-          />
+          <div className="py-4">
+            <TermsOfService onNavigate={() => {}} />
+          </div>
         </DialogContent>
       </Dialog>
     </div>
