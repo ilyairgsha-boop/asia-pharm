@@ -3,7 +3,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, type StoreType } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { createClient } from '../utils/supabase/client';
-import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X } from 'lucide-react';
+import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X, QrCode, Building2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PrivacyPolicy } from './PrivacyPolicy';
 import { TermsOfService } from './TermsOfService';
@@ -170,7 +170,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
       : Math.min(appliedPromo.discount_value, subtotalAfterLoyalty) // фиксированная скидка не больше оставшейся суммы
     : 0;
 
-  // Итоговая сумма: subtotal (включая пробники) - баллы - промокод + доставка
+  // Итоговая сумма: subtotal (включая пробники) - баллы - промокод + дост��вка
   const total = Math.max(0, subtotal - loyaltyDiscount - promoDiscount + shippingCost);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {

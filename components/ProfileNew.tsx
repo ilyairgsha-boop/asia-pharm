@@ -5,6 +5,7 @@ import { createClient } from '../utils/supabase/client';
 import { Package, Loader2, Gift, TrendingUp, Calendar, Heart, Mail, Bell, Trash2, AlertTriangle, Settings } from 'lucide-react';
 import { OrderDetails } from './OrderDetails';
 import { ProductCard } from './ProductCard';
+import { ProductModal } from './ProductModal';
 import { Product } from '../contexts/CartContext';
 import { getMockProducts, getMockOrders } from '../utils/mockData';
 import { toast } from 'sonner';
@@ -66,6 +67,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
   const [showEmailEdit, setShowEmailEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'orders' | 'favorites' | 'bonusHistory' | 'settings'>('orders');
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     if (user && accessToken) {
@@ -274,7 +276,7 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
         }));
         setOrders(mappedOrders);
       } else {
-        console.warn('⚠�� No orders found or error:', error);
+        console.warn('⚠ No orders found or error:', error);
         setOrders([]);
       }
     } catch (error) {
@@ -836,11 +838,8 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
                     key={product.id}
                     product={product}
                     onProductClick={(product) => {
-                      // Open product details
-                      if (typeof window !== 'undefined') {
-                        const event = new CustomEvent('openProductDetails', { detail: product });
-                        window.dispatchEvent(event);
-                      }
+                      // Open product modal
+                      setSelectedProduct(product);
                     }}
                   />
                 ))}
@@ -1176,6 +1175,14 @@ export const ProfileNew = ({ onNavigate }: ProfileNewProps) => {
             setSelectedOrder(null);
             onNavigate('payment-info');
           }}
+        />
+      )}
+
+      {/* Product Modal */}
+      {selectedProduct && (
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
         />
       )}
     </div>

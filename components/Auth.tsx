@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Loader2, Home, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AuthProps {
   mode: 'login' | 'register';
@@ -50,12 +51,12 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
         onNavigate('home');
       } else {
         if (formData.password !== formData.confirmPassword) {
-          alert('Passwords do not match');
+          toast.error(t('passwordsDoNotMatch'));
           setLoading(false);
           return;
         }
         if (parseInt(captchaAnswer) !== captchaNum1 + captchaNum2) {
-          alert('Captcha answer is incorrect');
+          toast.error(t('captchaIncorrect'));
           setLoading(false);
           return;
         }
@@ -64,7 +65,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
       }
     } catch (error: any) {
       console.warn('⚠️ Auth error:', error);
-      alert(error.message || 'Authentication failed');
+      toast.error(error.message || t('authenticationFailed'));
     } finally {
       setLoading(false);
     }
