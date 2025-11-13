@@ -412,33 +412,48 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
       
       // Send push notification
       try {
-        console.log('📱 Sending order push notification...');
+        console.log('📱 Sending order push notification...', {
+          userId: user?.id,
+          orderId: order.id,
+          orderNumber: order.order_number
+        });
+        
         if (user?.id) {
           const serverUrl = import.meta.env.VITE_SUPABASE_URL + '/functions/v1';
+          const pushPayload = {
+            userId: user.id,
+            type: 'order_pending',
+            orderId: order.id,
+            orderNumber: order.order_number
+          };
+          
+          console.log('📤 Push payload:', pushPayload);
+          
           const pushResponse = await fetch(`${serverUrl}/make-server-a75b5353/api/push/auto-notify`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              userId: user.id,
-              type: 'order_pending',
-              orderId: order.id,
-              orderNumber: order.order_number
-            }),
+            body: JSON.stringify(pushPayload),
           });
           
+          console.log('📥 Push response status:', pushResponse.status);
+          
           if (pushResponse.ok) {
-            console.log('✅ Push notification sent successfully');
+            const pushResult = await pushResponse.json();
+            console.log('✅ Push notification sent successfully:', pushResult);
           } else {
             const errorData = await pushResponse.json().catch(() => ({}));
-            console.warn('⚠️ Failed to send push notification:', errorData);
+            console.error('❌ Failed to send push notification:', {
+              status: pushResponse.status,
+              error: errorData
+            });
           }
         } else {
           console.warn('⚠️ No user ID available for push notification');
         }
       } catch (pushError) {
-        console.warn('⚠️ Error sending push notification:', pushError);
+        console.error('❌ Error sending push notification:', pushError);
         // Don't fail the whole order if push fails
       }
       

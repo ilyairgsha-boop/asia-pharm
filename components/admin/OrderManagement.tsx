@@ -173,12 +173,6 @@ export const OrderManagement = () => {
         // Send push notification about status change
         if (orderData && orderData.user_id) {
           try {
-            console.log(`📱 Sending order status push notification:`, {
-              orderId,
-              userId: orderData.user_id,
-              status,
-            });
-            
             // Map order status to push notification type
             const statusToPushType: Record<string, string> = {
               'pending': 'order_pending',
@@ -189,30 +183,42 @@ export const OrderManagement = () => {
             };
             
             const pushType = statusToPushType[status] || 'order_pending';
+            const pushPayload = {
+              userId: orderData.user_id,
+              type: pushType,
+              orderId,
+              orderNumber: orderData.order_number,
+            };
+            
+            console.log(`📱 Sending order status push notification:`, pushPayload);
+            
             const pushUrl = getServerUrl('/api/push/auto-notify');
+            console.log('📤 Push URL:', pushUrl);
+            
             const pushResponse = await fetch(pushUrl, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                userId: orderData.user_id,
-                type: pushType,
-                orderId,
-                orderNumber: orderData.order_number,
-              }),
+              body: JSON.stringify(pushPayload),
             });
 
+            console.log('📥 Push response status:', pushResponse.status);
+
             if (pushResponse.ok) {
-              console.log('✅ Push notification sent successfully');
+              const pushResult = await pushResponse.json();
+              console.log('✅ Push notification sent successfully:', pushResult);
               toast.success('📱 Push уведомление отправлено');
             } else {
               const errorData = await pushResponse.json().catch(() => ({}));
-              console.warn('⚠️ Failed to send push notification:', errorData);
+              console.error('❌ Failed to send push notification:', {
+                status: pushResponse.status,
+                error: errorData
+              });
               toast.warning('Push не отправлен: ' + (errorData.error || 'Неизвестная ошибка'));
             }
           } catch (pushError) {
-            console.warn('⚠️ Push notification error (non-critical):', pushError);
+            console.error('❌ Push notification error (non-critical):', pushError);
             toast.warning('Ошибка отправки push: ' + pushError);
           }
         } else {

@@ -282,8 +282,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.6.0 - Fixed Email & Push for customers',
-    version: '2.6.0-CUSTOMER-EMAIL-PUSH-FIX',
+    message: 'Asia-Pharm API v2.7.0 - Fixed Order Status Push Notifications',
+    version: '2.7.0-ORDER-STATUS-PUSH-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -1396,34 +1396,34 @@ app.post('/make-server-a75b5353/api/translate/batch', requireAdmin, async (c) =>
 // Notification templates (multi-language)
 const PUSH_TEMPLATES: any = {
   order_pending: {
-    ru: { title: '✅ Заказ оформлен', message: (data: any) => `Вы оформили заказ ${data.orderNumber}` },
-    zh: { title: '✅ 订单已创建', message: (data: any) => `您已下单 ${data.orderNumber}` },
-    en: { title: '✅ Order Created', message: (data: any) => `You have placed order ${data.orderNumber}` },
-    vi: { title: '✅ Đơn hàng đã tạo', message: (data: any) => `Bạn đã đặt đơn hàng ${data.orderNumber}` },
+    ru: { title: '✅ Заказ оформлен', message: (data: any) => `Заказ №${data.orderNumber} успешно оформлен` },
+    zh: { title: '✅ 订单已创建', message: (data: any) => `订单 №${data.orderNumber} 已成功创建` },
+    en: { title: '✅ Order Created', message: (data: any) => `Order №${data.orderNumber} successfully placed` },
+    vi: { title: '✅ Đơn hàng đã tạo', message: (data: any) => `Đơn hàng №${data.orderNumber} đã đặt thành công` },
   },
   order_processing: {
-    ru: { title: '💳 Оплата получена', message: () => 'Мы получили оплату Вашего заказа' },
-    zh: { title: '💳 已收到付款', message: () => '我们已收到您的订单付款' },
-    en: { title: '💳 Payment Received', message: () => 'We have received payment for your order' },
-    vi: { title: '💳 Đã nhận thanh toán', message: () => 'Chúng tôi đã nhận được thanh toán cho đơn hàng của bạn' },
+    ru: { title: '💳 Оплата получена', message: (data: any) => `Оплата заказа №${data.orderNumber} получена` },
+    zh: { title: '💳 已收到付款', message: (data: any) => `已收到订单 №${data.orderNumber} 的付款` },
+    en: { title: '💳 Payment Received', message: (data: any) => `Payment for order №${data.orderNumber} received` },
+    vi: { title: '💳 Đã nhận thanh toán', message: (data: any) => `Đã nhận thanh toán cho đơn hàng №${data.orderNumber}` },
   },
   order_shipped: {
-    ru: { title: '📦 Заказ отправлен', message: () => 'Ваш заказ отправлен' },
-    zh: { title: '📦 订单已发货', message: () => '您的订单已发货' },
-    en: { title: '📦 Order Shipped', message: () => 'Your order has been shipped' },
-    vi: { title: '📦 Đơn hàng đã gửi', message: () => 'Đơn hàng của bạn đã được gửi đi' },
+    ru: { title: '📦 Заказ отправлен', message: (data: any) => `Заказ №${data.orderNumber} отправлен` },
+    zh: { title: '📦 订单已发货', message: (data: any) => `订单 №${data.orderNumber} 已发货` },
+    en: { title: '📦 Order Shipped', message: (data: any) => `Order №${data.orderNumber} has been shipped` },
+    vi: { title: '📦 Đơn hàng đã gửi', message: (data: any) => `Đơn hàng №${data.orderNumber} đã được gửi` },
   },
   order_delivered: {
-    ru: { title: '🎉 Заказ доставлен', message: () => 'Благодарим Вас за заказ! Ваш заказ выполнен' },
-    zh: { title: '🎉 订单已送达', message: () => '感谢您的订单！您的订单已完成' },
-    en: { title: '🎉 Order Delivered', message: () => 'Thank you for your order! Your order is complete' },
-    vi: { title: '🎉 Đơn hàng đã giao', message: () => 'Cảm ơn bạn đã đặt hàng! Đơn hàng của bạn đã hoàn thành' },
+    ru: { title: '🎉 Заказ доставлен', message: (data: any) => `Заказ №${data.orderNumber} доставлен! Спасибо за покупку` },
+    zh: { title: '🎉 订单已送达', message: (data: any) => `订单 №${data.orderNumber} 已送达！感谢您的购买` },
+    en: { title: '🎉 Order Delivered', message: (data: any) => `Order №${data.orderNumber} delivered! Thank you for your purchase` },
+    vi: { title: '🎉 Đơn hàng đã giao', message: (data: any) => `Đơn hàng №${data.orderNumber} đã giao! Cảm ơn bạn đã mua hàng` },
   },
   order_cancelled: {
-    ru: { title: '❌ Заказ отменен', message: () => 'К сожалению Ваш заказ был отменен' },
-    zh: { title: '❌ 订单已取消', message: () => '很抱歉，您的订单已被取消' },
-    en: { title: '❌ Order Cancelled', message: () => 'Unfortunately your order has been cancelled' },
-    vi: { title: '❌ Đơn hàng đã hủy', message: () => 'Rất tiếc, đơn hàng của bạn đã bị hủy' },
+    ru: { title: '❌ Заказ отменен', message: (data: any) => `Заказ №${data.orderNumber} отменен` },
+    zh: { title: '❌ 订单已取消', message: (data: any) => `订单 №${data.orderNumber} 已取消` },
+    en: { title: '❌ Order Cancelled', message: (data: any) => `Order №${data.orderNumber} has been cancelled` },
+    vi: { title: '❌ Đơn hàng đã hủy', message: (data: any) => `Đơn hàng №${data.orderNumber} đã bị hủy` },
   },
   welcome: {
     ru: { title: '🎉 Добро пожаловать!', message: () => 'Благодарим Вас за подписку!' },
@@ -1500,6 +1500,12 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
       console.error('❌ Unknown notification type:', type);
       return c.json({ error: 'Unknown notification type' }, 400);
     }
+    
+    // Validate orderNumber for order-related notifications
+    if (type.startsWith('order_') && !orderNumber) {
+      console.warn('⚠️ Order notification without orderNumber:', { type, orderId });
+      // Continue anyway, use fallback
+    }
 
     const supabase = getSupabaseAdmin();
 
@@ -1550,13 +1556,21 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     // Get notification content
     const template = PUSH_TEMPLATES[type][userLanguage] || PUSH_TEMPLATES[type]['ru'];
     const title = template.title;
+    
+    // Prepare data for template with fallbacks
+    const templateData = {
+      orderNumber: orderNumber || orderId?.slice(0, 8) || 'N/A',
+      orderId,
+      points
+    };
+    
     const message = typeof template.message === 'function' 
-      ? template.message({ orderNumber, orderId, points }) 
+      ? template.message(templateData) 
       : template.message;
     
     const url = generatePushUrl(type, { orderId, orderNumber, trackingUrl });
 
-    console.log('📝 Push content:', { title, message, url });
+    console.log('📝 Push content:', { title, message, url, templateData });
 
     // Get OneSignal settings
     const { settings, source } = await getOneSignalSettings();
@@ -1610,8 +1624,14 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     }
 
     console.log('📤 Sending to OneSignal API...');
-    console.log('App ID:', settings.appId);
-    console.log('Player IDs:', playerIds);
+    console.log('🔧 Notification payload:', {
+      appId: settings.appId,
+      playerIds: playerIds,
+      title: notificationData.headings.en,
+      message: notificationData.contents.en,
+      url: notificationData.url,
+      type: type
+    });
 
     const response = await fetch('https://onesignal.com/api/v1/notifications', {
       method: 'POST',
@@ -1634,15 +1654,24 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     }
 
     const result = await response.json();
-    console.log('✅ Push sent successfully:', result.id);
-    console.log('Recipients:', result.recipients || playerIds.length);
+    console.log('✅ Push sent successfully:', {
+      notificationId: result.id,
+      recipients: result.recipients || playerIds.length,
+      type,
+      userId,
+      orderNumber,
+      title,
+      message
+    });
 
     return c.json({ 
       success: true, 
       id: result.id,
       recipients: result.recipients || playerIds.length,
       type,
-      userId
+      userId,
+      orderNumber,
+      message
     });
 
   } catch (error: any) {
