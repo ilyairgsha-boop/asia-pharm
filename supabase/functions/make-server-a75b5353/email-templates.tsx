@@ -126,7 +126,7 @@ const translations = {
     },
     messages: {
       pending: '您的订单已收到，正在等待处理。请使用以下方式之一付款。',
-      processing: '我们已收到您的付款！您的订单正在处理中，即将发货。',
+      processing: '我们已收到您的付款！您的订��正在处理中，即将发货。',
       shipped: '您的订单已发货！点击下面的钮跟踪您的包裹。',
       delivered: '感谢您使用亚洲药房服务！您的订单已成功送达。',
       cancelled: '很遗憾，您的订单已被取消。'
@@ -227,8 +227,8 @@ function formatCurrency(amount: number | undefined | null): string {
 
 // Generate welcome email HTML
 export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
-  // Updated logo URL to use correct path
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
+  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
+  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
   
   const welcomeTranslations = {
     ru: {
@@ -411,9 +411,9 @@ function translateDeliveryMethod(method: string, language: 'ru' | 'en' | 'zh' | 
 // Generate email HTML template
 export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
   const t = translations[language];
-  // Updated logo URL to use correct public path
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
-  
+  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
+  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
+
   // Language flags
   const flags = {
     ru: '🇷🇺',
@@ -756,8 +756,8 @@ export function generateBroadcastEmailHTML(
   language: 'ru' | 'en' | 'zh' | 'vi' = 'ru',
   unsubscribeUrl?: string
 ): string {
-  // Updated logo URL to use correct public path
-  const logoUrl = 'https://boybkoyidxwrgsayifrd.supabase.co/storage/v1/object/public/website-assets/asia-pharm-logo.png';
+  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
+  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
   
   const flags = {
     ru: '🇷🇺',

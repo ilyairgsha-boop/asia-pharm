@@ -442,13 +442,21 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
     }
     
     // Load payment settings from settings table
-    const { data: paymentSettings } = await supabase
+    console.log('🔍 Attempting to load payment settings from database...');
+    const { data: paymentSettings, error: paymentError } = await supabase
       .from('settings')
       .select('*')
-      .eq('key', 'payment_settings')
+      .eq('key', 'payment')
       .single();
     
+    if (paymentError) {
+      console.error('❌ Error loading payment settings:', paymentError);
+    }
+    
     console.log('💳 Payment settings loaded:', !!paymentSettings);
+    if (paymentSettings) {
+      console.log('📦 Raw payment settings:', JSON.stringify(paymentSettings, null, 2));
+    }
     
     let paymentDetails = undefined;
     if (paymentSettings && paymentSettings.value) {
@@ -457,15 +465,25 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
           ? JSON.parse(paymentSettings.value) 
           : paymentSettings.value;
         
+        console.log('🔧 Parsed settings:', JSON.stringify(settings, null, 2));
+        
         paymentDetails = {
-          cardNumber: settings.sberbankCard || '2202 2004 3395 7386',
-          contractNumber: settings.tbankContract || '505 518 5408',
+          cardNumber: settings.cardNumber || '2202 2004 3395 7386',
+          contractNumber: settings.contractNumber || '505 518 5408',
           qrCodeUrl: settings.qrCodeUrl || undefined
         };
-        console.log('💳 Payment details prepared:', { hasQrCode: !!paymentDetails.qrCodeUrl });
+        console.log('💳 Payment details prepared:', { 
+          hasQrCode: !!paymentDetails.qrCodeUrl,
+          qrCodeUrlLength: paymentDetails.qrCodeUrl ? paymentDetails.qrCodeUrl.length : 0,
+          qrCodeUrlPreview: paymentDetails.qrCodeUrl ? paymentDetails.qrCodeUrl.substring(0, 50) + '...' : 'none',
+          cardNumber: paymentDetails.cardNumber,
+          contractNumber: paymentDetails.contractNumber
+        });
       } catch (e) {
         console.error('❌ Error parsing payment settings:', e);
       }
+    } else {
+      console.warn('⚠️ No payment settings found in database');
     }
     
     // Transform order data to match OrderEmailData interface
