@@ -282,8 +282,8 @@ app.get('/make-server-a75b5353/', (c) => {
   
   return c.json({ 
     status: 'OK',
-    message: 'Asia-Pharm API v2.7.0 - Fixed Order Status Push Notifications',
-    version: '2.7.0-ORDER-STATUS-PUSH-FIX',
+    message: 'Asia-Pharm API v2.7.1 - Fixed Push Subscriptions Table',
+    version: '2.7.1-PUSH-TABLE-FIX',
     timestamp: new Date().toISOString(),
     routes: {
       email: ['/make-server-a75b5353/api/email/order-status', '/make-server-a75b5353/api/email/welcome', '/make-server-a75b5353/api/email/broadcast', '/make-server-a75b5353/api/email/subscribers-count'],
@@ -1512,10 +1512,10 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     // Get user's push subscriptions
     console.log('🔍 Looking for push subscriptions for user:', userId);
     const { data: subscriptions, error: subError } = await supabase
-      .from('push_subscriptions')
+      .from('user_push_subscriptions')
       .select('player_id, id')
       .eq('user_id', userId)
-      .eq('is_subscribed', true);
+      .eq('is_active', true);
 
     if (subError) {
       console.error('❌ Error fetching subscriptions:', subError);
