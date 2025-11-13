@@ -1,9 +1,11 @@
 // Google Translate API Integration
-// Использует Google Cloud Translation API v2
+// Использует Google Cloud Translation API v2 или бесплатный публичный endpoint
 
 export type SupportedLanguage = 'ru' | 'en' | 'zh' | 'vi';
 
 const GOOGLE_TRANSLATE_API_URL = 'https://translation.googleapis.com/language/translate/v2';
+// Публичный endpoint Google Translate (без API ключа)
+const GOOGLE_TRANSLATE_PUBLIC_URL = 'https://translate.googleapis.com/translate_a/single';
 
 export interface TranslateRequest {
   text: string;
@@ -24,6 +26,114 @@ export interface BatchTranslateRequest {
 
 export interface BatchTranslateResponse {
   translations: TranslateResponse[];
+}
+
+/**
+ * Переводит текст с использованием бесплатного публичного Google Translate (без API ключа)
+ * @param request - Запрос на перевод
+ * @returns Переведенный текст
+ */
+export async function translateTextFree(
+  request: TranslateRequest
+): Promise<TranslateResponse> {
+  const params = new URLSearchParams({
+    client: 'gtx',
+    sl: request.sourceLanguage ? mapLanguageCode(request.sourceLanguage) : 'auto',
+    tl: mapLanguageCode(request.targetLanguage),
+    dt: 't',
+    q: request.text,
+  });
+
+  try {
+    const response = await fetch(`${GOOGLE_TRANSLATE_PUBLIC_URL}?${params.toString()}`);
+
+    if (!response.ok) {
+      throw new Error(`Google Translate error: ${response.status} - ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    // Формат ответа: [[[переведенный_текст, исходный_текст, null, null, 3]], null, "исходный_язык"]
+    if (!data || !Array.isArray(data) || !data[0] || !Array.isArray(data[0])) {
+      throw new Error('Неверный формат ответа от Google Translate');
+    }
+
+    const translatedText = data[0].map((item: any) => item[0]).join('');
+    const detectedSourceLanguage = data[2] || undefined;
+
+    return {
+      translatedText,
+      detectedSourceLanguage,
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Ошибка перевода: ${error.message}`);
+    }
+    throw new Error('Неизвестная ошибка при переводе');
+  }
+}
+
+/**
+ * Переводит несколько текстов одновременно (без API ключа)
+ * @param request - Запрос на пакетный перевод
+ * @returns Массив переведенных текстов
+ */
+export async function translateBatchFree(
+  request: BatchTranslateRequest
+): Promise<BatchTranslateResponse> {
+  try {
+    // Переводим каждый текст по отдельности
+    const translations = await Promise.all(
+      request.texts.map(text =>
+        translateTextFree({
+          text,
+          targetLanguage: request.targetLanguage,
+          sourceLanguage: request.sourceLanguage,
+        })
+      )
+    );
+
+    return { translations };
+  } catch (error) {
+    if (error instanceof Error) {
+      throw new Error(`Ошибка пакетного перевода: ${error.message}`);
+    }
+    throw new Error('Неизвестная ошибка при пакетном переводе');
+  }
+}
+
+/**
+ * Универсальная функция перевода - использует API ключ если доступен, иначе бесплатный endpoint
+ * @param apiKey - Google Cloud API ключ (опционально)
+ * @param request - Запрос на перевод
+ * @returns Переведенный текст
+ */
+export async function translateTextAuto(
+  apiKey: string | null | undefined,
+  request: TranslateRequest
+): Promise<TranslateResponse> {
+  if (apiKey && apiKey.trim() !== '') {
+    return translateText(apiKey, request);
+  } else {
+    return translateTextFree(request);
+  }
+}
+
+/**
+ * Универсальная функция пакетного перевода - использует API ключ если доступен, иначе бесплатный endpoint
+ * @param apiKey - Google Cloud API ключ (опционально)
+ * @param request - Запрос на пакетный перевод
+ * @returns Массив переведенных текстов
+ */
+export async function translateBatchAuto(
+  apiKey: string | null | undefined,
+  request: BatchTranslateRequest
+): Promise<BatchTranslateResponse> {
+  if (apiKey && apiKey.trim() !== '') {
+    return translateBatch(apiKey, request);
+  } else {
+    return translateBatchFree(request);
+  }
 }
 
 /**

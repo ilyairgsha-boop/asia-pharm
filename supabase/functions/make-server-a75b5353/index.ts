@@ -1002,6 +1002,30 @@ app.delete('/make-server-a75b5353/api/kv/delete', requireAdmin, async (c) => {
 // Google Translate API
 // ============================================================================
 
+// Helper function to map language codes to Google Translate codes
+const mapLanguageCode = (language: string): string => {
+  const mapping: Record<string, string> = {
+    'ru': 'ru',
+    'en': 'en',
+    'zh': 'zh-CN',  // Используем упрощенный китайский
+    'vi': 'vi',
+    'auto': 'auto'
+  };
+  return mapping[language] || language;
+};
+
+// Helper function to map language codes for MyMemory API
+const mapLanguageCodeForMyMemory = (language: string): string => {
+  const mapping: Record<string, string> = {
+    'ru': 'ru-RU',
+    'en': 'en-US',
+    'zh': 'zh-CN',
+    'vi': 'vi-VN',
+    'auto': 'auto'
+  };
+  return mapping[language] || language;
+};
+
 app.get('/make-server-a75b5353/api/translate/key', requireAdmin, async (c) => {
   try {
     const apiKey = await kv.get('google_translate_api_key');
@@ -1033,6 +1057,136 @@ app.delete('/make-server-a75b5353/api/translate/key', requireAdmin, async (c) =>
     return c.json({ success: true });
   } catch (error) {
     return c.json({ error: 'Failed to delete API key' }, 500);
+  }
+});
+
+// Translate text endpoint
+app.post('/make-server-a75b5353/api/translate/text', requireAdmin, async (c) => {
+  try {
+    const { text, targetLanguage, sourceLanguage } = await c.req.json();
+    
+    if (!text || !targetLanguage) {
+      return c.json({ error: 'Text and target language are required' }, 400);
+    }
+    
+    console.log(`🌍 Translating from ${sourceLanguage || 'auto'} to ${targetLanguage}`);
+    console.log(`📝 Text to translate: ${text.substring(0, 100)}...`);
+    
+    // Используем MyMemory API - бесплатный, без регистрации
+    // Лимит: 10000 символов в день
+    const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
+    const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
+    const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
+    
+    const translateUrl = new URL('https://api.mymemory.translated.net/get');
+    translateUrl.searchParams.set('q', text);
+    translateUrl.searchParams.set('langpair', langPair);
+    
+    console.log(`🔗 MyMemory API URL: ${translateUrl.toString()}`);
+    
+    const response = await fetch(translateUrl.toString(), {
+      headers: {
+        'Accept': 'application/json',
+      }
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ MyMemory API error: ${response.status} ${response.statusText}`);
+      throw new Error(`Translation failed: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    console.log('📥 MyMemory API response:', JSON.stringify(data).substring(0, 200));
+    
+    // Формат ответа MyMemory: { responseData: { translatedText: "...", match: 0.95 }, responseStatus: 200 }
+    if (!data || !data.responseData || !data.responseData.translatedText) {
+      console.error('❌ Invalid response format:', data);
+      throw new Error('Invalid response format from MyMemory API');
+    }
+    
+    const translatedText = data.responseData.translatedText;
+    
+    console.log(`✅ Translation successful: ${translatedText.substring(0, 100)}...`);
+    
+    return c.json({ 
+      success: true, 
+      translatedText,
+      provider: 'MyMemory',
+      quality: data.responseData.match
+    });
+  } catch (error) {
+    console.error('❌ Translation error:', error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : 'Translation failed' 
+    }, 500);
+  }
+});
+
+// Batch translate endpoint
+app.post('/make-server-a75b5353/api/translate/batch', requireAdmin, async (c) => {
+  try {
+    const { texts, targetLanguage, sourceLanguage } = await c.req.json();
+    
+    if (!texts || !Array.isArray(texts) || !targetLanguage) {
+      return c.json({ error: 'Texts array and target language are required' }, 400);
+    }
+    
+    console.log(`🌍 Batch translating ${texts.length} texts from ${sourceLanguage || 'auto'} to ${targetLanguage}`);
+    
+    // Переводим каждый текст по отдельности с использованием MyMemory API
+    const translations = await Promise.all(
+      texts.map(async (text: string, index: number) => {
+        try {
+          const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
+          const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
+          const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
+          
+          const translateUrl = new URL('https://api.mymemory.translated.net/get');
+          translateUrl.searchParams.set('q', text);
+          translateUrl.searchParams.set('langpair', langPair);
+          
+          const response = await fetch(translateUrl.toString(), {
+            headers: {
+              'Accept': 'application/json',
+            }
+          });
+          
+          if (!response.ok) {
+            console.error(`❌ Batch item ${index + 1} failed: ${response.status}`);
+            throw new Error(`Translation failed: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (!data || !data.responseData || !data.responseData.translatedText) {
+            throw new Error('Invalid response format');
+          }
+          
+          const translatedText = data.responseData.translatedText;
+          console.log(`✅ Batch item ${index + 1}/${texts.length} translated successfully`);
+          
+          // Добавляем небольшую задержку между запросами, чтобы не превысить rate limit
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          return { translatedText, quality: data.responseData.match };
+        } catch (error) {
+          console.error(`❌ Error translating batch item ${index + 1}:`, error);
+          return { translatedText: text, error: true };
+        }
+      })
+    );
+    
+    return c.json({ 
+      success: true, 
+      translations,
+      provider: 'MyMemory'
+    });
+  } catch (error) {
+    console.error('Batch translation error:', error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : 'Batch translation failed' 
+    }, 500);
   }
 });
 

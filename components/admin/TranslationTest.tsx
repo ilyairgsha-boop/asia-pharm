@@ -126,10 +126,11 @@ export const TranslationTest = () => {
       return;
     }
 
-    if (!hasKey) {
-      toast.error(t('translateApiKeyNotSet') || 'API ключ не установлен');
-      return;
-    }
+    // Теперь можно переводить и без API ключа
+    // if (!hasKey) {
+    //   toast.error(t('translateApiKeyNotSet') || 'API ключ не установлен');
+    //   return;
+    // }
 
     setTranslating(true);
     try {
@@ -191,7 +192,7 @@ export const TranslationTest = () => {
             {t('translateApiSettings') || 'Настройки Google Translate API'}
           </CardTitle>
           <CardDescription>
-            {t('translateApiDescription') || 'Настройте Google Cloud Translation API для автоматического перевода контента'}
+            {t('translateApiDescription') || 'Автоматический перевод работает без API ключа через публичный endpoint. API ключ опционален для повышенной стабильности.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -250,7 +251,7 @@ export const TranslationTest = () => {
               </div>
               <Alert>
                 <AlertDescription className="text-sm">
-                  {t('translateApiKeyHelp') || 'Получите API ключ в Google Cloud Console → APIs & Services → Credentials. Включите Cloud Translation API для вашего проекта.'}
+                  {t('translateApiKeyHelp') || 'API ключ опционален. Перевод работает и без него через публичный Google Translate endpoint. Для получения API ключа: Google Cloud Console → APIs & Services → Credentials. Включите Cloud Translation API для вашего проекта.'}
                 </AlertDescription>
               </Alert>
             </div>
@@ -313,7 +314,7 @@ export const TranslationTest = () => {
 
           <Button 
             onClick={translateTextNow} 
-            disabled={translating || !hasKey}
+            disabled={translating}
             className="w-full"
           >
             {translating ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Languages className="w-4 h-4 mr-2" />}

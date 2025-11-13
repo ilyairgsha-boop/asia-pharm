@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
-import { supabase } from '../../utils/supabase/client';
+import { supabase, getServerUrl } from '../../utils/supabase/client';
 import { toast } from 'sonner';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
@@ -127,57 +127,52 @@ export const PopUpSettings = () => {
     setTranslating(true);
     
     try {
-      // Get Google Translate API key from settings
-      const { data: apiKeyData, error: apiKeyError } = await supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'google_translate_api_key')
-        .single();
-
-      if (apiKeyError || !apiKeyData?.value) {
-        toast.error(t('popUpTranslateApiKeyMissing'));
-        setTranslating(false);
-        return;
-      }
-
-      const apiKey = apiKeyData.value as string;
       const targetLanguages: Language[] = ['ru', 'en', 'zh', 'vi'].filter(
         (lang) => lang !== sourceLang
       ) as Language[];
 
       const newContent = { ...content };
 
-      // Map language codes to Google Translate format
-      const langMap: Record<Language, string> = {
-        ru: 'ru',
-        en: 'en',
-        zh: 'zh-CN',
-        vi: 'vi',
-      };
+      console.log(`🌍 Starting auto-translation from ${sourceLang} to:`, targetLanguages);
 
+      // Используем серверный endpoint с поддержкой бесплатного перевода
       for (const targetLang of targetLanguages) {
         try {
-          const response = await fetch(
-            `https://translation.googleapis.com/language/translate/v2?key=${apiKey}&q=${encodeURIComponent(sourceContent)}&target=${langMap[targetLang]}&source=${langMap[sourceLang]}&format=text`,
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            }
-          );
+          // Получаем токен пользователя
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session?.access_token) {
+            console.error('❌ No access token available');
+            toast.error('Authentication required. Please sign in again.');
+            return;
+          }
+          
+          const response = await fetch(getServerUrl('/api/translate/text'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session?.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              text: sourceContent,
+              targetLanguage: targetLang,
+              sourceLanguage: sourceLang,
+            }),
+          });
 
           if (!response.ok) {
-            console.error(`Translation failed for ${targetLang}`);
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`Translation failed for ${targetLang}:`, errorData);
             continue;
           }
 
           const data = await response.json();
-          if (data.data?.translations?.[0]) {
-            newContent[targetLang] = data.data.translations[0].translatedText;
+          console.log(`✅ Translation to ${targetLang}:`, data.translatedText?.substring(0, 50));
+          if (data.translatedText) {
+            newContent[targetLang] = data.translatedText;
           }
         } catch (error) {
-          console.error(`Error translating to ${targetLang}:`, error);
+          console.error(`❌ Error translating to ${targetLang}:`, error);
         }
       }
 
