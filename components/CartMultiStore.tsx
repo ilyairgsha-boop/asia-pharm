@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useCart, type StoreType } from '../contexts/CartContext';
+import { useCart, type StoreType, getCurrentPrice } from '../contexts/CartContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface CartMultiStoreProps {
@@ -165,7 +165,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                   <div className="flex-grow">
                     <h3 className="text-gray-800 mb-2">{getName(item)}</h3>
                     <p className="cart-item-price text-red-600 mb-2">
-                      {(item.price || 0).toLocaleString()} ₽
+                      {(item.actualPrice ?? getCurrentPrice(item)).toLocaleString()} ₽
                     </p>
 
                     <div className="flex items-center gap-3">
@@ -196,7 +196,7 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                       <Trash2 size={20} />
                     </button>
                     <p className="text-gray-800">
-                      {((item.price || 0) * (item.quantity || 0)).toLocaleString()} ₽
+                      {((item.actualPrice ?? getCurrentPrice(item)) * (item.quantity || 0)).toLocaleString()} ₽
                     </p>
                   </div>
                 </div>

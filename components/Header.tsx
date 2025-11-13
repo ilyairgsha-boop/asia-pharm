@@ -7,8 +7,8 @@ import { useTheme } from '../contexts/ThemeContext';
 import { Language } from '../utils/i18n';
 import { SmartSearch } from './SmartSearch';
 
-// Import logo from repository
-const logoImage = '/image/logo.png';
+// Import logo from GitHub repository
+const logoImage = 'https://raw.githubusercontent.com/ilyairgsha-boop/asia-pharm/main/image/logo.png';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
