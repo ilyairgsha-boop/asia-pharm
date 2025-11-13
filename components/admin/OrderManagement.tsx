@@ -249,7 +249,11 @@ export const OrderManagement = () => {
       const items = order.items || [];
       const subtotalWithoutSamples = items
         .filter((item: any) => !item.isSample)
-        .reduce((sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0), 0);
+        .reduce((sum: number, item: any) => {
+          // Use actualPrice if available (price at time of purchase), otherwise use regular price
+          const itemPrice = item.actualPrice ?? item.price ?? 0;
+          return sum + itemPrice * (item.quantity || 0);
+        }, 0);
       
       if (subtotalWithoutSamples <= 0) {
         console.log('ℹ️ No eligible items for loyalty points (only samples or zero amount)');

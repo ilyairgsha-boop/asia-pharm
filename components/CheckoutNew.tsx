@@ -32,8 +32,15 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const sampleItems = cart.filter(item => item.isSample);
   
   // Сумма без пробников (для расчета бесплатной доставки и баллов)
-  const subtotalWithoutSamples = regularItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const samplesTotal = sampleItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const subtotalWithoutSamples = regularItems.reduce((sum, item) => {
+    // Use actualPrice if available (price at time of adding to cart), otherwise calculate current price
+    const itemPrice = item.actualPrice ?? getCurrentPrice(item);
+    return sum + itemPrice * item.quantity;
+  }, 0);
+  const samplesTotal = sampleItems.reduce((sum, item) => {
+    const itemPrice = item.actualPrice ?? getCurrentPrice(item);
+    return sum + itemPrice * item.quantity;
+  }, 0);
 
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>(
     store === 'china' ? 'russian_post' : 'air_delivery'

@@ -6,7 +6,9 @@ import { useCart, type Product } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Language } from '../utils/i18n';
 import { SmartSearch } from './SmartSearch';
-import logoImage from 'figma:asset/91639b3a178dd4f8b1175415cada262c7237f110.png';
+
+// Import logo from repository
+const logoImage = '/image/logo.png';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
