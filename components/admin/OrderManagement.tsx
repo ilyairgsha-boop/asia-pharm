@@ -170,6 +170,58 @@ export const OrderManagement = () => {
           });
         }
         
+        // Send push notification about status change
+        if (orderData && orderData.user_id) {
+          try {
+            console.log(`📱 Sending order status push notification:`, {
+              orderId,
+              userId: orderData.user_id,
+              status,
+            });
+            
+            // Map order status to push notification type
+            const statusToPushType: Record<string, string> = {
+              'pending': 'order_pending',
+              'processing': 'order_processing',
+              'shipped': 'order_shipped',
+              'delivered': 'order_delivered',
+              'cancelled': 'order_cancelled',
+            };
+            
+            const pushType = statusToPushType[status] || 'order_pending';
+            const pushUrl = getServerUrl('/api/push/auto-notify');
+            const pushResponse = await fetch(pushUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: orderData.user_id,
+                type: pushType,
+                orderId,
+                orderNumber: orderData.order_number,
+              }),
+            });
+
+            if (pushResponse.ok) {
+              console.log('✅ Push notification sent successfully');
+              toast.success('📱 Push уведомление отправлено');
+            } else {
+              const errorData = await pushResponse.json().catch(() => ({}));
+              console.warn('⚠️ Failed to send push notification:', errorData);
+              toast.warning('Push не отправлен: ' + (errorData.error || 'Неизвестная ошибка'));
+            }
+          } catch (pushError) {
+            console.warn('⚠️ Push notification error (non-critical):', pushError);
+            toast.warning('Ошибка отправки push: ' + pushError);
+          }
+        } else {
+          console.warn('⚠️ Push not sent - missing user_id:', {
+            hasOrderData: !!orderData,
+            hasUserId: !!orderData?.user_id,
+          });
+        }
+        
         await loadOrders();
         toast.success(t('saveSuccess'));
       }
@@ -185,7 +237,7 @@ export const OrderManagement = () => {
     try {
       const supabase = createClient();
       
-      // Calculate subtotal without samples (pробники не участвуют в программе лояльности)
+      // Calculate subtotal without samples (пробники не участвуют в программе лояльности)
       const items = order.items || [];
       const subtotalWithoutSamples = items
         .filter((item: any) => !item.isSample)
@@ -275,7 +327,7 @@ export const OrderManagement = () => {
       // Validate UUID format
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(orderId)) {
-        console.warn('⚠️ Invalid UUID format for order ID:', orderId);
+        console.warn('���️ Invalid UUID format for order ID:', orderId);
         toast.error(t('invalidOrderId'));
         setUpdatingOrder(null);
         return;

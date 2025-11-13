@@ -29,7 +29,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const regularItems = cart.filter(item => !item.isSample);
   const sampleItems = cart.filter(item => item.isSample);
   
-  // Сумма без пробников (для расчета бесплатной доставки и баллов)
+  // Сумма без ��робников (для расчета бесплатной доставки и баллов)
   const subtotalWithoutSamples = regularItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const samplesTotal = sampleItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
@@ -380,7 +380,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         const { data: { session } } = await supabase.auth.getSession();
         const authToken = session?.access_token;
         
-        if (authToken) {
+        if (!authToken) {
+          console.error('❌ No auth token available for email');
+        } else {
           const serverUrl = import.meta.env.VITE_SUPABASE_URL + '/functions/v1';
           const response = await fetch(`${serverUrl}/make-server-a75b5353/api/email/order-status`, {
             method: 'POST',
@@ -432,6 +434,8 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             const errorData = await pushResponse.json().catch(() => ({}));
             console.warn('⚠️ Failed to send push notification:', errorData);
           }
+        } else {
+          console.warn('⚠️ No user ID available for push notification');
         }
       } catch (pushError) {
         console.warn('⚠️ Error sending push notification:', pushError);
@@ -554,7 +558,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         <p>Используя сайт, вы соглашаетесь с настоящими Правилами и обязуетесь их соблюдать.</p>
         
         <h3>2. Регистрация и учетная запись</h3>
-        <p>Для оформления заказов необходима регистрация. Вы обязуетесь предоставлять актуальную информацию.</p>
+        <p>Для оформлен��я заказов необходима регистрация. Вы обязуетесь предоставлять актуальную информацию.</p>
         
         <h3>3. Оформление заказов</h3>
         <p>Заказ считается принятым после подтверждения администрацией. Цены и наличие товаров могут изменяться.</p>
