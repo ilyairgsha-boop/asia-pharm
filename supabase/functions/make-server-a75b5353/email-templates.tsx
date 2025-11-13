@@ -263,7 +263,7 @@ export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 
       benefit4: 'Quick order checkout'
     },
     zh: {
-      welcome: '欢迎来到亚���药房！',
+      welcome: '欢迎来到亚洲药房！',
       greeting: '您好',
       registered: '您已成功在我们的网站上注册。您的注册信息：',
       name: '姓名',

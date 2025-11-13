@@ -685,9 +685,9 @@ export const CategoryManagement = () => {
       <div className="space-y-4">
         {/* Warning Banner */}
         <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-          <h4 className="text-red-800 mb-2">⚠️ Проблемы с категориями?</h4>
+          <h4 className="text-red-800 mb-2">⚠️ {t('categoryProblems')}</h4>
           <p className="text-sm text-red-700 mb-3">
-            Если категории отображаются некорректно или не переводятся, используйте кнопку <strong>"ПОЛНОСТЬЮ ПЕРЕСОЗДАТЬ"</strong> для полного сброса всей структуры категорий.
+            {t('categoryProblemsDesc')}
           </p>
         </div>
 
@@ -699,7 +699,7 @@ export const CategoryManagement = () => {
               className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Loader2 className={saving ? "animate-spin" : ""} size={18} />
-              🔄 Сбросить к значениям по умолчанию
+              🔄 {t('resetToDefaults')}
             </button>
 
             <button
@@ -708,14 +708,14 @@ export const CategoryManagement = () => {
               className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border-2 border-red-800"
             >
               <Loader2 className={saving ? "animate-spin" : ""} size={18} />
-              🗑️ ПОЛНОСТЬЮ ПЕРЕСОЗДАТЬ ВСЕ КАТЕГОРИИ
+              🗑️ {t('completelyRecreateCategories')}
             </button>
           </div>
           
           <div className="flex items-center gap-3">
             {hasUnsavedChanges && (
               <div className="flex items-center gap-2 text-orange-600">
-                <span className="text-sm">⚠️ Есть несохраненные изменения</span>
+                <span className="text-sm">⚠️ {t('unsavedChanges')}</span>
               </div>
             )}
             <button

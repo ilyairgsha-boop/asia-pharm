@@ -155,6 +155,26 @@ export const translations = {
     saleDateTimeEnd: 'Дата и время окончания',
     salePreview: 'Превью',
     
+    // Category Management
+    categoryManagement: 'Управление категориями',
+    categoryProblems: 'Проблемы с категориями?',
+    categoryProblemsDesc: 'Если категории отображаются некорректно или не переводятся, используйте кнопку "ПОЛНОСТЬЮ ПЕРЕСОЗДАТЬ" для полного сброса всей структуры категорий.',
+    resetToDefaults: 'Сбросить к значениям по умолчанию',
+    completelyRecreateCategories: 'ПОЛНОСТЬЮ ПЕРЕСОЗДАТЬ ВСЕ КАТЕГОРИИ',
+    unsavedChanges: 'Есть несохраненные изменения',
+    
+    // Push Notifications
+    pushNotificationSettings: 'Настройки уведомлений',
+    pushSubscribed: 'Вы подписаны на push-уведомления',
+    pushUnsubscribed: 'Push-уведомления отключены',
+    pushSubscribedDesc: 'Вы будете получать уведомления о заказах и акциях',
+    pushUnsubscribedDesc: 'Включите для получения мгновенных обновлений',
+    subscribe: 'Подписаться',
+    unsubscribe: 'Отписаться',
+    subscribeToNotifications: 'Подписаться на уведомления',
+    testSendToMe: 'Отправить тестовое уведомление',
+    newsletterSubscribedDesc: 'Получайте новости и эксклюзивные предложения на email',
+    
     // Cookie consent
     cookieMessage: 'Мы используем файлы cookie для улучшения работы сайта. Продолжая использовать сайт, вы соглашаетесь с использованием cookie.',
     acceptCookies: 'Принять',
@@ -1176,6 +1196,26 @@ export const translations = {
     saleDateTimeEnd: 'End date and time',
     salePreview: 'Preview',
     
+    // Category Management
+    categoryManagement: 'Category Management',
+    categoryProblems: 'Problems with categories?',
+    categoryProblemsDesc: 'If categories are displayed incorrectly or not translated, use the "COMPLETELY RECREATE" button to completely reset the entire category structure.',
+    resetToDefaults: 'Reset to defaults',
+    completelyRecreateCategories: 'COMPLETELY RECREATE ALL CATEGORIES',
+    unsavedChanges: 'There are unsaved changes',
+    
+    // Push Notifications
+    pushNotificationSettings: 'Notification Settings',
+    pushSubscribed: 'You are subscribed to push notifications',
+    pushUnsubscribed: 'Push notifications are disabled',
+    pushSubscribedDesc: 'You will receive notifications about orders and promotions',
+    pushUnsubscribedDesc: 'Enable to receive instant updates',
+    subscribe: 'Subscribe',
+    unsubscribe: 'Unsubscribe',
+    subscribeToNotifications: 'Subscribe to notifications',
+    testSendToMe: 'Send test notification',
+    newsletterSubscribedDesc: 'Receive news and exclusive offers via email',
+    
     // Cookie consent
     cookieMessage: 'We use cookies to improve the site. By continuing to use the site, you agree to the use of cookies.',
     acceptCookies: 'Accept',
@@ -2188,6 +2228,26 @@ export const translations = {
     saleDiscountRange: '从 1% 到 99%',
     saleDateTimeEnd: '结束日期和时间',
     salePreview: '预览',
+    
+    // Category Management
+    categoryManagement: '类别管理',
+    categoryProblems: '类别有问题？',
+    categoryProblemsDesc: '如果类别显示不正确或未翻译，请使用"完全重建"按钮完全重置整个类别结构。',
+    resetToDefaults: '重置为默认值',
+    completelyRecreateCategories: '完全重建所有类别',
+    unsavedChanges: '有未保存的更改',
+    
+    // Push Notifications
+    pushNotificationSettings: '通知设置',
+    pushSubscribed: '您已订阅推送通知',
+    pushUnsubscribed: '推送通知已禁用',
+    pushSubscribedDesc: '您将收到有关订单和促销的通知',
+    pushUnsubscribedDesc: '启用以接收即时更新',
+    subscribe: '订阅',
+    unsubscribe: '取消订阅',
+    subscribeToNotifications: '订阅通知',
+    testSendToMe: '发送测试通知',
+    newsletterSubscribedDesc: '通过电子邮件接收新闻和独家优惠',
     
     // Cookie consent
     cookieMessage: '我们使用cookies来改善网站。继续使用网站即表示您同意使用cookies。',
@@ -3203,6 +3263,26 @@ export const translations = {
     saleDiscountRange: 'Từ 1% đến 99%',
     saleDateTimeEnd: 'Ngày và giờ kết thúc',
     salePreview: 'Xem trước',
+    
+    // Category Management
+    categoryManagement: 'Quản lý danh mục',
+    categoryProblems: 'Có vấn đề với danh mục?',
+    categoryProblemsDesc: 'Nếu danh mục hiển thị không chính xác hoặc không được dịch, hãy sử dụng nút "TẠO LẠI HOÀN TOÀN" để đặt lại hoàn toàn cấu trúc danh mục.',
+    resetToDefaults: 'Đặt lại về mặc định',
+    completelyRecreateCategories: 'TẠO LẠI HOÀN TOÀN TẤT CẢ DANH MỤC',
+    unsavedChanges: 'Có thay đổi chưa được lưu',
+    
+    // Push Notifications
+    pushNotificationSettings: 'Cài đặt thông báo',
+    pushSubscribed: 'Bạn đã đăng ký nhận thông báo đẩy',
+    pushUnsubscribed: 'Thông báo đẩy đã tắt',
+    pushSubscribedDesc: 'Bạn sẽ nhận thông báo về đơn hàng và khuyến mãi',
+    pushUnsubscribedDesc: 'Bật để nhận cập nhật ngay lập tức',
+    subscribe: 'Đăng ký',
+    unsubscribe: 'Hủy đăng ký',
+    subscribeToNotifications: 'Đăng ký nhận thông báo',
+    testSendToMe: 'Gửi thông báo thử nghiệm',
+    newsletterSubscribedDesc: 'Nhận tin tức và ưu đãi độc quyền qua email',
     
     // Cookie consent
     cookieMessage: 'Chúng tôi sử dụng cookie để cải thiện trang web. Tiếp tục sử dụng trang web đồng nghĩa với việc bạn đồng ý sử dụng cookie.',

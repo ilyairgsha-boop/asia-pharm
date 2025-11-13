@@ -548,14 +548,14 @@ export const OneSignalSettings = () => {
                   variant="outline"
                   className="border-green-600 text-green-600 hover:bg-green-50"
                 >
-                  🔔 Подписаться на уведомления
+                  🔔 {t('subscribeToNotifications')}
                 </Button>
                 <Button
                   onClick={handleTestNotification}
                   disabled={isTestMode}
                   variant="outline"
                 >
-                  {isTestMode ? t('sending') : t('sendTestNotification')}
+                  {isTestMode ? t('sending') : t('testSendToMe')}
                 </Button>
               </>
             )}
