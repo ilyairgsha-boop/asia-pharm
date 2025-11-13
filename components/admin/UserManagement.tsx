@@ -156,42 +156,42 @@ export const UserManagement = () => {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-3 text-left text-gray-700">Email</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('fullName')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('userRole')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('loyaltyPoints')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('loyaltyStatus')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('monthlyAmount')}</th>
-                  <th className="px-6 py-3 text-left text-gray-700">{t('actions')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">Email</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('fullName')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('userRole')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('loyaltyPoints')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('loyaltyStatus')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('monthlyAmount')}</th>
+                  <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
                   <tr key={user.id} className="border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-6 py-4 text-gray-800">{user.email}</td>
-                    <td className="px-6 py-4 text-gray-700">{user.name || '—'}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 sm:px-6 py-4 text-gray-800 text-xs sm:text-sm">{user.email}</td>
+                    <td className="px-2 sm:px-6 py-4 text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{user.name || '—'}</td>
+                    <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                       {getRoleBadge(user)}
                     </td>
-                    <td className="px-6 py-4 text-gray-700">
+                    <td className="px-2 sm:px-6 py-4 text-gray-700 text-xs sm:text-sm">
                       {user.loyaltyPoints !== undefined ? (
                         <span className="inline-flex items-center gap-1">
-                          <Award size={14} className="text-amber-500" />
+                          <Award size={12} className="text-amber-500 sm:w-3.5 sm:h-3.5" />
                           {user.loyaltyPoints} ₽
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                       {getLoyaltyBadge(user.loyaltyTier)}
                     </td>
-                    <td className="px-6 py-4 text-gray-600">
+                    <td className="px-2 sm:px-6 py-4 text-gray-600 text-xs sm:text-sm">
                       {user.monthlyTotal ? `${user.monthlyTotal.toLocaleString()} ₽` : '0 ₽'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 sm:px-6 py-4">
                       <select
                         value={user.isAdmin ? 'admin' : user.isWholesaler ? 'wholesaler' : 'customer'}
                         onChange={(e) => updateUserRole(user.id, e.target.value as 'customer' | 'wholesaler' | 'admin')}
-                        className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                        className="px-2 sm:px-3 py-1 border border-gray-300 rounded text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                       >
                         <option value="customer">{t('roleCustomer')}</option>
                         <option value="wholesaler">{t('roleWholesaler')}</option>

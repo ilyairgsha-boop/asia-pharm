@@ -6,6 +6,7 @@ import { useCart, type Product } from '../contexts/CartContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Language } from '../utils/i18n';
 import { SmartSearch } from './SmartSearch';
+import logoImage from 'figma:asset/91639b3a178dd4f8b1175415cada262c7237f110.png';
 
 interface HeaderProps {
   onNavigate: (page: string) => void;
@@ -170,8 +171,8 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
               onClick={() => onNavigate('home')}
               className="flex items-center gap-3"
             >
-              <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg flex-shrink-0">
-                <span className="text-4xl">中</span>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center shadow-lg flex-shrink-0 overflow-hidden">
+                <img src={logoImage} alt="Asia Pharm Logo" className="w-full h-full object-cover" />
               </div>
               <div className="flex items-center">
                 <h1 
@@ -271,8 +272,8 @@ export const Header = ({ onNavigate, currentPage, currentStore, onStoreChange, o
             onClick={() => onNavigate('home')}
             className="flex items-center gap-3 hover:opacity-80 transition-opacity flex-shrink-0"
           >
-            <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg">
-              <span className="text-3xl">中</span>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg overflow-hidden">
+              <img src={logoImage} alt="Asia Pharm Logo" className="w-full h-full object-cover" />
             </div>
             <div className="flex items-center">
               <h1 

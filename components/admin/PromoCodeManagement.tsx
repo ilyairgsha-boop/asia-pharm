@@ -293,52 +293,52 @@ export const PromoCodeManagement = () => {
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-3 text-left text-gray-700">{t('promoCodeValue')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('discountType')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('discountValue')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('timesUsed')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('expiryDate')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('active')}</th>
-              <th className="px-4 py-3 text-left text-gray-700">{t('actions')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('promoCodeValue')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('discountType')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('discountValue')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('timesUsed')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('expiryDate')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('active')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {promoCodes.map((promo) => (
               <tr key={promo.id} className="border-b border-gray-200">
-                <td className="px-4 py-3">{promo.code}</td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{promo.code}</td>
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">
                   {promo.discount_type === 'percent' ? '%' : '₽'}
                 </td>
-                <td className="px-4 py-3">{promo.discount_value}</td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{promo.discount_value}</td>
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm hidden sm:table-cell">
                   {promo.times_used}
                   {promo.usage_limit && ` / ${promo.usage_limit}`}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm hidden sm:table-cell">
                   {promo.expiry_date
                     ? new Date(promo.expiry_date).toLocaleDateString()
                     : '—'}
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 sm:px-4 py-3 hidden sm:table-cell">
                   {promo.active ? (
                     <span className="text-green-600">✓</span>
                   ) : (
                     <span className="text-red-600">✗</span>
                   )}
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex gap-2">
+                <td className="px-2 sm:px-4 py-3">
+                  <div className="flex gap-1 sm:gap-2">
                     <button
                       onClick={() => handleEdit(promo)}
-                      className="text-blue-600 hover:bg-blue-50 p-2 rounded transition-colors"
+                      className="text-blue-600 hover:bg-blue-50 p-1 sm:p-2 rounded transition-colors"
                     >
-                      <Edit size={18} />
+                      <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                     <button
                       onClick={() => handleDelete(promo.id)}
-                      className="text-red-600 hover:bg-red-50 p-2 rounded transition-colors"
+                      className="text-red-600 hover:bg-red-50 p-1 sm:p-2 rounded transition-colors"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
                 </td>

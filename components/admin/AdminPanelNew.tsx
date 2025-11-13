@@ -116,31 +116,31 @@ export const AdminPanelNew = () => {
   };
 
   return (
-    <div className="admin-panel-container container mx-auto px-4 py-8">
-      <h2 className="text-gray-800 mb-6">{t('adminPanel')}</h2>
+    <div className="admin-panel-container container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <h2 className="text-gray-800 mb-4 sm:mb-6 text-xl sm:text-2xl px-2">{t('adminPanel')}</h2>
 
       {/* Edge Function Status */}
-      <div className="mb-6">
+      <div className="mb-4 sm:mb-6 px-2 sm:px-0">
         <EdgeFunctionStatus />
       </div>
 
-      {/* Tabs */}
-      <div className="bg-white rounded-lg shadow-md mb-6">
-        <div className="flex overflow-x-auto border-b border-gray-200">
+      {/* Tabs - vertical on mobile, horizontal on desktop */}
+      <div className="bg-white rounded-lg shadow-md mb-4 sm:mb-6 -mx-2 sm:mx-0">
+        <div className="flex flex-col sm:flex-row sm:overflow-x-auto sm:border-b sm:border-gray-200 sm:hide-scrollbar">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-4 whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-4 sm:px-4 py-3 sm:py-4 transition-colors text-sm border-b sm:border-b-0 border-gray-200 sm:whitespace-nowrap ${
                   activeTab === tab.id
-                    ? 'border-b-2 border-red-600 text-red-600'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'sm:border-b-2 sm:border-red-600 text-red-600 bg-red-50 sm:bg-red-50'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <Icon size={20} />
-                <span className="text-sm">{tab.label}</span>
+                <Icon size={18} className="sm:w-5 sm:h-5 flex-shrink-0" />
+                <span>{tab.label}</span>
               </button>
             );
           })}
@@ -148,7 +148,9 @@ export const AdminPanelNew = () => {
       </div>
 
       {/* Tab content */}
-      {renderTabContent()}
+      <div className="px-2 sm:px-0">
+        {renderTabContent()}
+      </div>
     </div>
   );
 };

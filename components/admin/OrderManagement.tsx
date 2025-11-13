@@ -31,6 +31,8 @@ export const OrderManagement = () => {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
+  const [statusModalOpen, setStatusModalOpen] = useState(false);
+  const [orderToChangeStatus, setOrderToChangeStatus] = useState<Order | null>(null);
 
   useEffect(() => {
     loadOrders();
@@ -439,36 +441,36 @@ export const OrderManagement = () => {
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
-              <th className="px-6 py-3 text-left text-gray-700">{t('orderNumber')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('customer')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('date')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('total')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('orderStatus')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('trackNumber')}</th>
-              <th className="px-6 py-3 text-left text-gray-700">{t('actions')}</th>
+              <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('orderNumber')}</th>
+              <th className="px-1 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('customer')}</th>
+              <th className="px-1 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('date')}</th>
+              <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('total')}</th>
+              <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('orderStatus')}</th>
+              <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('trackNumber')}</th>
+              <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
             {orders.map((order) => (
               <tr key={order.id} className="border-b border-gray-200 hover:bg-gray-50">
-                <td className="px-6 py-4 text-gray-800">
+                <td className="px-2 sm:px-6 py-4 text-gray-800 text-xs sm:text-sm">
                   #{order.orderNumber || order.id.slice(0, 8)}
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-1 sm:px-6 py-4">
                   <div>
-                    <p className="text-gray-800">
+                    <p className="text-gray-800 text-xs sm:text-sm">
                       {order.userName || order.shippingInfo?.fullName || order.userEmail}
                     </p>
-                    <p className="text-gray-600 text-sm">{order.userEmail}</p>
+                    <p className="text-gray-600 text-xs hidden sm:block">{order.userEmail}</p>
                   </div>
                 </td>
-                <td className="px-6 py-4 text-gray-700">
+                <td className="px-1 sm:px-6 py-4 text-gray-700 text-xs sm:text-sm">
                   {order.orderDate ? new Date(order.orderDate).toLocaleDateString('ru-RU') : '-'}
                 </td>
-                <td className="px-6 py-4 text-gray-800">
+                <td className="px-2 sm:px-6 py-4 text-gray-800 text-xs sm:text-sm">
                   {(order.totalPrice || 0).toLocaleString()} ₽
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                   <select
                     value={order.status}
                     onChange={(e) => updateOrderStatus(order.id, e.target.value)}
@@ -484,32 +486,44 @@ export const OrderManagement = () => {
                     ))}
                   </select>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                   {order.trackingNumber ? (
                     <span className="text-gray-700 text-sm">{order.trackingNumber}</span>
                   ) : (
                     <span className="text-gray-400 text-sm">-</span>
                   )}
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                <td className="px-2 sm:px-6 py-4">
+                  <div className="flex items-center gap-1">
+                    {/* Status button - mobile only */}
+                    <button
+                      onClick={() => {
+                        setOrderToChangeStatus(order);
+                        setStatusModalOpen(true);
+                      }}
+                      disabled={updatingOrder === order.id}
+                      className={`sm:hidden p-1 rounded text-white ${getStatusColor(order.status)} hover:opacity-80`}
+                      title={t('orderStatus')}
+                    >
+                      <span className="text-xs px-1">{t(order.status).substring(0, 3)}</span>
+                    </button>
                     <button
                       onClick={() => {
                         setSelectedOrder(order);
                         setDetailsOpen(true);
                       }}
-                      className="flex items-center gap-2 text-green-600 hover:text-green-700 bg-white"
+                      className="p-1 sm:p-2 text-green-600 hover:text-green-700 bg-white"
                       title="Детали заказа"
                     >
-                      <Eye size={18} />
+                      <Eye size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                     <button
                       onClick={() => sendTrackingNumber(order.id)}
                       disabled={updatingOrder === order.id}
-                      className="flex items-center gap-2 text-blue-600 hover:text-blue-700 disabled:text-gray-400 bg-white"
+                      className="p-1 sm:p-2 text-blue-600 hover:text-blue-700 disabled:text-gray-400 bg-white"
                       title={t('sendTrackingNumber')}
                     >
-                      <Send size={18} />
+                      <Send size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                     <button
                       onClick={() => {
@@ -517,10 +531,10 @@ export const OrderManagement = () => {
                         setDeleteConfirmOpen(true);
                       }}
                       disabled={updatingOrder === order.id}
-                      className="flex items-center gap-2 text-red-600 hover:text-red-700 disabled:text-gray-400 bg-white"
+                      className="p-1 sm:p-2 text-red-600 hover:text-red-700 disabled:text-gray-400 bg-white"
                       title={t('deleteOrder')}
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                     </button>
                   </div>
                 </td>
@@ -750,6 +764,54 @@ export const OrderManagement = () => {
                     {t('delete')}
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Status Change Modal - Mobile */}
+      {statusModalOpen && orderToChangeStatus && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b">
+              <h3 className="text-xl text-gray-800">{t('changeStatus')}</h3>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-700 mb-4">
+                {t('orderNumber')} #{orderToChangeStatus.orderNumber || orderToChangeStatus.id.slice(0, 8)}
+              </p>
+              <div className="space-y-2">
+                {statuses.map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      updateOrderStatus(orderToChangeStatus.id, status);
+                      setStatusModalOpen(false);
+                      setOrderToChangeStatus(null);
+                    }}
+                    disabled={updatingOrder === orderToChangeStatus.id}
+                    className={`w-full text-left px-4 py-3 rounded-lg ${getStatusColor(status)} hover:opacity-80 transition-opacity ${
+                      orderToChangeStatus.status === status ? 'ring-2 ring-red-600' : ''
+                    }`}
+                  >
+                    {t(status)}
+                    {orderToChangeStatus.status === status && ' ✓'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="px-6 py-4 bg-gray-50 border-t flex justify-end">
+              <button
+                onClick={() => {
+                  setStatusModalOpen(false);
+                  setOrderToChangeStatus(null);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400"
+              >
+                {t('cancel')}
               </button>
             </div>
           </div>

@@ -608,27 +608,27 @@ export const ProductManagement = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-left text-gray-700">{t('productName')}</th>
-                      <th className="px-6 py-3 text-left text-gray-700">{t('price')}</th>
-                      <th className="px-6 py-3 text-left text-gray-700">{t('category')}</th>
-                      <th className="px-6 py-3 text-left text-gray-700">{t('stockStatus')}</th>
-                      <th className="px-6 py-3 text-left text-gray-700">{t('actions')}</th>
+                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('productName')}</th>
+                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('price')}</th>
+                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('category')}</th>
+                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('stockStatus')}</th>
+                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {products.map((product) => (
                       <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
+                        <td className="px-2 sm:px-6 py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
                             <img
                               src={product.image}
                               alt={getProductName(product)}
-                              className="w-12 h-12 object-cover rounded"
+                              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded"
                             />
-                            <span className="text-gray-800">{getProductName(product)}</span>
+                            <span className="text-gray-800 text-xs sm:text-sm">{getProductName(product)}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 sm:px-6 py-4">
                           <div className="flex flex-col gap-1">
                             {(() => {
                               const saleEnabled = (product as any).saleEnabled;
@@ -642,19 +642,19 @@ export const ProductManagement = () => {
                                 const discountedPrice = originalPrice * (1 - saleDiscount / 100);
                                 return (
                                   <>
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-gray-400 line-through text-sm">{originalPrice.toLocaleString()} ₽</span>
-                                      <span className="bg-red-600 text-white px-2 py-0.5 rounded text-xs font-semibold">-{saleDiscount}%</span>
+                                    <div className="flex items-center gap-1 sm:gap-2">
+                                      <span className="text-gray-400 line-through text-xs">{originalPrice.toLocaleString()} ₽</span>
+                                      <span className="bg-red-600 text-white px-1 sm:px-2 py-0.5 rounded text-xs">-{saleDiscount}%</span>
                                     </div>
-                                    <span className="text-red-600 font-semibold">{discountedPrice.toLocaleString()} ₽</span>
+                                    <span className="text-red-600 text-xs sm:text-sm">{discountedPrice.toLocaleString()} ₽</span>
                                   </>
                                 );
                               }
-                              return <span className="text-gray-700">{(product.price || 0).toLocaleString()} ₽</span>;
+                              return <span className="text-gray-700 text-xs sm:text-sm">{(product.price || 0).toLocaleString()} ₽</span>;
                             })()}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
                           <div className="flex flex-col gap-1">
                             <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded inline-block">
                               {t(product.category)}
@@ -675,9 +675,9 @@ export const ProductManagement = () => {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-2 sm:px-6 py-4">
                           <span
-                            className={`px-2 py-1 rounded-full text-sm ${
+                            className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
                               product.inStock
                                 ? 'bg-green-100 text-green-800'
                                 : 'bg-red-100 text-red-800'
@@ -686,19 +686,19 @@ export const ProductManagement = () => {
                             {product.inStock ? t('inStock') : t('outOfStock')}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
+                        <td className="px-2 sm:px-6 py-4">
+                          <div className="flex gap-1 sm:gap-2">
                             <button
                               onClick={() => handleEdit(product)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                              className="p-1 sm:p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
                             >
-                              <Edit size={18} />
+                              <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </button>
                             <button
                               onClick={() => handleDelete(product.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                              className="p-1 sm:p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
                             >
-                              <Trash2 size={18} />
+                              <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
                             </button>
                           </div>
                         </td>

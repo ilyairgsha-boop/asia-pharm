@@ -555,20 +555,20 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-gray-800 mb-6">{t('myProfile')}</h2>
+    <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
+      <h2 className="text-gray-800 mb-4 sm:mb-6 text-xl sm:text-2xl px-2">{t('myProfile')}</h2>
 
-      <div className="grid lg:grid-cols-4 gap-8">
+      <div className="grid lg:grid-cols-4 gap-4 sm:gap-8">
         {/* User info sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="lg:col-span-1 space-y-4 sm:space-y-6">
           {/* Profile Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
             <div className="text-center mb-4">
-              <div className="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center text-white text-3xl mx-auto mb-3">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-600 rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl mx-auto mb-3">
                 {user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
               </div>
-              <h3 className="text-gray-800">{user?.name || 'User'}</h3>
-              <p className="text-gray-600 text-sm">{user?.email}</p>
+              <h3 className="text-gray-800 text-base sm:text-lg">{user?.name || 'User'}</h3>
+              <p className="text-gray-600 text-xs sm:text-sm break-all px-2">{user?.email}</p>
               
               {/* Status badges */}
               <div className="mt-3 space-y-1">
@@ -588,12 +588,12 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Admin Panel Link */}
           {user?.isAdmin && (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
               <button
                 onClick={() => onNavigate('admin')}
-                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-2 sm:py-3 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-colors flex items-center justify-center gap-2 text-sm sm:text-base"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
@@ -603,21 +603,21 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
           )}
 
           {/* Loyalty Program Card */}
-          <div className="profile-loyalty-card bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-md p-6 text-white">
+          <div className="profile-loyalty-card bg-gradient-to-br from-red-600 to-red-700 rounded-lg shadow-md p-4 sm:p-6 text-white -mx-2 sm:mx-0">
             <div className="flex items-center gap-2 mb-4">
-              <Gift size={24} />
-              <h3>{t('loyaltyProgram')}</h3>
+              <Gift size={20} className="sm:w-6 sm:h-6" />
+              <h3 className="text-base sm:text-lg">{t('loyaltyProgram')}</h3>
             </div>
             
             <div className="space-y-3">
               <div>
-                <p className="text-red-100 text-sm">{t('availablePoints')}</p>
-                <p className="text-2xl">{pluralizePoints(loyaltyPoints || 0, language)}</p>
+                <p className="text-red-100 text-xs sm:text-sm">{t('availablePoints')}</p>
+                <p className="text-xl sm:text-2xl">{pluralizePoints(loyaltyPoints || 0, language)}</p>
               </div>
 
               <div>
-                <p className="text-red-100 text-sm">{t('currentTier')}</p>
-                <p className="text-lg">
+                <p className="text-red-100 text-xs sm:text-sm">{t('currentTier')}</p>
+                <p className="text-base sm:text-lg">
                   {currentTier === 'platinum' ? (
                     <span className="flex items-center gap-1">
                       💎 {t('tierPlatinum')} (10%)
@@ -637,8 +637,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
               </div>
 
               <div>
-                <p className="text-red-100 text-sm">{t('lifetimeTotal')}</p>
-                <p className="text-lg">{(lifetimeTotal || 0).toLocaleString()} ₽</p>
+                <p className="text-red-100 text-xs sm:text-sm">{t('lifetimeTotal')}</p>
+                <p className="text-base sm:text-lg">{(lifetimeTotal || 0).toLocaleString()} ₽</p>
                 {lifetimeTotal < 50000 && (
                   <p className="text-xs text-red-100 mt-1">
                     {(50000 - lifetimeTotal).toLocaleString()} ₽ {t('untilSilver')}
@@ -659,7 +659,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
             <button
               onClick={() => onNavigate('loyalty-program')}
-              className="w-full mt-4 bg-white text-red-600 py-2 rounded-lg hover:bg-red-50 transition-colors text-sm"
+              className="w-full mt-4 bg-white text-red-600 py-2 rounded-lg hover:bg-red-50 transition-colors text-xs sm:text-sm"
             >
               {t('learnMore')}
             </button>
@@ -667,52 +667,52 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
         </div>
 
         {/* Main content */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="flex border-b border-gray-200">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
+          {/* Tabs - vertical on mobile, horizontal on desktop */}
+          <div className="bg-white rounded-lg shadow-md -mx-2 sm:mx-0">
+            <div className="flex flex-col sm:flex-row sm:border-b sm:border-gray-200">
               <button
                 onClick={() => setSettingsTab('orders')}
-                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-4 sm:px-6 py-3 transition-colors text-sm sm:text-base border-b sm:border-b-0 border-gray-200 ${
                   settingsTab === 'orders'
-                    ? 'border-b-2 border-red-600 text-red-600 active'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'sm:border-b-2 sm:border-red-600 text-red-600 bg-red-50 sm:bg-transparent active'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <Package size={20} />
+                <Package size={18} className="sm:w-5 sm:h-5" />
                 {t('orderHistory')}
               </button>
               <button
                 onClick={() => setSettingsTab('favorites')}
-                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-4 sm:px-6 py-3 transition-colors text-sm sm:text-base border-b sm:border-b-0 border-gray-200 ${
                   settingsTab === 'favorites'
-                    ? 'border-b-2 border-red-600 text-red-600 active'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'sm:border-b-2 sm:border-red-600 text-red-600 bg-red-50 sm:bg-transparent active'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <Heart size={20} />
+                <Heart size={18} className="sm:w-5 sm:h-5" />
                 {t('favorites')}
               </button>
               <button
                 onClick={() => setSettingsTab('bonusHistory')}
-                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-4 sm:px-6 py-3 transition-colors text-sm sm:text-base border-b sm:border-b-0 border-gray-200 ${
                   settingsTab === 'bonusHistory'
-                    ? 'border-b-2 border-red-600 text-red-600 active'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'sm:border-b-2 sm:border-red-600 text-red-600 bg-red-50 sm:bg-transparent active'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <TrendingUp size={20} />
+                <TrendingUp size={18} className="sm:w-5 sm:h-5" />
                 {t('bonusPointsHistory')}
               </button>
               <button
                 onClick={() => setSettingsTab('settings')}
-                className={`profile-tab flex items-center gap-2 px-6 py-3 transition-colors ${
+                className={`profile-tab flex items-center gap-2 px-4 sm:px-6 py-3 transition-colors text-sm sm:text-base ${
                   settingsTab === 'settings'
-                    ? 'border-b-2 border-red-600 text-red-600 active'
-                    : 'text-gray-600 hover:text-gray-800'
+                    ? 'sm:border-b-2 sm:border-red-600 text-red-600 bg-red-50 sm:bg-transparent active'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
                 }`}
               >
-                <Settings size={20} />
+                <Settings size={18} className="sm:w-5 sm:h-5" />
                 {t('profileSettings')}
               </button>
             </div>
@@ -720,8 +720,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Order history */}
           {settingsTab === 'orders' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-gray-800 mb-4">{t('orderHistory')}</h3>
+            <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 -mx-2 sm:mx-0">
+              <h3 className="text-gray-800 mb-4 text-base sm:text-lg">{t('orderHistory')}</h3>
 
             {loading ? (
               <div className="flex items-center justify-center py-12">
@@ -744,16 +744,16 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                   <div
                     key={order.id}
                     onClick={() => setSelectedOrder(order)}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-red-600 hover:shadow-md transition-all cursor-pointer"
+                    className="border border-gray-200 rounded-lg p-3 sm:p-4 hover:border-red-600 hover:shadow-md transition-all cursor-pointer"
                   >
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <Package className="text-gray-600" size={20} />
-                        <div>
-                          <p className="text-gray-800">
+                    <div className="flex items-start sm:items-center justify-between mb-2 gap-2">
+                      <div className="flex items-start sm:items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                        <Package className="text-gray-600 flex-shrink-0 mt-1 sm:mt-0" size={18} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-gray-800 text-sm sm:text-base break-words">
                             {t('orderNumber')} #{order.orderNumber || order.id.slice(0, 8)}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-xs sm:text-sm text-gray-600">
                             {(order.orderDate || order.createdAt) ? new Date(order.orderDate || order.createdAt!).toLocaleDateString(
                               language === 'ru' ? 'ru-RU' :
                               language === 'zh' ? 'zh-CN' :
@@ -762,13 +762,13 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                           </p>
                         </div>
                       </div>
-                      <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(order.status)}`}>
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm whitespace-nowrap flex-shrink-0 ${getStatusColor(order.status)}`}>
                         {t(order.status)}
                       </span>
                     </div>
 
-                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                      <div className="text-sm text-gray-600">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-3 pt-3 border-t border-gray-100 gap-2">
+                      <div className="text-xs sm:text-sm text-gray-600">
                         {(() => {
                           const totalItems = order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
                           // Russian plural rules: 1 товар, 2-4 товара, 5+ товаров
@@ -813,8 +813,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Favorites */}
           {settingsTab === 'favorites' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-gray-800 mb-4">{t('favorites')}</h3>
+            <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 -mx-2 sm:mx-0">
+              <h3 className="text-gray-800 mb-4 text-base sm:text-lg">{t('favorites')}</h3>
 
             {loadingFavorites ? (
               <div className="flex items-center justify-center py-12">
@@ -832,7 +832,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                 </button>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {favoriteProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -853,88 +853,90 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Bonus History */}
           {settingsTab === 'bonusHistory' && (
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h3 className="text-gray-800 mb-4">{t('bonusPointsHistory')}</h3>
+            <div className="bg-white rounded-lg shadow-md p-3 sm:p-6 -mx-2 sm:mx-0">
+              <h3 className="text-gray-800 mb-4 text-base sm:text-lg">{t('bonusPointsHistory')}</h3>
 
               {loyaltyHistory.length === 0 ? (
                 <div className="text-center py-12">
-                  <Gift className="mx-auto text-gray-400 mb-4" size={64} />
-                  <p className="text-gray-600">{t('noBonusHistory')}</p>
+                  <Gift className="mx-auto text-gray-400 mb-4" size={48} />
+                  <p className="text-gray-600 text-sm sm:text-base">{t('noBonusHistory')}</p>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px]">
+                <div className="overflow-x-auto -mx-3 sm:mx-0">
+                  <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-200">
-                        <th className="text-left py-3 px-4 text-sm text-gray-600">{t('action')}</th>
-                        <th className="text-left py-3 px-4 text-sm text-gray-600">{t('forOrder')}</th>
-                        <th className="text-left py-3 px-4 text-sm text-gray-600">{t('orderDate')}</th>
-                        <th className="text-left py-3 px-4 text-sm text-gray-600">{t('creditedDate')}</th>
-                        <th className="text-right py-3 px-4 text-sm text-gray-600">{t('pointsCredited')}</th>
-                        <th className="text-right py-3 px-4 text-sm text-gray-600">{t('pointsSpent')}</th>
-                        <th className="text-left py-3 px-4 text-sm text-gray-600">{t('tierAtCredit')}</th>
+                        <th className="text-left py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">{t('action')}</th>
+                        <th className="text-left py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">{t('forOrder')}</th>
+                        <th className="text-left py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{t('orderDate')}</th>
+                        <th className="text-left py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">{t('creditedDate')}</th>
+                        <th className="text-right py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">{t('pointsCredited')}</th>
+                        <th className="text-right py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">{t('pointsSpent')}</th>
+                        <th className="text-left py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">{t('tierAtCredit')}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {loyaltyHistory.map((item) => (
                         <tr key={item.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                          <td className="py-3 px-4">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4">
                             {item.type === 'earned' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-800 rounded text-sm">
-                                <TrendingUp size={14} />
-                                {t('crediting')}
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-green-100 text-green-800 rounded text-xs sm:text-sm">
+                                <TrendingUp size={12} className="sm:w-3.5 sm:h-3.5" />
+                                <span className="hidden sm:inline">{t('crediting')}</span>
+                                <span className="sm:hidden">+</span>
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">
-                                <Gift size={14} />
-                                {t('spending')}
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 text-blue-800 rounded text-xs sm:text-sm">
+                                <Gift size={12} className="sm:w-3.5 sm:h-3.5" />
+                                <span className="hidden sm:inline">{t('spending')}</span>
+                                <span className="sm:hidden">-</span>
                               </span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4">
                             {item.orderId ? (
                               <button
                                 onClick={() => {
                                   const order = orders.find(o => o.id === item.orderId);
                                   if (order) setSelectedOrder(order);
                                 }}
-                                className="text-red-600 hover:text-red-700 hover:underline cursor-pointer"
+                                className="text-red-600 hover:text-red-700 hover:underline cursor-pointer text-xs sm:text-sm"
                               >
                                 #{item.orderNumber}
                               </button>
                             ) : (
-                              <span className="text-gray-600">-</span>
+                              <span className="text-gray-600 text-xs sm:text-sm">-</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600 hidden sm:table-cell">
                             {item.orderDate ? new Date(item.orderDate).toLocaleDateString(
                               language === 'ru' ? 'ru-RU' :
                               language === 'zh' ? 'zh-CN' :
                               language === 'vi' ? 'vi-VN' : 'en-US'
                             ) : '-'}
                           </td>
-                          <td className="py-3 px-4 text-sm text-gray-600">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm text-gray-600">
                             {new Date(item.createdAt).toLocaleDateString(
                               language === 'ru' ? 'ru-RU' :
                               language === 'zh' ? 'zh-CN' :
                               language === 'vi' ? 'vi-VN' : 'en-US'
                             )}
                           </td>
-                          <td className="py-3 px-4 text-right text-gray-800">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4 text-right text-gray-800">
                             {item.type === 'earned' ? (
-                              <span className="bonus-history-earned text-green-600">+{item.points.toLocaleString()}</span>
+                              <span className="bonus-history-earned text-green-600 text-xs sm:text-sm">+{item.points.toLocaleString()}</span>
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-gray-400 text-xs sm:text-sm">-</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-right text-gray-800">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4 text-right text-gray-800">
                             {item.type === 'spent' ? (
-                              <span className="bonus-history-spent text-blue-600">-{item.points.toLocaleString()}</span>
+                              <span className="bonus-history-spent text-blue-600 text-xs sm:text-sm">-{item.points.toLocaleString()}</span>
                             ) : (
-                              <span className="text-gray-400">-</span>
+                              <span className="text-gray-400 text-xs sm:text-sm">-</span>
                             )}
                           </td>
-                          <td className="py-3 px-4 text-sm">
+                          <td className="py-2 sm:py-3 px-1 sm:px-4 text-xs sm:text-sm hidden sm:table-cell">
                             {item.type === 'earned' && item.tierAtCredit ? (
                               item.tierAtCredit === 'platinum' ? (
                                 <span>💎 {t('tierPlatinum')} (10%)</span>
@@ -960,18 +962,18 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Settings Tab */}
           {settingsTab === 'settings' && (
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Email Settings */}
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
                 <div className="flex items-center gap-2 mb-4">
-                  <Mail size={20} className="profile-email-icon text-red-600" />
-                  <h3 className="text-gray-800">{t('emailSettings')}</h3>
+                  <Mail size={18} className="sm:w-5 sm:h-5 profile-email-icon text-red-600" />
+                  <h3 className="text-gray-800 text-base sm:text-lg">{t('emailSettings')}</h3>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm text-gray-700 mb-2">{t('currentEmail')}</label>
-                    <div className="flex gap-2">
+                    <label className="block text-xs sm:text-sm text-gray-700 mb-2">{t('currentEmail')}</label>
+                    <div className="flex flex-col sm:flex-row gap-2">
                       {showEmailEdit ? (
                         <>
                           <input
@@ -979,32 +981,34 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                             value={newEmail}
                             onChange={(e) => setNewEmail(e.target.value)}
                             placeholder={user?.email}
-                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+                            className="flex-1 px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 text-sm sm:text-base"
                           />
-                          <button
-                            onClick={handleUpdateEmail}
-                            className="profile-settings-button px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                          >
-                            {t('save')}
-                          </button>
-                          <button
-                            onClick={() => {
-                              setShowEmailEdit(false);
-                              setNewEmail('');
-                            }}
-                            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                          >
-                            {t('cancel')}
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={handleUpdateEmail}
+                              className="profile-settings-button px-3 sm:px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base flex-1 sm:flex-initial"
+                            >
+                              {t('save')}
+                            </button>
+                            <button
+                              onClick={() => {
+                                setShowEmailEdit(false);
+                                setNewEmail('');
+                              }}
+                              className="px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base flex-1 sm:flex-initial"
+                            >
+                              {t('cancel')}
+                            </button>
+                          </div>
                         </>
                       ) : (
                         <>
-                          <div className="flex-1 px-4 py-2 bg-gray-50 rounded-lg text-gray-700">
+                          <div className="flex-1 px-3 sm:px-4 py-2 bg-gray-50 rounded-lg text-gray-700 break-all text-sm sm:text-base">
                             {user?.email}
                           </div>
                           <button
                             onClick={() => setShowEmailEdit(true)}
-                            className="profile-settings-button px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="profile-settings-button px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base whitespace-nowrap"
                           >
                             {t('changeEmail')}
                           </button>
@@ -1016,24 +1020,24 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
               </div>
 
               {/* Push Notification Settings */}
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
                 <div className="flex items-center gap-2 mb-4">
-                  <Bell size={20} className="profile-settings-icon text-red-600" />
-                  <h3 className="text-gray-800">{t('pushNotificationSettings') || 'Push Notifications'}</h3>
+                  <Bell size={18} className="sm:w-5 sm:h-5 profile-settings-icon text-red-600" />
+                  <h3 className="text-gray-800 text-base sm:text-lg">{t('pushNotificationSettings') || 'Push Notifications'}</h3>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+                  <div className="flex-1">
+                    <p className="text-gray-800 text-sm sm:text-base">
                       {isSubscribed ? (t('pushSubscribed') || 'You are subscribed to push notifications') : (t('pushUnsubscribed') || 'Push notifications are disabled')}
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                       {isSubscribed ? (t('pushSubscribedDesc') || 'You will receive notifications about orders and promotions') : (t('pushUnsubscribedDesc') || 'Enable to receive instant updates')}
                     </p>
                   </div>
                   <button
                     onClick={handleToggleSubscription}
-                    className={`profile-settings-button px-6 py-2 rounded-lg transition-colors ${
+                    className={`profile-settings-button px-4 sm:px-6 py-2 rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap ${
                       isSubscribed
                         ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         : 'bg-green-600 text-white hover:bg-green-700'
@@ -1045,24 +1049,24 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
               </div>
 
               {/* Email Newsletter Settings */}
-              <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
                 <div className="flex items-center gap-2 mb-4">
-                  <Mail size={20} className="profile-settings-icon text-red-600" />
-                  <h3 className="text-gray-800">{t('newsletterSettings') || 'Email Newsletter'}</h3>
+                  <Mail size={18} className="sm:w-5 sm:h-5 profile-settings-icon text-red-600" />
+                  <h3 className="text-gray-800 text-base sm:text-lg">{t('newsletterSettings') || 'Email Newsletter'}</h3>
                 </div>
 
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="text-gray-800">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg gap-3">
+                  <div className="flex-1">
+                    <p className="text-gray-800 text-sm sm:text-base">
                       {isSubscribedToNewsletter ? (t('newsletterSubscribed') || 'Subscribed to email newsletter') : (t('newsletterUnsubscribed') || 'Not subscribed to newsletter')}
                     </p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
                       {isSubscribedToNewsletter ? (t('newsletterSubscribedDesc') || 'You will receive promotional emails and updates') : (t('newsletterUnsubscribedDesc') || 'Subscribe to receive special offers via email')}
                     </p>
                   </div>
                   <button
                     onClick={handleToggleNewsletterSubscription}
-                    className={`profile-settings-button px-6 py-2 rounded-lg transition-colors ${
+                    className={`profile-settings-button px-4 sm:px-6 py-2 rounded-lg transition-colors text-sm sm:text-base whitespace-nowrap ${
                       isSubscribedToNewsletter
                         ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         : 'bg-green-600 text-white hover:bg-green-700'
@@ -1074,28 +1078,28 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
               </div>
 
               {/* Danger Zone */}
-              <div className="bg-white rounded-lg shadow-md p-6 border-2 border-red-200">
+              <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 border-2 border-red-200 -mx-2 sm:mx-0">
                 <div className="flex items-center gap-2 mb-4">
-                  <AlertTriangle size={20} className="text-red-600" />
-                  <h3 className="text-red-600">{t('dangerZone')}</h3>
+                  <AlertTriangle size={18} className="sm:w-5 sm:h-5 text-red-600" />
+                  <h3 className="text-red-600 text-base sm:text-lg">{t('dangerZone')}</h3>
                 </div>
 
                 <div className="space-y-3">
-                  <p className="text-gray-700">{t('deleteAccountConfirm')}</p>
-                  <p className="text-sm text-gray-600">{t('deleteAccountWarning')}</p>
+                  <p className="text-gray-700 text-sm sm:text-base">{t('deleteAccountConfirm')}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">{t('deleteAccountWarning')}</p>
                   
                   {showDeleteConfirm ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <button
                         onClick={handleDeleteAccount}
-                        className="profile-settings-button flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                        className="profile-settings-button flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm sm:text-base"
                       >
                         <Trash2 size={16} />
                         {t('confirmDeleteAccount')}
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(false)}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
                       >
                         {t('cancel')}
                       </button>
@@ -1103,7 +1107,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                   ) : (
                     <button
                       onClick={() => setShowDeleteConfirm(true)}
-                      className="profile-settings-button flex items-center gap-2 px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors"
+                      className="profile-settings-button flex items-center justify-center gap-2 px-4 py-2 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors text-sm sm:text-base w-full sm:w-auto"
                     >
                       <Trash2 size={16} />
                       {t('deleteAccount')}
@@ -1116,19 +1120,19 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
 
           {/* Loyalty Points History */}
           {settingsTab === 'orders' && loyaltyHistory.length > 0 && (
-            <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="bg-white rounded-lg shadow-md p-4 sm:p-6 -mx-2 sm:mx-0">
               <div className="flex items-center gap-2 mb-4">
-                <Calendar size={20} className="text-gray-600" />
-                <h3 className="text-gray-800">{t('pointsHistory')}</h3>
+                <Calendar size={18} className="sm:w-5 sm:h-5 text-gray-600" />
+                <h3 className="text-gray-800 text-base sm:text-lg">{t('pointsHistory')}</h3>
               </div>
 
               <div className="space-y-2">
                 {loyaltyHistory.slice(0, 10).map((entry) => (
                   <div
                     key={entry.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 rounded-lg gap-2"
                   >
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">
                         {entry.description.includes('Order') 
                           ? entry.description.replace('Order', t('order')).replace('delivered', t('delivered'))
