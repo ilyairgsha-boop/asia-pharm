@@ -1026,6 +1026,50 @@ const mapLanguageCodeForMyMemory = (language: string): string => {
   return mapping[language] || language;
 };
 
+// Helper function to split text into chunks for MyMemory API (max 500 chars)
+const splitTextIntoChunks = (text: string, maxLength: number = 450): string[] => {
+  if (text.length <= maxLength) {
+    return [text];
+  }
+  
+  const chunks: string[] = [];
+  let currentChunk = '';
+  
+  // Разбиваем по HTML тегам, чтобы не разрывать структуру
+  const parts = text.split(/(<[^>]+>)/g);
+  
+  for (const part of parts) {
+    if ((currentChunk + part).length <= maxLength) {
+      currentChunk += part;
+    } else {
+      if (currentChunk) {
+        chunks.push(currentChunk);
+      }
+      currentChunk = part;
+      
+      // Если один тег больше лимита, разбиваем по пробелам
+      if (part.length > maxLength) {
+        const words = part.split(' ');
+        currentChunk = '';
+        for (const word of words) {
+          if ((currentChunk + ' ' + word).length <= maxLength) {
+            currentChunk += (currentChunk ? ' ' : '') + word;
+          } else {
+            if (currentChunk) chunks.push(currentChunk);
+            currentChunk = word;
+          }
+        }
+      }
+    }
+  }
+  
+  if (currentChunk) {
+    chunks.push(currentChunk);
+  }
+  
+  return chunks;
+};
+
 app.get('/make-server-a75b5353/api/translate/key', requireAdmin, async (c) => {
   try {
     const apiKey = await kv.get('google_translate_api_key');
@@ -1070,50 +1114,69 @@ app.post('/make-server-a75b5353/api/translate/text', requireAdmin, async (c) => 
     }
     
     console.log(`🌍 Translating from ${sourceLanguage || 'auto'} to ${targetLanguage}`);
-    console.log(`📝 Text to translate: ${text.substring(0, 100)}...`);
+    console.log(`📝 Text length: ${text.length} chars`);
     
-    // Используем MyMemory API - бесплатный, без регистрации
-    // Лимит: 10000 символов в день
     const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
     const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
     const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
     
-    const translateUrl = new URL('https://api.mymemory.translated.net/get');
-    translateUrl.searchParams.set('q', text);
-    translateUrl.searchParams.set('langpair', langPair);
+    // MyMemory API имеет лимит 500 символов, разбиваем на части
+    const chunks = splitTextIntoChunks(text, 450);
+    console.log(`📦 Split into ${chunks.length} chunk(s)`);
     
-    console.log(`🔗 MyMemory API URL: ${translateUrl.toString()}`);
+    const translatedChunks: string[] = [];
     
-    const response = await fetch(translateUrl.toString(), {
-      headers: {
-        'Accept': 'application/json',
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      console.log(`🔄 Translating chunk ${i + 1}/${chunks.length} (${chunk.length} chars)...`);
+      
+      const translateUrl = new URL('https://api.mymemory.translated.net/get');
+      translateUrl.searchParams.set('q', chunk);
+      translateUrl.searchParams.set('langpair', langPair);
+      
+      const response = await fetch(translateUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ MyMemory API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`Error details: ${errorText}`);
+        throw new Error(`Translation failed: ${response.status}`);
       }
-    });
-    
-    if (!response.ok) {
-      console.error(`❌ MyMemory API error: ${response.status} ${response.statusText}`);
-      throw new Error(`Translation failed: ${response.status}`);
+      
+      const data = await response.json();
+      
+      // Проверяем на ошибки в ответе
+      if (data.responseStatus !== 200 && data.responseData?.translatedText?.includes('LIMIT EXCEEDED')) {
+        console.error('❌ MyMemory API limit exceeded');
+        throw new Error('Translation limit exceeded. Please try with shorter text.');
+      }
+      
+      if (!data || !data.responseData || !data.responseData.translatedText) {
+        console.error('❌ Invalid response format:', data);
+        throw new Error('Invalid response format from MyMemory API');
+      }
+      
+      translatedChunks.push(data.responseData.translatedText);
+      console.log(`✅ Chunk ${i + 1}/${chunks.length} translated`);
+      
+      // Небольшая задержка между запросами
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
     }
     
-    const data = await response.json();
-    
-    console.log('📥 MyMemory API response:', JSON.stringify(data).substring(0, 200));
-    
-    // Формат ответа MyMemory: { responseData: { translatedText: "...", match: 0.95 }, responseStatus: 200 }
-    if (!data || !data.responseData || !data.responseData.translatedText) {
-      console.error('❌ Invalid response format:', data);
-      throw new Error('Invalid response format from MyMemory API');
-    }
-    
-    const translatedText = data.responseData.translatedText;
-    
-    console.log(`✅ Translation successful: ${translatedText.substring(0, 100)}...`);
+    const translatedText = translatedChunks.join('');
+    console.log(`✅ Translation complete: ${translatedText.length} chars`);
     
     return c.json({ 
       success: true, 
       translatedText,
       provider: 'MyMemory',
-      quality: data.responseData.match
+      chunks: chunks.length
     });
   } catch (error) {
     console.error('❌ Translation error:', error);
@@ -1142,34 +1205,45 @@ app.post('/make-server-a75b5353/api/translate/batch', requireAdmin, async (c) =>
           const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
           const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
           
-          const translateUrl = new URL('https://api.mymemory.translated.net/get');
-          translateUrl.searchParams.set('q', text);
-          translateUrl.searchParams.set('langpair', langPair);
+          // Разбиваем текст на части если он длинный
+          const chunks = splitTextIntoChunks(text, 450);
+          const translatedChunks: string[] = [];
           
-          const response = await fetch(translateUrl.toString(), {
-            headers: {
-              'Accept': 'application/json',
+          for (const chunk of chunks) {
+            const translateUrl = new URL('https://api.mymemory.translated.net/get');
+            translateUrl.searchParams.set('q', chunk);
+            translateUrl.searchParams.set('langpair', langPair);
+            
+            const response = await fetch(translateUrl.toString(), {
+              headers: {
+                'Accept': 'application/json',
+              }
+            });
+            
+            if (!response.ok) {
+              console.error(`❌ Batch item ${index + 1} chunk failed: ${response.status}`);
+              throw new Error(`Translation failed: ${response.status}`);
             }
-          });
-          
-          if (!response.ok) {
-            console.error(`❌ Batch item ${index + 1} failed: ${response.status}`);
-            throw new Error(`Translation failed: ${response.status}`);
+            
+            const data = await response.json();
+            
+            if (!data || !data.responseData || !data.responseData.translatedText) {
+              throw new Error('Invalid response format');
+            }
+            
+            translatedChunks.push(data.responseData.translatedText);
+            
+            // Небольшая задержка между частями
+            await new Promise(resolve => setTimeout(resolve, 200));
           }
           
-          const data = await response.json();
+          const translatedText = translatedChunks.join('');
+          console.log(`✅ Batch item ${index + 1}/${texts.length} translated successfully (${chunks.length} chunks)`);
           
-          if (!data || !data.responseData || !data.responseData.translatedText) {
-            throw new Error('Invalid response format');
-          }
-          
-          const translatedText = data.responseData.translatedText;
-          console.log(`✅ Batch item ${index + 1}/${texts.length} translated successfully`);
-          
-          // Добавляем небольшую задержку между запросами, чтобы не превысить rate limit
+          // Добавляем задержку между текстами
           await new Promise(resolve => setTimeout(resolve, 300));
           
-          return { translatedText, quality: data.responseData.match };
+          return { translatedText };
         } catch (error) {
           console.error(`❌ Error translating batch item ${index + 1}:`, error);
           return { translatedText: text, error: true };
