@@ -347,8 +347,8 @@ export const PromoCodeManagement = () => {
                   {promo.usage_limit && ` / ${promo.usage_limit}`}
                 </td>
                 <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm hidden sm:table-cell">
-                  {promo.expiry_date
-                    ? new Date(promo.expiry_date).toLocaleDateString()
+                  {promo.expires_at
+                    ? new Date(promo.expires_at).toLocaleDateString()
                     : '—'}
                 </td>
                 <td className="px-2 sm:px-4 py-3 hidden sm:table-cell">

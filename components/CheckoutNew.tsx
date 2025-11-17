@@ -24,8 +24,21 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const { user, accessToken } = useAuth();
   const [loading, setLoading] = useState(false);
 
+  const isWholesaler = user?.isWholesaler || false;
+  
+  // Курс для оптовиков: 1 юань ≈ 10 рублей (НЕ используется для расчетов, только для справки)
+  const YUAN_TO_RUB = 10;
+
   const cart = getCartByStore(store);
   const subtotal = getTotalByStore(store);
+  
+  // Для оптовиков считаем все в юанях
+  const subtotalInYuan = isWholesaler 
+    ? cart.reduce((sum, item) => {
+        const wholesalePrice = item.wholesalePrice || 0;
+        return sum + wholesalePrice * item.quantity;
+      }, 0)
+    : 0;
   
   // Разделение товаров на обычные и пробники
   const regularItems = cart.filter(item => !item.isSample);
@@ -148,8 +161,13 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
 
   // Расчет стоимости доставки
   const calculateShipping = () => {
-    // Бесплатная доставка от 8000 руб (пробники не учитываются)
-    if (subtotalWithoutSamples >= 8000) return 0;
+    // Оптовики из Китая: 65 юаней за кг (по точному весу)
+    if (isWholesaler && store === 'china') {
+      return totalWeight * 65; // Возвращаем юани по точному весу
+    }
+    
+    // Бесплатная доставка от 8000 руб (пробники не учитываются) - только для обычных покупателей
+    if (!isWholesaler && subtotalWithoutSamples >= 8000) return 0;
 
     switch (deliveryMethod) {
       case 'russian_post':
@@ -166,12 +184,14 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   const shippingCost = calculateShipping();
 
   // Сначала применяем баллы лояльности (только на товары без пробников)
-  const loyaltyDiscount = useLoyaltyPoints ? Math.min(loyaltyPointsToUse, subtotalWithoutSamples) : 0;
+  // Оптовики не могут использовать баллы
+  const loyaltyDiscount = !isWholesaler && useLoyaltyPoints ? Math.min(loyaltyPointsToUse, subtotalWithoutSamples) : 0;
 
   // Затем применяем промокод к результату после вычета баллов (без пробников и без доставки)
   // Пример: товары 10,000 руб, баллы 5,000, промокод применяется к (10,000 - 5,000) = 5,000 руб
+  // Оптовики не могут использовать промокоды
   const subtotalAfterLoyalty = subtotalWithoutSamples - loyaltyDiscount;
-  const promoDiscount = appliedPromo
+  const promoDiscount = !isWholesaler && appliedPromo
     ? appliedPromo.discount_type === 'percent'
       ? Math.round((subtotalAfterLoyalty * appliedPromo.discount_value) / 100) // округляем до целых рублей
       : Math.min(appliedPromo.discount_value, subtotalAfterLoyalty) // фиксированная скидка не больше оставшейся суммы
@@ -211,21 +231,17 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         
         // Check if promo code is still valid (not expired, usage limits, etc.)
         const now = new Date();
-        const validFrom = data.valid_from ? new Date(data.valid_from) : null;
-        const validUntil = data.valid_until ? new Date(data.valid_until) : null;
         
-        if (validFrom && now < validFrom) {
-          alert(t('promoCodeNotYetActive'));
-          return;
+        if (data.expires_at) {
+          const expiryDate = new Date(data.expires_at);
+          if (now > expiryDate) {
+            toast.error(t('promoCodeExpired'));
+            return;
+          }
         }
         
-        if (validUntil && now > validUntil) {
-          alert(t('promoCodeExpired'));
-          return;
-        }
-        
-        if (data.usage_limit && data.usage_count >= data.usage_limit) {
-          alert(t('promoCodeUsageLimitReached'));
+        if (data.usage_limit && data.times_used >= data.usage_limit) {
+          toast.error(t('promoCodeUsageLimitReached'));
           return;
         }
         
@@ -520,7 +536,18 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-gray-800 mb-4">{t('deliveryMethod')}</h3>
 
-              {store === 'china' && (
+              {/* Для оптовиков из Китая - только оптовая доставка */}
+              {store === 'china' && isWholesaler && (
+                <div className="p-3 border rounded-lg bg-gray-50">
+                  <div className="text-gray-800">{t('wholesaleDelivery')}</div>
+                  <div className="text-sm text-gray-600 mt-1">
+                    65 ¥ / {t('kg')} × {totalWeight.toFixed(2)} {t('kg')} = {shippingCost.toFixed(2)} ¥
+                  </div>
+                </div>
+              )}
+
+              {/* Для обычных покупателей из Китая */}
+              {store === 'china' && !isWholesaler && (
                 <div className="space-y-3">
                   <label className={`delivery-option flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${
                     deliveryMethod === 'russian_post' ? 'selected' : ''
@@ -565,7 +592,8 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                 </div>
               )}
 
-              {subtotal >= 8000 && (
+              {/* Бесплатная доставка только для обычных покупателей */}
+              {!isWholesaler && subtotal >= 8000 && (
                 <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700">
                   {t('freeDeliveryFrom')}
                 </div>
@@ -878,17 +906,27 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             <h3 className="text-gray-800">{t('orderSummary')}</h3>
 
             <div className="space-y-3">
-              {cart.map((item) => (
-                <div key={item.id} className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    {item.name} × {item.quantity}
-                    {item.isSample && <span className="ml-1 text-xs text-blue-600">({t('productIsSample')})</span>}
-                  </span>
-                  <span className="text-gray-800">
-                    {((item.price || 0) * (item.quantity || 0)).toLocaleString()} ₽
-                  </span>
-                </div>
-              ))}
+              {cart.map((item) => {
+                const wholesaleItemPrice = item.wholesalePrice || 0;
+                const wholesaleItemTotal = wholesaleItemPrice * (item.quantity || 0);
+                const retailItemPrice = item.price || 0;
+                const retailItemTotal = retailItemPrice * (item.quantity || 0);
+                
+                return (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span className="text-gray-600">
+                      {item.name} × {item.quantity}
+                      {item.isSample && <span className="ml-1 text-xs text-blue-600">({t('productIsSample')})</span>}
+                    </span>
+                    <span className="text-gray-800">
+                      {isWholesaler 
+                        ? `¥${wholesaleItemTotal.toFixed(2)}`
+                        : `${retailItemTotal.toLocaleString()} ₽`
+                      }
+                    </span>
+                  </div>
+                );
+              })}
             </div>
             
             {/* Предупреждение о пробниках */}
@@ -898,36 +936,38 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               </div>
             )}
 
-            {/* Промокод */}
-            <div className="pt-4 border-t border-gray-200">
-              <label className="block text-sm text-gray-700 mb-2">
-                {t('promoCode')}
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                  placeholder={t('enterPromoCode')}
-                  className="promo-code-input flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-                <button
-                  type="button"
-                  onClick={applyPromoCode}
-                  className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
-                >
-                  <Tag size={16} />
-                </button>
-              </div>
-              {appliedPromo && (
-                <div className="mt-2 text-sm text-green-600">
-                  ✓ {t('promoCodeApplied')}: {appliedPromo.code}
+            {/* Промокод - только для обычных покупателей */}
+            {!isWholesaler && (
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-sm text-gray-700 mb-2">
+                  {t('promoCode')}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    placeholder={t('enterPromoCode')}
+                    className="promo-code-input flex-1 px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-red-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={applyPromoCode}
+                    className="px-4 py-2 bg-gray-600 text-white rounded text-sm hover:bg-gray-700"
+                  >
+                    <Tag size={16} />
+                  </button>
                 </div>
-              )}
-            </div>
+                {appliedPromo && (
+                  <div className="mt-2 text-sm text-green-600">
+                    ✓ {t('promoCodeApplied')}: {appliedPromo.code}
+                  </div>
+                )}
+              </div>
+            )}
 
-            {/* Баллы лояльности */}
-            {user && availableLoyaltyPoints > 0 && (
+            {/* Баллы лояльности - только для обычных покупателей */}
+            {!isWholesaler && user && availableLoyaltyPoints > 0 && (
               <div className="pt-4 border-t border-gray-200">
                 <label className="flex items-center gap-2">
                   <input
@@ -965,7 +1005,12 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             <div className="pt-4 border-t border-gray-200 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">{t('subtotal')}:</span>
-                <span className="text-gray-800">{subtotal.toLocaleString()} ₽</span>
+                <span className="text-gray-800">
+                  {isWholesaler 
+                    ? `¥${subtotalInYuan.toFixed(2)}`
+                    : `${subtotal.toLocaleString()} ₽`
+                  }
+                </span>
               </div>
 
               {loyaltyDiscount > 0 && (
@@ -987,6 +1032,8 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
                 <span className="text-gray-800">
                   {shippingCost === 0 ? (
                     <span className="text-green-600">{t('free')}</span>
+                  ) : isWholesaler ? (
+                    `¥${shippingCost.toFixed(2)}`
                   ) : (
                     `${shippingCost.toLocaleString()} ₽`
                   )}
@@ -996,7 +1043,10 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                 <span className="text-gray-800">{t('finalTotal')}:</span>
                 <span className="final-total-price text-red-600 text-xl">
-                  {total.toLocaleString()} ₽
+                  {isWholesaler 
+                    ? `¥${(subtotalInYuan + shippingCost).toFixed(2)}`
+                    : `${total.toLocaleString()} ₽`
+                  }
                 </span>
               </div>
             </div>

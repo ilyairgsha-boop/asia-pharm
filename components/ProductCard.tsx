@@ -225,25 +225,46 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
             </div>
             {isWholesaler && wholesalePrice && (
               <div className="text-sm md:text-sm text-green-600 mt-1 whitespace-nowrap">
-                {t('wholesalePrice')}: ¥{wholesalePrice.toFixed(2)}
+                <span className="hidden md:inline">{t('wholesalePrice')}: </span>¥{wholesalePrice.toFixed(2)}
               </div>
             )}
           </div>
           
-          <button
-            ref={buttonRef}
-            onClick={handleAddToCart}
-            disabled={!product.inStock}
-            className={`add-to-cart-button flex items-center justify-center gap-2 px-4 py-2.5 md:py-2 rounded-lg transition-colors text-base md:text-sm whitespace-nowrap shrink-0 ${
-              product.inStock
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            <ShoppingCart size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
-            <span className="hidden md:inline">{t('addToCart')}</span>
-            <span className="md:hidden">+</span>
-          </button>
+          {/* Button for non-wholesalers */}
+          {!isWholesaler && (
+            <button
+              ref={buttonRef}
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              className={`add-to-cart-button flex items-center justify-center gap-2 px-4 py-2.5 md:py-2 rounded-lg transition-colors text-base md:text-sm whitespace-nowrap shrink-0 ${
+                product.inStock
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <ShoppingCart size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
+              <span className="hidden md:inline">{t('addToCart')}</span>
+              <span className="md:hidden">+</span>
+            </button>
+          )}
+          
+          {/* Button for wholesalers */}
+          {isWholesaler && (
+            <button
+              ref={buttonRef}
+              onClick={handleAddToCart}
+              disabled={!product.inStock}
+              className={`add-to-cart-button flex items-center justify-center gap-2 px-4 py-2.5 md:py-2 rounded-lg transition-colors text-base md:text-sm whitespace-nowrap shrink-0 ${
+                product.inStock
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              <ShoppingCart size={18} className="md:w-[18px] md:h-[18px] shrink-0" />
+              <span className="hidden md:inline">{t('addToCart')}</span>
+              <span className="md:hidden">+</span>
+            </button>
+          )}
         </div>
       </div>
       

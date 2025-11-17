@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Trash2, Plus, Minus, ShoppingCart } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart, type StoreType, getCurrentPrice } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 
 interface CartMultiStoreProps {
@@ -10,6 +11,7 @@ interface CartMultiStoreProps {
 
 export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
   const { language, t } = useLanguage();
+  const { user } = useAuth();
   const { 
     chinaCart, 
     thailandCart, 
@@ -18,6 +20,8 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
     updateQuantity, 
     getTotalByStore 
   } = useCart();
+
+  const isWholesaler = user?.isWholesaler || false;
 
   const [selectedStore, setSelectedStore] = useState<StoreType>('china');
 
@@ -46,6 +50,14 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
     vietnamCart;
 
   const totalPrice = getTotalByStore(selectedStore);
+  
+  // Для оптовиков считаем итого в юанях
+  const totalInYuan = isWholesaler 
+    ? currentCart.reduce((sum, item) => {
+        const wholesalePrice = item.wholesalePrice || 0;
+        return sum + wholesalePrice * item.quantity;
+      }, 0)
+    : 0;
 
   const allCartsEmpty = chinaCart.length === 0 && thailandCart.length === 0 && vietnamCart.length === 0;
 
@@ -165,7 +177,10 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                   <div className="flex-grow">
                     <h3 className="text-gray-800 mb-2">{getName(item)}</h3>
                     <p className="cart-item-price text-red-600 mb-2">
-                      {(item.actualPrice ?? getCurrentPrice(item)).toLocaleString()} ₽
+                      {isWholesaler && item.wholesalePrice 
+                        ? `¥${item.wholesalePrice.toFixed(2)}`
+                        : `${(item.actualPrice ?? getCurrentPrice(item)).toLocaleString()} ₽`
+                      }
                     </p>
 
                     <div className="flex items-center gap-3">
@@ -196,7 +211,10 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
                       <Trash2 size={20} />
                     </button>
                     <p className="text-gray-800">
-                      {((item.actualPrice ?? getCurrentPrice(item)) * (item.quantity || 0)).toLocaleString()} ₽
+                      {isWholesaler && item.wholesalePrice
+                        ? `¥${(item.wholesalePrice * (item.quantity || 0)).toFixed(2)}`
+                        : `${((item.actualPrice ?? getCurrentPrice(item)) * (item.quantity || 0)).toLocaleString()} ₽`
+                      }
                     </p>
                   </div>
                 </div>
@@ -213,7 +231,12 @@ export const CartMultiStore = ({ onNavigate }: CartMultiStoreProps) => {
             <div className="border-t border-gray-200 pt-4 mb-6">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-gray-600">{t('subtotal')}:</span>
-                <span className="cart-total-price text-gray-800">{(totalPrice || 0).toLocaleString()} ₽</span>
+                <span className="cart-total-price text-gray-800">
+                  {isWholesaler 
+                    ? `¥${totalInYuan.toFixed(2)}`
+                    : `${(totalPrice || 0).toLocaleString()} ₽`
+                  }
+                </span>
               </div>
             </div>
 

@@ -314,6 +314,8 @@ export const translations = {
     russianPost: 'Почта России',
     pyaterochkaPickup: 'Доставка в магазин Пятерочка',
     airDelivery: 'Авиа доставка',
+    wholesaleDelivery: 'Оптовая доставка',
+    perKg: 'за кг',
     region: 'Регион',
     cityOrTown: 'Город или населенный пункт',
     streetAndHouse: 'Улица и номер дома',
@@ -329,6 +331,8 @@ export const translations = {
     kg: 'кг',
     free: 'Бесплатно',
     freeDeliveryFrom: 'Бесплатная доставка от 8000 ₽',
+    yuan: '¥',
+    ruble: '₽',
     
     // Alerts/Messages
     agreePrivacyPolicy: 'Примите политику конфиденциальности',
@@ -504,7 +508,7 @@ export const translations = {
     orderNotFound: 'Информация о заказе не найдена',
     loading: 'Загрузка...',
     refresh: 'Обновить',
-    orderInformation: 'Информация о заказе',
+    orderInformation: 'Информац��я о заказе',
     followPaymentInstructions: 'Спасибо за ваш заказ. Следуйте инструкциям ниже для оплаты.',
     sberbank: 'Сбербанк',
     sbp: 'СБП',
@@ -1369,6 +1373,8 @@ export const translations = {
     russianPost: 'Russian Post',
     pyaterochkaPickup: 'Pyaterochka Store Pickup',
     airDelivery: 'Air Delivery',
+    wholesaleDelivery: 'Wholesale Delivery',
+    perKg: 'per kg',
     region: 'Region',
     cityOrTown: 'City or Town',
     streetAndHouse: 'Street and House Number',
@@ -1384,6 +1390,8 @@ export const translations = {
     kg: 'kg',
     free: 'Free',
     freeDeliveryFrom: 'Free delivery from 8000 ₽',
+    yuan: '¥',
+    ruble: '₽',
     
     // Alerts/Messages
     agreePrivacyPolicy: 'Please accept the privacy policy',
@@ -2411,6 +2419,8 @@ export const translations = {
     russianPost: '俄罗斯邮政',
     pyaterochkaPickup: 'Pyaterochka商店取货',
     airDelivery: '航空配送',
+    wholesaleDelivery: '批发配送',
+    perKg: '每公斤',
     region: '地区',
     cityOrTown: '城市或城镇',
     streetAndHouse: '街道和门牌号',
@@ -2426,6 +2436,8 @@ export const translations = {
     kg: '公斤',
     free: '免费',
     freeDeliveryFrom: '8000₽起免费配送',
+    yuan: '¥',
+    ruble: '₽',
     
     // Alerts/Messages
     agreePrivacyPolicy: '请接受隐私政策',
@@ -3434,6 +3446,8 @@ export const translations = {
     russianPost: 'Bưu điện Nga',
     pyaterochkaPickup: 'Lấy hàng tại cửa hàng Pyaterochka',
     airDelivery: 'Giao hàng hàng không',
+    wholesaleDelivery: 'Giao hàng bán sỉ',
+    perKg: 'mỗi kg',
     region: 'Vùng',
     cityOrTown: 'Thành phố hoặc thị trấn',
     streetAndHouse: 'Đường và số nhà',
@@ -3449,6 +3463,8 @@ export const translations = {
     kg: 'kg',
     free: 'Miễn phí',
     freeDeliveryFrom: 'Miễn phí giao hàng từ 8000 ₽',
+    yuan: '¥',
+    ruble: '₽',
     
     // Alerts/Messages
     agreePrivacyPolicy: 'Vui lòng chấp nhận chính sách bảo mật',
