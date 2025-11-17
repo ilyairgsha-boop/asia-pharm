@@ -227,8 +227,8 @@ function formatCurrency(amount: number | undefined | null): string {
 
 // Generate welcome email HTML
 export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
-  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
-  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
+  // Logo from GitHub repository
+  const logoUrl = 'https://raw.githubusercontent.com/ilyairgsha-boop/asia-pharm/main/image/logo.png';
   
   const welcomeTranslations = {
     ru: {
@@ -417,8 +417,8 @@ function translateDeliveryMethod(method: string, language: 'ru' | 'en' | 'zh' | 
 // Generate email HTML template
 export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'en' | 'zh' | 'vi' = 'ru'): string {
   const t = translations[language];
-  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
-  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
+  // Logo from GitHub repository
+  const logoUrl = 'https://raw.githubusercontent.com/ilyairgsha-boop/asia-pharm/main/image/logo.png';
 
   // Language flags
   const flags = {
@@ -756,8 +756,8 @@ export function generateBroadcastEmailHTML(
   language: 'ru' | 'en' | 'zh' | 'vi' = 'ru',
   unsubscribeUrl?: string
 ): string {
-  // Simple SVG logo as data URI - red circle with white "A" for Asia Pharm
-  const logoUrl = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSI2MCIgY3k9IjYwIiByPSI1OCIgZmlsbD0iI2VmMTAxMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iNjAiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+QTwvdGV4dD48L3N2Zz4=';
+  // Logo from GitHub repository
+  const logoUrl = 'https://raw.githubusercontent.com/ilyairgsha-boop/asia-pharm/main/image/logo.png';
   
   const flags = {
     ru: '🇷🇺',

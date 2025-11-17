@@ -1668,12 +1668,19 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     const template = PUSH_TEMPLATES[type][userLanguage] || PUSH_TEMPLATES[type]['ru'];
     const title = template.title;
     
-    // Prepare data for template with fallbacks
+    // Prepare data for template - orderNumber is REQUIRED for order notifications
+    // Do NOT use orderId as fallback to avoid sending duplicate notifications
     const templateData = {
-      orderNumber: orderNumber || orderId?.slice(0, 8) || 'N/A',
+      orderNumber: orderNumber || 'N/A',
       orderId,
       points
     };
+    
+    // Log warning if orderNumber is missing for order notifications
+    if (type.startsWith('order_') && !orderNumber) {
+      console.warn('⚠️ orderNumber is missing for order notification! This may cause incorrect notification content.');
+      console.warn('⚠️ Data:', { type, orderId, orderNumber });
+    }
     
     const message = typeof template.message === 'function' 
       ? template.message(templateData) 
