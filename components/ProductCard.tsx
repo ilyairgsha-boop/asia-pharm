@@ -225,7 +225,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
             </div>
             {isWholesaler && wholesalePrice && (
               <div className="text-sm md:text-sm text-green-600 mt-1 whitespace-nowrap">
-                <span className="hidden md:inline">{t('wholesalePrice')}: </span>¥{wholesalePrice.toFixed(2)}
+                ¥{wholesalePrice.toFixed(2)}
               </div>
             )}
           </div>
