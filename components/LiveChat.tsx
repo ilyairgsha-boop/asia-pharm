@@ -77,13 +77,12 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
       {/* Cart Button - Mobile only - always visible */}
       <button
         onClick={() => onNavigate?.('cart')}
-        className={`live-chat-cart-button md:hidden fixed bottom-[30px] right-[84px] w-[54px] h-[54px] rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all hover:scale-110 flex items-center justify-center p-0 ${
+        className={`live-chat-cart-button md:hidden fixed bottom-[30px] right-[84px] w-[54px] h-[54px] rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] transition-all hover:scale-110 flex items-center justify-center p-0 z-[50] ${
           currentTheme === 'blackfriday' 
             ? 'bg-yellow-400 text-black hover:bg-yellow-500' 
             : 'bg-red-600 text-white hover:bg-red-700'
         }`}
         aria-label="Cart"
-        style={{ zIndex: 9999, position: 'fixed' }}
       >
         <div className="relative w-full h-full flex items-center justify-center">
           <ShoppingCart size={24} strokeWidth={2} className="live-chat-cart-icon" />
@@ -103,7 +102,7 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
       {chatSettings.enabled && !isOpen && (
         <button
           onClick={handleOpenChat}
-          className="chat-button fixed bottom-[30px] right-[20px] md:bottom-6 md:right-6 bg-red-600 text-white w-[54px] h-[54px] md:w-auto md:h-auto md:p-4 rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] hover:bg-red-700 transition-all hover:scale-110 z-50 flex items-center justify-center"
+          className="chat-button fixed bottom-[30px] right-[20px] md:bottom-6 md:right-6 bg-red-600 text-white w-[54px] h-[54px] md:w-auto md:h-auto md:p-4 rounded-full shadow-[0px_10px_15px_-3px_rgba(0,0,0,0.1),0px_4px_6px_-4px_rgba(0,0,0,0.1)] hover:bg-red-700 transition-all hover:scale-110 z-[60] flex items-center justify-center"
           aria-label="Open chat"
         >
           <MessageCircle size={24} strokeWidth={2} />
@@ -112,7 +111,7 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
 
       {/* Chat Window - only if enabled */}
       {chatSettings.enabled && isOpen && (
-        <div className="fixed bottom-[30px] right-[20px] md:bottom-6 md:right-6 w-[calc(100vw-40px)] max-w-[320px] md:w-80 bg-white rounded-lg shadow-2xl z-50 border border-gray-200">
+        <div className="fixed bottom-[30px] right-[20px] md:bottom-6 md:right-6 w-[calc(100vw-40px)] max-w-[320px] md:w-80 bg-white rounded-lg shadow-2xl z-[60] border border-gray-200">
           {/* Header */}
           <div className="chat-header bg-red-600 text-white p-4 rounded-t-lg flex justify-between items-center">
             <div>

@@ -679,9 +679,9 @@ function AppContent() {
 
       {currentPage === 'admin' && user?.isAdmin && <AdminPanelNew />}
 
-      {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} />}
+      {currentPage === 'privacy-policy' && <PrivacyPolicy onNavigate={handleNavigate} language={currentLanguage} />}
 
-      {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} />}
+      {currentPage === 'terms-of-service' && <TermsOfService onNavigate={handleNavigate} language={currentLanguage} />}
 
       {currentPage === 'loyalty-program' && <LoyaltyProgram onNavigate={handleNavigate} />}
 
@@ -799,12 +799,15 @@ function AppContent() {
                         );
                       } else {
                         console.warn('⚠️ Subscription failed - no Player ID returned');
-                        toast.warning(
-                          currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще раз.' :
-                          currentLanguage === 'en' ? '⚠️ Subscription failed. Please try again.' :
-                          currentLanguage === 'zh' ? '⚠️ 订阅失败。请重试。' :
-                          '⚠️ Đăng ký thất bại. Vui lòng thử lại.'
-                        );
+                        // Only show warning on desktop (push notifications don't work on mobile web)
+                        if (window.innerWidth > 768) {
+                          toast.warning(
+                            currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще раз.' :
+                            currentLanguage === 'en' ? '⚠️ Subscription failed. Please try again.' :
+                            currentLanguage === 'zh' ? '⚠️ 订阅失败。请重试。' :
+                            '⚠️ Đăng ký thất bại. Vui lòng thử lại.'
+                          );
+                        }
                       }
                     } else {
                       toast.error(

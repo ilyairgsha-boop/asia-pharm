@@ -126,7 +126,7 @@ const translations = {
     },
     messages: {
       pending: '您的订单已收到，正在等待处理。请使用以下方式之一付款。',
-      processing: '我们已收到您的付款！您的订��正在处理中，即将发货。',
+      processing: '我们已收到您的付款！您的订正在处理中，即将发货。',
       shipped: '您的订单已发货！点击下面的钮跟踪您的包裹。',
       delivered: '感谢您使用亚洲药房服务！您的订单已成功送达。',
       cancelled: '很遗憾，您的订单已被取消。'
@@ -301,86 +301,92 @@ export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 
   const flag = { ru: '🇷🇺', en: '🇬🇧', zh: '🇨🇳', vi: '🇻🇳' }[language];
   
   return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <style>
-        body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; }
-        .header { background: linear-gradient(135deg, #ef1010 0%, #dc0000 100%); padding: 30px 20px; text-align: center; }
-        .logo { max-width: 120px; height: auto; }
-        .site-name { color: white; margin: 15px 0 0 0; font-size: 28px; }
-        .language-flag { position: absolute; top: 20px; right: 20px; font-size: 32px; }
-        .content { padding: 40px 30px; }
-        .welcome-title { color: #ef1010; font-size: 32px; margin: 0 0 20px 0; text-align: center; }
-        .greeting { color: #333; font-size: 24px; margin: 0 0 15px 0; }
-        .message { color: #666; font-size: 16px; line-height: 1.6; margin: 20px 0; }
-        .info-box { background: #f8f9fa; border-left: 4px solid #ef1010; padding: 20px; margin: 25px 0; border-radius: 4px; }
-        .info-row { padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: #666; font-size: 14px; margin-bottom: 5px; }
-        .info-value { color: #333; font-size: 18px; font-weight: 600; }
-        .button { display: inline-block; padding: 15px 40px; background: #ef1010; color: white !important; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 18px; margin: 30px 0; text-align: center; }
-        .benefits { background: #e8f5e9; padding: 25px; border-radius: 8px; margin: 25px 0; }
-        .benefits h3 { color: #2e7d32; margin: 0 0 15px 0; }
-        .benefits ul { margin: 0; padding: 0 0 0 20px; }
-        .benefits li { color: #333; margin: 10px 0; line-height: 1.6; }
-        .footer { background: #2c2c2c; color: white; text-align: center; padding: 30px 20px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header" style="position: relative;">
-          <span class="language-flag">${flag}</span>
-          <img src="${logoUrl}" alt="Asia Pharm Logo" class="logo" />
-          <h1 class="site-name">Азия Фарм</h1>
+<!DOCTYPE html>
+<html lang="${language}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${t.welcome}</title>
+  <style>
+    body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(180deg, #c9ecc2 0%, #ffffff 100%); }
+    .container { max-width: 800px; margin: 0 auto; background: white; box-shadow: 0 0 40px rgba(201, 236, 194, 0.5); position: relative; }
+    .header { background: linear-gradient(180deg, #c9ecc2 0%, #ffffff 100%); padding: 40px 30px; text-align: center; position: relative; }
+    .logo-wrapper { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
+    .logo { width: 120px; height: 120px; }
+    .site-name { font-family: 'Lobster', cursive; font-size: 56px; color: #ef1010; text-shadow: 0 0 20px rgba(201, 236, 194, 0.8); margin: 0; }
+    .language-flag { position: absolute; top: 20px; right: 20px; font-size: 28px; }
+    .content { padding: 40px 30px; }
+    .welcome-title { color: #ef1010; font-size: 32px; margin: 0 0 20px 0; text-align: center; font-weight: 600; }
+    .greeting { color: #333; font-size: 24px; margin: 0 0 15px 0; }
+    .message { color: #666; font-size: 18px; line-height: 1.6; margin: 20px 0; }
+    .info-box { background: #f8f9fa; border-left: 4px solid #ef1010; padding: 20px; margin: 25px 0; border-radius: 4px; }
+    .info-row { padding: 10px 0; border-bottom: 1px solid #e0e0e0; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: #666; font-size: 14px; margin-bottom: 5px; }
+    .info-value { color: #333; font-size: 18px; font-weight: 600; }
+    .button { display: inline-block; padding: 15px 40px; background: #ef1010; color: white !important; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 18px; margin: 30px 0; text-align: center; transition: background 0.3s; }
+    .button:hover { background: #dc0000; }
+    .benefits { background: linear-gradient(135deg, #c9ecc2 0%, #e8f5e9 100%); padding: 25px; border-radius: 8px; margin: 25px 0; box-shadow: 0 2px 8px rgba(201, 236, 194, 0.3); }
+    .benefits h3 { color: #2e7d32; margin: 0 0 15px 0; }
+    .benefits ul { margin: 0; padding: 0 0 0 20px; }
+    .benefits li { color: #333; margin: 10px 0; line-height: 1.6; }
+    .footer { background: linear-gradient(180deg, #2c2c2c 0%, #1a1a1a 100%); color: white; text-align: center; padding: 30px 20px; }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="language-flag">${flag}</div>
+      <div class="logo-wrapper">
+        <img src="${logoUrl}" alt="Asia Pharm Logo" class="logo" />
+      </div>
+      <h1 class="site-name">Азия Фарм</h1>
+    </div>
+    
+    <div class="content">
+      <h1 class="welcome-title">${t.welcome}</h1>
+      <h2 class="greeting">${t.greeting}, ${userData.name}!</h2>
+      <p class="message">${t.thankYou}</p>
+      <p class="message">${t.registered}</p>
+      
+      <div class="info-box">
+        <div class="info-row">
+          <div class="info-label">${t.name}:</div>
+          <div class="info-value">${userData.name}</div>
         </div>
-        
-        <div class="content">
-          <h1 class="welcome-title">${t.welcome}</h1>
-          <h2 class="greeting">${t.greeting}, ${userData.name}!</h2>
-          <p class="message">${t.thankYou}</p>
-          <p class="message">${t.registered}</p>
-          
-          <div class="info-box">
-            <div class="info-row">
-              <div class="info-label">${t.name}:</div>
-              <div class="info-value">${userData.name}</div>
-            </div>
-            <div class="info-row">
-              <div class="info-label">${t.email}:</div>
-              <div class="info-value">${userData.email}</div>
-            </div>
-            <div class="info-row">
-              <div class="info-label">${t.password}:</div>
-              <div class="info-value">${userData.password || '••••••••'}</div>
-            </div>
-          </div>
-          
-          <div style="text-align: center;">
-            <a href="https://asia-pharm.com/profile" class="button">${t.loginButton}</a>
-          </div>
-          
-          <div class="benefits">
-            <h3>${t.benefits}</h3>
-            <ul>
-              <li>${t.benefit1}</li>
-              <li>${t.benefit2}</li>
-              <li>${t.benefit3}</li>
-              <li>${t.benefit4}</li>
-            </ul>
-          </div>
+        <div class="info-row">
+          <div class="info-label">${t.email}:</div>
+          <div class="info-value">${userData.email}</div>
         </div>
-        
-        <div class="footer">
-          <p style="margin: 0; font-size: 16px;">${t.footer}</p>
-          <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.8;">© 2025 Asia Pharm. All rights reserved.</p>
+        <div class="info-row">
+          <div class="info-label">${t.password}:</div>
+          <div class="info-value">${userData.password || '••••••••'}</div>
         </div>
       </div>
-    </body>
-    </html>
+      
+      <div style="text-align: center;">
+        <a href="https://asia-pharm.com/profile" class="button">${t.loginButton}</a>
+      </div>
+      
+      <div class="benefits">
+        <h3>${t.benefits}</h3>
+        <ul>
+          <li>✅ ${t.benefit1}</li>
+          <li>✅ ${t.benefit2}</li>
+          <li>✅ ${t.benefit3}</li>
+          <li>✅ ${t.benefit4}</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p style="margin: 0; font-size: 16px;">${t.footer}</p>
+      <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.8;">© 2025 Asia Pharm. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
   `;
 }
 
@@ -475,7 +481,7 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
               <p style="margin: 10px 0 0 0; color: #666; font-size: 12px; line-height: 1.4;">${language === 'ru' ? 'Отсканируйте в приложении банка' : language === 'en' ? 'Scan in bank app' : language === 'zh' ? '在银行应用中扫描' : 'Quét trong ứng dụng ngân hàng'}</p>
             ` : `
               <div style="width: 180px; height: 180px; margin: 10px auto; display: flex; align-items: center; justify-content: center; border: 2px dashed #0088cc; border-radius: 8px; background: #f0f8ff;">
-                <p style="margin: 0; color: #0088cc; font-size: 14px; text-align: center; padding: 15px;">${language === 'ru' ? 'QR-код будет отправлен отдельно' : language === 'en' ? 'QR code will be sent separately' : language === 'zh' ? '二维码将单独发送' : 'Mã QR sẽ được gửi riêng'}</p>
+                <p style="margin: 0; color: #0088cc; font-size: 14px; text-align: center; padding: 15px;">${language === 'ru' ? 'QR-ко�� будет отправлен отдельно' : language === 'en' ? 'QR code will be sent separately' : language === 'zh' ? '二维码将单独发送' : 'Mã QR sẽ được gửi riêng'}</p>
               </div>
             `}
           </div>
@@ -552,9 +558,7 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
     .logo-wrapper { display: flex; align-items: center; justify-content: center; gap: 20px; margin-bottom: 20px; }
     .logo { width: 120px; height: 120px; }
     .site-name { font-family: 'Lobster', cursive; font-size: 56px; color: #ef1010; text-shadow: 0 0 20px rgba(201, 236, 194, 0.8); margin: 0; }
-    .language-selector { position: absolute; top: 20px; right: 20px; text-align: right; }
-    .language-flag { font-size: 28px; cursor: pointer; margin: 0 5px; opacity: 0.5; transition: opacity 0.3s; text-decoration: none; display: inline-block; }
-    .language-flag.active { opacity: 1; }
+    .language-flag { position: absolute; top: 20px; right: 20px; font-size: 28px; }
     .content { padding: 40px 30px; }
     .greeting { color: #ef1010; font-size: 32px; margin-bottom: 20px; font-weight: 600; }
     .thank-you { font-size: 20px; color: #333; margin-bottom: 10px; }
@@ -594,14 +598,10 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
   <div class="container">
     <!-- Header -->
     <div class="header">
+      <div class="language-flag">${flags[language]}</div>
       <div class="logo-wrapper">
         <img src="${logoUrl}" alt="Asia Pharm Logo" class="logo" />
         <h1 class="site-name">Азия Фарм</h1>
-      </div>
-      
-      <!-- Language Indicator -->
-      <div class="language-selector">
-        <span class="language-flag active" title="${language === 'ru' ? 'Русский' : language === 'en' ? 'English' : language === 'zh' ? '中文' : 'Tiếng Việt'}">${flags[language]}</span>
       </div>
     </div>
 
@@ -828,7 +828,7 @@ export function generateBroadcastEmailHTML(
 <body>
   <div class="container">
     <div class="header">
-      <span class="language-flag">${flags[language]}</span>
+      <div class="language-flag">${flags[language]}</div>
       <div class="logo-wrapper">
         <img src="${logoUrl}" alt="Asia Pharm Logo" class="logo" />
         <h1 class="site-name">Азия Фарм</h1>

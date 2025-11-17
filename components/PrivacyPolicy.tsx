@@ -13,6 +13,17 @@ export const PrivacyPolicy = ({ onNavigate, language = 'ru', t = (key) => key, e
   const [content, setContent] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Переводы для кнопки "На главную"
+  const getBackToHomeText = () => {
+    const translations: Record<Language, string> = {
+      ru: '← На главную',
+      en: '← Back to Home',
+      zh: '← 返回首页',
+      vi: '← Về trang chủ'
+    };
+    return translations[language] || translations.ru;
+  };
+
   useEffect(() => {
     fetchContent();
   }, [language]);
@@ -43,7 +54,7 @@ export const PrivacyPolicy = ({ onNavigate, language = 'ru', t = (key) => key, e
   const getDefaultContent = () => {
     const defaults = {
       ru: `
-        <h2>Политика конфиденциаль��ости</h2>
+        <h2>Политика конфиденциальости</h2>
         <p>Настоящая Политика конфиденциальности определяет порядок обработки и защиты персональных данных пользователей сайта.</p>
         
         <h3>1. Сбор информации</h3>
@@ -162,7 +173,7 @@ export const PrivacyPolicy = ({ onNavigate, language = 'ru', t = (key) => key, e
         onClick={() => onNavigate('home')}
         className="mb-4 text-red-600 hover:underline"
       >
-        ← {t('backToHome')}
+        {getBackToHomeText()}
       </button>
       <div className="bg-white rounded-lg shadow-md p-8">
         <div 
