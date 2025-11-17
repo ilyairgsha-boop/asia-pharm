@@ -126,7 +126,7 @@ const translations = {
     },
     messages: {
       pending: '您的订单已收到，正在等待处理。请使用以下方式之一付款。',
-      processing: '我们已收到您的付款！您的订正在处理中，即将发货。',
+      processing: '我们已收到您的付款！您的订��在处理中，即将发货。',
       shipped: '您的订单已发货！点击下面的钮跟踪您的包裹。',
       delivered: '感谢您使用亚洲药房服务！您的订单已成功送达。',
       cancelled: '很遗憾，您的订单已被取消。'
@@ -361,7 +361,7 @@ export function generateWelcomeEmailHTML(userData: any, language: 'ru' | 'en' | 
         </div>
         <div class="info-row">
           <div class="info-label">${t.password}:</div>
-          <div class="info-value">${userData.password || '••••••••'}</div>
+          <div class="info-value">${userData.password || ''}</div>
         </div>
       </div>
       
@@ -481,7 +481,7 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
               <p style="margin: 10px 0 0 0; color: #666; font-size: 12px; line-height: 1.4;">${language === 'ru' ? 'Отсканируйте в приложении банка' : language === 'en' ? 'Scan in bank app' : language === 'zh' ? '在银行应用中扫描' : 'Quét trong ứng dụng ngân hàng'}</p>
             ` : `
               <div style="width: 180px; height: 180px; margin: 10px auto; display: flex; align-items: center; justify-content: center; border: 2px dashed #0088cc; border-radius: 8px; background: #f0f8ff;">
-                <p style="margin: 0; color: #0088cc; font-size: 14px; text-align: center; padding: 15px;">${language === 'ru' ? 'QR-ко�� будет отправлен отдельно' : language === 'en' ? 'QR code will be sent separately' : language === 'zh' ? '二维码将单独发送' : 'Mã QR sẽ được gửi riêng'}</p>
+                <p style="margin: 0; color: #0088cc; font-size: 14px; text-align: center; padding: 15px;">${language === 'ru' ? 'QR-ко будет отправлен отдельно' : language === 'en' ? 'QR code will be sent separately' : language === 'zh' ? '二维码将单独发送' : 'Mã QR sẽ được gửi riêng'}</p>
               </div>
             `}
           </div>

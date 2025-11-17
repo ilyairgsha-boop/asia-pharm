@@ -341,6 +341,11 @@ export const translations = {
     errorPlacingOrder: 'Ошибка при оформлении заказа',
     promoCodeApplied: 'Промокод применен',
     invalidPromoCode: 'Неверный промокод',
+    promoCodeWrongStore: 'Этот промокод не действует для выбранного магазина',
+    all: 'Все',
+    china: 'Китай',
+    thailand: 'Таиланд',
+    vietnam: 'Вьетнам',
     
     // Loyalty extended
     availablePoints: 'Доступно баллов',
@@ -1391,6 +1396,11 @@ export const translations = {
     errorPlacingOrder: 'Error placing order',
     promoCodeApplied: 'Promo code applied',
     invalidPromoCode: 'Invalid promo code',
+    promoCodeWrongStore: 'This promo code does not apply to the selected store',
+    all: 'All',
+    china: 'China',
+    thailand: 'Thailand',
+    vietnam: 'Vietnam',
     
     // Loyalty extended
     availablePoints: 'Available Points',
@@ -2428,6 +2438,11 @@ export const translations = {
     errorPlacingOrder: '下单错误',
     promoCodeApplied: '促销代码已应用',
     invalidPromoCode: '无效的促销代码',
+    promoCodeWrongStore: '此促销代码不适用于所选商店',
+    all: '全部',
+    china: '中国',
+    thailand: '泰国',
+    vietnam: '越南',
     
     // Loyalty extended
     availablePoints: '可用积分',
@@ -3446,6 +3461,11 @@ export const translations = {
     errorPlacingOrder: 'Lỗi đặt hàng',
     promoCodeApplied: 'Đã áp dụng mã khuyến mãi',
     invalidPromoCode: 'Mã khuyến mãi không hợp lệ',
+    promoCodeWrongStore: 'Mã khuyến mãi này không áp dụng cho cửa hàng đã chọn',
+    all: 'Tất cả',
+    china: 'Trung Quốc',
+    thailand: 'Thái Lan',
+    vietnam: 'Việt Nam',
     
     // Loyalty extended
     availablePoints: 'Điểm có sẵn',

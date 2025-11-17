@@ -203,6 +203,12 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         .maybeSingle();
 
       if (!error && data) {
+        // Check if promo code is for the correct store
+        if (data.store && data.store !== 'all' && data.store !== store) {
+          toast.error(t('promoCodeWrongStore'));
+          return;
+        }
+        
         // Check if promo code is still valid (not expired, usage limits, etc.)
         const now = new Date();
         const validFrom = data.valid_from ? new Date(data.valid_from) : null;

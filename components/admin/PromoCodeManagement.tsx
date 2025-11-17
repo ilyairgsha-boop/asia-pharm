@@ -14,6 +14,7 @@ interface PromoCode {
   usage_limit: number | null;
   times_used: number;
   active: boolean;
+  store: 'china' | 'thailand' | 'vietnam' | 'all'; // Add store field
 }
 
 export const PromoCodeManagement = () => {
@@ -31,6 +32,7 @@ export const PromoCodeManagement = () => {
     expires_at: '',
     usage_limit: '',
     active: true,
+    store: 'all' as 'china' | 'thailand' | 'vietnam' | 'all', // Add store field
   });
 
   useEffect(() => {
@@ -105,6 +107,7 @@ export const PromoCodeManagement = () => {
       expires_at: promo.expires_at || '',
       usage_limit: promo.usage_limit?.toString() || '',
       active: promo.active,
+      store: promo.store, // Add store field
     });
     setEditingId(promo.id);
     setShowForm(true);
@@ -143,6 +146,7 @@ export const PromoCodeManagement = () => {
       expires_at: '',
       usage_limit: '',
       active: true,
+      store: 'all', // Add store field
     });
   };
 
@@ -187,6 +191,27 @@ export const PromoCodeManagement = () => {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
               />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('store')} *
+              </label>
+              <select
+                value={formData.store}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    store: e.target.value as 'china' | 'thailand' | 'vietnam' | 'all',
+                  })
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              >
+                <option value="all">{t('all')}</option>
+                <option value="china">{t('china')}</option>
+                <option value="thailand">{t('thailand')}</option>
+                <option value="vietnam">{t('vietnam')}</option>
+              </select>
             </div>
 
             <div>
@@ -294,6 +319,7 @@ export const PromoCodeManagement = () => {
           <thead className="bg-gray-50">
             <tr>
               <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('promoCodeValue')}</th>
+              <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('store')}</th>
               <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('discountType')}</th>
               <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('discountValue')}</th>
               <th className="px-2 sm:px-4 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('timesUsed')}</th>
@@ -306,6 +332,12 @@ export const PromoCodeManagement = () => {
             {promoCodes.map((promo) => (
               <tr key={promo.id} className="border-b border-gray-200">
                 <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">{promo.code}</td>
+                <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">
+                  {promo.store === 'all' && t('all')}
+                  {promo.store === 'china' && t('china')}
+                  {promo.store === 'thailand' && t('thailand')}
+                  {promo.store === 'vietnam' && t('vietnam')}
+                </td>
                 <td className="px-2 sm:px-4 py-3 text-xs sm:text-sm">
                   {promo.discount_type === 'percent' ? '%' : '₽'}
                 </td>
