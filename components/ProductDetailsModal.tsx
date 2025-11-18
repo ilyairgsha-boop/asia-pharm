@@ -58,6 +58,21 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
 
   if (!product) return null;
   
+  // Debug logging for first render
+  useEffect(() => {
+    if (product) {
+      console.log('🔍 ProductDetailsModal - Product data:', {
+        name: product.name,
+        image: product.image,
+        image_length: product.image?.length,
+        shortDescription_length: product.shortDescription?.length,
+        description_length: product.description?.length,
+        shortDescription_preview: product.shortDescription?.substring(0, 100),
+        description_preview: product.description?.substring(0, 100)
+      });
+    }
+  }, [product]);
+  
   const isWholesaler = user?.isWholesaler || false;
   const wholesalePrice = (product as any).wholesalePrice; // Keep as any for backwards compatibility
 

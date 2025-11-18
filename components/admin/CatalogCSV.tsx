@@ -208,6 +208,45 @@ export const CatalogCSV = () => {
     }
   };
 
+  // Parse CSV text into lines, respecting quoted multiline values
+  const parseCSVLines = (text: string): string[] => {
+    const lines: string[] = [];
+    let currentLine = '';
+    let insideQuotes = false;
+    
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+      const nextChar = text[i + 1];
+      
+      if (char === '"') {
+        if (insideQuotes && nextChar === '"') {
+          // Escaped quote
+          currentLine += '""';
+          i++;
+        } else {
+          // Toggle quote mode
+          insideQuotes = !insideQuotes;
+          currentLine += char;
+        }
+      } else if (char === '\n' && !insideQuotes) {
+        // End of line (outside quotes)
+        if (currentLine.trim()) {
+          lines.push(currentLine);
+        }
+        currentLine = '';
+      } else {
+        currentLine += char;
+      }
+    }
+    
+    // Push last line
+    if (currentLine.trim()) {
+      lines.push(currentLine);
+    }
+    
+    return lines;
+  };
+
   const parseCSVLine = (line: string, separator: string): string[] => {
     const values: string[] = [];
     let currentValue = '';
@@ -227,13 +266,8 @@ export const CatalogCSV = () => {
           insideQuotes = !insideQuotes;
         }
       } else if (char === separator && !insideQuotes) {
-        // End of field - trim and push
-        let trimmed = currentValue.trim();
-        // Remove surrounding quotes if present
-        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-          trimmed = trimmed.slice(1, -1);
-        }
-        values.push(trimmed);
+        // End of field - push value
+        values.push(currentValue);
         currentValue = '';
       } else {
         currentValue += char;
@@ -241,12 +275,7 @@ export const CatalogCSV = () => {
     }
     
     // Push last value
-    let trimmed = currentValue.trim();
-    // Remove surrounding quotes if present
-    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      trimmed = trimmed.slice(1, -1);
-    }
-    values.push(trimmed);
+    values.push(currentValue);
     return values;
   };
 
@@ -271,7 +300,8 @@ export const CatalogCSV = () => {
       // Normalize line endings
       text = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
       
-      const lines = text.split('\n').filter(line => line.trim());
+      // Parse CSV lines respecting quotes (multiline values)
+      const lines = parseCSVLines(text);
       
       if (lines.length < 2) {
         toast.error('CSV файл пустой или некорректный');
@@ -310,6 +340,15 @@ export const CatalogCSV = () => {
           headers.forEach((header, index) => {
             const value = values[index] || '';
             const cleanValue = value.trim();
+            
+            // Log image and description fields for first row
+            if (i === 1 && (header.includes('Изображение') || header.includes('Описание') || header.includes('Краткое описание'))) {
+              console.log(`🔍 Field "${header}":`, {
+                raw_length: value.length,
+                clean_length: cleanValue.length,
+                preview: cleanValue.substring(0, 100)
+              });
+            }
             
             if (header.includes('Название (RU)') || header.includes('Название') && header.includes('*')) {
               product.name = cleanValue;
@@ -377,9 +416,19 @@ export const CatalogCSV = () => {
             } else if (header.includes('Изображение')) {
               // Ensure image URL is properly saved
               const imageUrl = cleanValue.trim();
+              if (i === 1) {
+                console.log(`🖼️ Image field for first row:`, {
+                  raw: value,
+                  cleaned: imageUrl,
+                  length: imageUrl.length,
+                  has_value: imageUrl !== ''
+                });
+              }
               if (imageUrl && imageUrl !== '') {
                 product.image = imageUrl;
-                console.log(`🖼️ Image found for row ${i}: ${imageUrl.substring(0, 50)}...`);
+                console.log(`🖼️ Image found for row ${i}: ${imageUrl.substring(0, 80)}...`);
+              } else {
+                console.log(`⚠️ No image for row ${i}`);
               }
             } else if (header.includes('В наличии') || header.includes('наличии')) {
               // Parse multiple formats for "in stock"
@@ -460,9 +509,9 @@ export const CatalogCSV = () => {
           // Ensure we have created_at timestamp
           product.created_at = new Date().toISOString();
           
-          // Log product data for first few rows
-          if (products.length < 3) {
-            console.log(`✅ Valid product ${products.length + 1}:`, {
+          // Log product data for first product in detail
+          if (products.length === 0) {
+            console.log(`✅ First valid product FULL DATA:`, {
               name: product.name,
               price: product.price,
               weight: product.weight,
@@ -474,9 +523,9 @@ export const CatalogCSV = () => {
               image_length: product.image?.length,
               in_stock: product.in_stock,
               short_description_length: product.short_description?.length,
-              short_description: product.short_description?.substring(0, 80) + '...',
+              short_description_preview: product.short_description?.substring(0, 150),
               description_length: product.description?.length,
-              description: product.description?.substring(0, 80) + '...',
+              description_preview: product.description?.substring(0, 150),
             });
           }
 
