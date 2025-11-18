@@ -108,7 +108,21 @@ export const SmartSearch = ({ onProductClick }: SmartSearchProps) => {
           if (product.category?.toLowerCase().includes(searchLower)) score += 15;
           if (product.disease?.toLowerCase().includes(searchLower)) score += 15;
 
-          return { ...product, searchScore: score };
+          // Map database fields to frontend format
+          return { 
+            ...product, 
+            searchScore: score,
+            inStock: product.in_stock !== false, // Map in_stock to inStock
+            isSample: product.is_sample || false,
+            wholesalePrice: product.wholesale_price,
+            saleEnabled: product.sale_enabled || false,
+            saleDiscount: product.sale_discount || 0,
+            saleEndDate: product.sale_end_date || null,
+            shortDescription: product.short_description || product.description || '',
+            shortDescription_en: product.short_description_en || product.description_en || '',
+            shortDescription_zh: product.short_description_zh || product.description_zh || '',
+            shortDescription_vi: product.short_description_vi || product.description_vi || '',
+          };
         });
 
         // Sort by score and filter out 0 scores

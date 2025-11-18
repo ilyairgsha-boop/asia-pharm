@@ -539,9 +539,14 @@ function AppContent() {
             ...product,
             inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
             isSample: product.is_sample ?? false,
+            wholesalePrice: product.wholesale_price,
             saleEnabled: product.sale_enabled ?? false,
             saleDiscount: product.sale_discount ?? 0,
             saleEndDate: product.sale_end_date ?? null,
+            shortDescription: product.short_description || product.description || '',
+            shortDescription_en: product.short_description_en || product.description_en || '',
+            shortDescription_zh: product.short_description_zh || product.description_zh || '',
+            shortDescription_vi: product.short_description_vi || product.description_vi || '',
           };
           
           setSelectedProduct(mappedProduct);
@@ -583,9 +588,14 @@ function AppContent() {
             ...product,
             inStock: product.in_stock ?? true, // Map in_stock to inStock with fallback
             isSample: product.is_sample ?? false,
+            wholesalePrice: product.wholesale_price,
             saleEnabled: product.sale_enabled ?? false,
             saleDiscount: product.sale_discount ?? 0,
             saleEndDate: product.sale_end_date ?? null,
+            shortDescription: product.short_description || product.description || '',
+            shortDescription_en: product.short_description_en || product.description_en || '',
+            shortDescription_zh: product.short_description_zh || product.description_zh || '',
+            shortDescription_vi: product.short_description_vi || product.description_vi || '',
           };
           
           setSelectedProduct(mappedProduct);

@@ -502,6 +502,10 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
             store: item.store,
             weight: item.weight || 0,
             isSample: item.is_sample || false,
+            wholesalePrice: item.wholesale_price,
+            saleEnabled: item.sale_enabled || false,
+            saleDiscount: item.sale_discount || 0,
+            saleEndDate: item.sale_end_date || null,
           }));
         } else {
           allProducts = getMockProducts();
