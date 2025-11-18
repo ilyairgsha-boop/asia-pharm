@@ -253,13 +253,19 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
 
               {/* Short description without header */}
               <div>
-                <p className="text-gray-700 whitespace-pre-line text-base md:text-base text-[16px]">{getShortDescription()}</p>
+                <div 
+                  className="text-gray-700 text-base md:text-base text-[16px]"
+                  dangerouslySetInnerHTML={{ __html: getShortDescription() || '' }}
+                />
               </div>
 
               {/* Full description with header */}
               <div>
                 <h3 className="text-gray-800 mb-2 text-lg md:text-lg text-[16px]">{t('description')}</h3>
-                <p className="text-gray-700 whitespace-pre-line text-base md:text-base text-[16px]">{getDescription()}</p>
+                <div 
+                  className="text-gray-700 text-base md:text-base text-[16px]"
+                  dangerouslySetInnerHTML={{ __html: getDescription() || '' }}
+                />
               </div>
 
               {product.inStock && (
