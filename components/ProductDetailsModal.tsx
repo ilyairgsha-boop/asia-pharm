@@ -56,9 +56,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
     }
   }, [product]);
 
-  if (!product) return null;
-  
-  // Debug logging for first render
+  // Debug logging
   useEffect(() => {
     if (product) {
       console.log('🔍 ProductDetailsModal - Product data:', {
@@ -72,6 +70,8 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
       });
     }
   }, [product]);
+
+  if (!product) return null;
   
   const isWholesaler = user?.isWholesaler || false;
   const wholesalePrice = (product as any).wholesalePrice; // Keep as any for backwards compatibility

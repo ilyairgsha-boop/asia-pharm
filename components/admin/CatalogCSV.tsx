@@ -316,8 +316,11 @@ export const CatalogCSV = () => {
       console.log('📋 CSV Headers:', headers);
       console.log('📋 Looking for columns:', {
         image: headers.find(h => h.includes('Изображение')),
+        imageIndex: headers.findIndex(h => h.includes('Изображение')),
         description: headers.find(h => h.includes('Описание (RU)')),
-        shortDescription: headers.find(h => h.includes('Краткое описание (RU)'))
+        descriptionIndex: headers.findIndex(h => h.includes('Описание (RU)')),
+        shortDescription: headers.find(h => h.includes('Краткое описание (RU)')),
+        shortDescriptionIndex: headers.findIndex(h => h.includes('Краткое описание (RU)'))
       });
       
       const products = [];
@@ -331,23 +334,26 @@ export const CatalogCSV = () => {
 
           const product: any = {};
           
-          // Debug first few rows
-          if (i <= 3) {
-            console.log(`📊 Row ${i} values:`, values);
-            console.log(`📊 Row ${i} - Values count:`, values.length, 'Headers count:', headers.length);
+          // Debug first row in detail
+          if (i === 1) {
+            console.log(`📊 Row ${i} - FULL DEBUG:`);
+            console.log(`  Values count: ${values.length}, Headers count: ${headers.length}`);
+            console.log(`  Line text (first 200 chars):`, lines[i].substring(0, 200));
+            headers.forEach((header, idx) => {
+              const val = values[idx] || '';
+              if (header.includes('Изображение') || header.includes('Описание') || header.includes('Название') || header.includes('Краткое')) {
+                console.log(`  [${idx}] "${header}" = "${val.substring(0, 100)}${val.length > 100 ? '...' : ''}"`);
+              }
+            });
           }
           
           headers.forEach((header, index) => {
             const value = values[index] || '';
-            const cleanValue = value.trim();
+            let cleanValue = value.trim();
             
-            // Log image and description fields for first row
-            if (i === 1 && (header.includes('Изображение') || header.includes('Описание') || header.includes('Краткое описание'))) {
-              console.log(`🔍 Field "${header}":`, {
-                raw_length: value.length,
-                clean_length: cleanValue.length,
-                preview: cleanValue.substring(0, 100)
-              });
+            // Remove surrounding quotes if present (double cleanup just in case)
+            if (cleanValue.startsWith('"') && cleanValue.endsWith('"')) {
+              cleanValue = cleanValue.slice(1, -1).trim();
             }
             
             if (header.includes('Название (RU)') || header.includes('Название') && header.includes('*')) {
@@ -415,7 +421,7 @@ export const CatalogCSV = () => {
               product.description_vi = cleanValue;
             } else if (header.includes('Изображение')) {
               // Ensure image URL is properly saved
-              const imageUrl = cleanValue.trim();
+              const imageUrl = cleanValue;
               if (i === 1) {
                 console.log(`🖼️ Image field for first row:`, {
                   raw: value,
@@ -428,7 +434,7 @@ export const CatalogCSV = () => {
                 product.image = imageUrl;
                 console.log(`🖼️ Image found for row ${i}: ${imageUrl.substring(0, 80)}...`);
               } else {
-                console.log(`⚠️ No image for row ${i}`);
+                console.log(`⚠️ No image for row ${i}, product name: "${product.name}"`);
               }
             } else if (header.includes('В наличии') || header.includes('наличии')) {
               // Parse multiple formats for "in stock"
