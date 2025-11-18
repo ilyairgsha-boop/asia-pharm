@@ -278,10 +278,10 @@ export const CatalogCSV = () => {
 
           const product: any = {};
           
-          // Debug first row
-          if (i === 1) {
-            console.log('📊 First row values:', values);
-            console.log('📊 Values count:', values.length, 'Headers count:', headers.length);
+          // Debug first few rows
+          if (i <= 3) {
+            console.log(`📊 Row ${i} values:`, values);
+            console.log(`📊 Row ${i} - Values count:`, values.length, 'Headers count:', headers.length);
           }
           
           headers.forEach((header, index) => {
@@ -346,11 +346,49 @@ export const CatalogCSV = () => {
             } else if (header.includes('Описание (RU)')) {
               product.description = cleanValue;
             } else if (header.includes('Изображение')) {
-              product.image = cleanValue;
+              // Ensure image URL is properly saved
+              const imageUrl = cleanValue.trim();
+              if (imageUrl && imageUrl !== '') {
+                product.image = imageUrl;
+                console.log(`🖼️ Image found for row ${i}: ${imageUrl.substring(0, 50)}...`);
+              }
             } else if (header.includes('В наличии') || header.includes('наличии')) {
-              product.in_stock = cleanValue === 'Да' || cleanValue === 'да' || cleanValue === 'true' || cleanValue === '1';
+              // Parse multiple formats for "in stock"
+              const normalized = cleanValue.toLowerCase().trim();
+              const isInStock = normalized === 'да' || 
+                               normalized === 'д' || 
+                               normalized === 'yes' || 
+                               normalized === 'y' || 
+                               normalized === 'true' || 
+                               normalized === '1' || 
+                               normalized === 'в наличии' || 
+                               normalized === 'в';
+              const isOutOfStock = normalized === 'нет' || 
+                                  normalized === 'н' || 
+                                  normalized === 'no' || 
+                                  normalized === 'n' || 
+                                  normalized === 'false' || 
+                                  normalized === '0' || 
+                                  normalized === 'нет в наличии';
+              
+              if (isOutOfStock) {
+                product.in_stock = false;
+                console.log(`❌ Row ${i} marked as OUT OF STOCK: "${cleanValue}"`);
+              } else if (isInStock) {
+                product.in_stock = true;
+                console.log(`✅ Row ${i} marked as IN STOCK: "${cleanValue}"`);
+              } else {
+                // Default to true if unclear
+                product.in_stock = true;
+                console.log(`⚠️ Row ${i} unclear stock value "${cleanValue}", defaulting to IN STOCK`);
+              }
             } else if (header.includes('Пробник')) {
-              product.is_sample = cleanValue === 'Да' || cleanValue === 'да' || cleanValue === 'true' || cleanValue === '1';
+              const normalized = cleanValue.toLowerCase().trim();
+              product.is_sample = normalized === 'да' || 
+                                 normalized === 'д' || 
+                                 normalized === 'yes' || 
+                                 normalized === 'true' || 
+                                 normalized === '1';
             }
           });
 
@@ -403,6 +441,8 @@ export const CatalogCSV = () => {
               disease: product.disease,
               disease_categories: product.disease_categories,
               store: product.store,
+              image: product.image,
+              in_stock: product.in_stock,
               short_description: product.short_description?.substring(0, 50) + '...',
             });
           }
@@ -478,7 +518,10 @@ export const CatalogCSV = () => {
           if (p.description_en) cleaned.description_en = p.description_en;
           if (p.description_zh) cleaned.description_zh = p.description_zh;
           if (p.description_vi) cleaned.description_vi = p.description_vi;
-          if (p.image) cleaned.image = p.image;
+          if (p.image && p.image.trim() !== '') {
+            cleaned.image = p.image.trim();
+            console.log(`💾 Saving image for "${p.name}": ${p.image.substring(0, 50)}...`);
+          }
           
           const productNameKey = p.name.trim().toLowerCase();
           const existingProductId = existingProductsMap.get(productNameKey);
