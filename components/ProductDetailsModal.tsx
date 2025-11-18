@@ -180,8 +180,8 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
 
         {/* Content */}
         <div className="p-4 md:p-6">
-          <div className="grid md:grid-cols-2 gap-4 md:gap-6">
-            {/* Image */}
+          <div className="grid md:grid-cols-[320px_1fr] gap-4 md:gap-6">
+            {/* Image - Reduced size on desktop */}
             <div className="relative aspect-square bg-gray-100 rounded-lg overflow-hidden product-image-container">
               <ImageWithFallback
                 src={product.image}
@@ -206,8 +206,8 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
               </div>
             </div>
 
-            {/* Details */}
-            <div className="space-y-4 md:space-y-4">
+            {/* Details - More space for content */}
+            <div className="space-y-4 md:space-y-4 md:overflow-y-auto md:max-h-[calc(90vh-200px)]">
               <div>
                 {/* Sale badge */}
                 {isSaleActive && (
@@ -254,7 +254,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
               {/* Short description without header */}
               <div>
                 <div 
-                  className="text-gray-700 text-base md:text-base text-[16px]"
+                  className="text-gray-700 text-base md:text-base text-[16px] prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{ __html: getShortDescription() || '' }}
                 />
               </div>
@@ -263,7 +263,7 @@ export const ProductDetailsModal = ({ product, onClose }: ProductDetailsModalPro
               <div>
                 <h3 className="text-gray-800 mb-2 text-lg md:text-lg text-[16px]">{t('description')}</h3>
                 <div 
-                  className="text-gray-700 text-base md:text-base text-[16px]"
+                  className="text-gray-700 text-base md:text-base text-[16px] prose prose-sm max-w-none product-description"
                   dangerouslySetInnerHTML={{ __html: getDescription() || '' }}
                 />
               </div>

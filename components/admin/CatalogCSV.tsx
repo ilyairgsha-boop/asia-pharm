@@ -158,6 +158,9 @@ export const CatalogCSV = () => {
         { key: 'short_description_zh', header: 'Краткое описание (ZH)' },
         { key: 'short_description_vi', header: 'Краткое описание (VI)' },
         { key: 'description', header: 'Описание (RU)' },
+        { key: 'description_en', header: 'Описание (EN)' },
+        { key: 'description_zh', header: 'Описание (ZH)' },
+        { key: 'description_vi', header: 'Описание (VI)' },
         { key: 'image', header: 'Изображение' },
         { key: 'in_stock', header: 'В наличии' },
         { key: 'is_sample', header: 'Пробник' },
@@ -216,19 +219,34 @@ export const CatalogCSV = () => {
 
       if (char === '"') {
         if (insideQuotes && nextChar === '"') {
+          // Escaped quote - add it to the value
           currentValue += '"';
           i++;
         } else {
+          // Toggle quote mode
           insideQuotes = !insideQuotes;
         }
       } else if (char === separator && !insideQuotes) {
-        values.push(currentValue.trim());
+        // End of field - trim and push
+        let trimmed = currentValue.trim();
+        // Remove surrounding quotes if present
+        if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+          trimmed = trimmed.slice(1, -1);
+        }
+        values.push(trimmed);
         currentValue = '';
       } else {
         currentValue += char;
       }
     }
-    values.push(currentValue.trim());
+    
+    // Push last value
+    let trimmed = currentValue.trim();
+    // Remove surrounding quotes if present
+    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
+      trimmed = trimmed.slice(1, -1);
+    }
+    values.push(trimmed);
     return values;
   };
 
@@ -266,6 +284,11 @@ export const CatalogCSV = () => {
       const headers = parseCSVLine(headerLine, SEPARATOR);
       
       console.log('📋 CSV Headers:', headers);
+      console.log('📋 Looking for columns:', {
+        image: headers.find(h => h.includes('Изображение')),
+        description: headers.find(h => h.includes('Описание (RU)')),
+        shortDescription: headers.find(h => h.includes('Краткое описание (RU)'))
+      });
       
       const products = [];
       const errors: string[] = [];
@@ -345,6 +368,12 @@ export const CatalogCSV = () => {
               product.short_description_vi = cleanValue;
             } else if (header.includes('Описание (RU)')) {
               product.description = cleanValue;
+            } else if (header.includes('Описание (EN)')) {
+              product.description_en = cleanValue;
+            } else if (header.includes('Описание (ZH)')) {
+              product.description_zh = cleanValue;
+            } else if (header.includes('Описание (VI)')) {
+              product.description_vi = cleanValue;
             } else if (header.includes('Изображение')) {
               // Ensure image URL is properly saved
               const imageUrl = cleanValue.trim();
@@ -442,8 +471,12 @@ export const CatalogCSV = () => {
               disease_categories: product.disease_categories,
               store: product.store,
               image: product.image,
+              image_length: product.image?.length,
               in_stock: product.in_stock,
-              short_description: product.short_description?.substring(0, 50) + '...',
+              short_description_length: product.short_description?.length,
+              short_description: product.short_description?.substring(0, 80) + '...',
+              description_length: product.description?.length,
+              description: product.description?.substring(0, 80) + '...',
             });
           }
 
@@ -521,10 +554,24 @@ export const CatalogCSV = () => {
           if (p.image && p.image.trim() !== '') {
             cleaned.image = p.image.trim();
             console.log(`💾 Saving image for "${p.name}": ${p.image.substring(0, 50)}...`);
+          } else {
+            console.log(`⚠️ No image for "${p.name}"`);
           }
           
           const productNameKey = p.name.trim().toLowerCase();
           const existingProductId = existingProductsMap.get(productNameKey);
+          
+          // Log what we're about to save for first product
+          if (products.indexOf(p) === 0) {
+            console.log('💾 First product data being saved:', {
+              name: cleaned.name,
+              image: cleaned.image,
+              short_description_length: cleaned.short_description?.length,
+              description_length: cleaned.description?.length,
+              short_description_preview: cleaned.short_description?.substring(0, 100),
+              description_preview: cleaned.description?.substring(0, 100)
+            });
+          }
           
           if (existingProductId) {
             // Update existing product
