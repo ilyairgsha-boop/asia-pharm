@@ -31,6 +31,7 @@ import { performHealthCheck, logHealthCheckResults } from './utils/supabase/heal
 import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
 import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
+import { oneSignalService } from './utils/oneSignal'; // RESTORED: Static import needed for multiple uses
 import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
 import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
 import './utils/clearOldCategories'; // Import to make functions available in console
@@ -100,9 +101,6 @@ function AppContent() {
     // Load OneSignal settings from database and initialize
     const initOneSignal = async () => {
       console.log('🚀 [INIT] Starting OneSignal initialization...');
-      
-      // Dynamically import oneSignalService
-      const { oneSignalService } = await import('./utils/oneSignal');
       
       try {
         // Step 1: Check if settings table exists
