@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Send, Users, Filter, History, Bell, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { oneSignalService } from '../../utils/oneSignal';
 import { getServerUrl, getAnonKey, supabase } from '../../utils/supabase/client';
 
 interface NotificationTemplate {
@@ -167,7 +166,10 @@ export const PushNotifications = () => {
 
   useEffect(() => {
     // Check if OneSignal is configured (has credentials)
-    const checkConfiguration = () => {
+    const checkConfiguration = async () => {
+      // Dynamically import oneSignalService
+      const { oneSignalService } = await import('../../utils/oneSignal');
+      
       const configured = oneSignalService.isConfigured();
       console.log('🔍 PushNotifications: checking configuration:', configured);
       setIsConfigured(configured);
@@ -214,6 +216,9 @@ export const PushNotifications = () => {
     setIsSending(true);
 
     try {
+      // Dynamically import oneSignalService
+      const { oneSignalService } = await import('../../utils/oneSignal');
+      
       // Check if user is subscribed
       const isSubscribed = await oneSignalService.isSubscribed();
       const playerId = await oneSignalService.getUserId();
@@ -266,6 +271,9 @@ export const PushNotifications = () => {
     setIsSending(true);
 
     try {
+      // Dynamically import oneSignalService
+      const { oneSignalService } = await import('../../utils/oneSignal');
+      
       // Prepare notification data
       const notificationData = {
         title: title[currentLanguage],

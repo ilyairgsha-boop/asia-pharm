@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui
 import { Alert, AlertDescription } from '../ui/alert';
 import { Bell, Info, CheckCircle2, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import { oneSignalService } from '../../utils/oneSignal';
 import { getServerUrl, supabase, getAnonKey } from '../../utils/supabase/client';
 
 interface OneSignalSettingsData {
@@ -201,7 +200,7 @@ export const OneSignalSettings = () => {
         return;
       }
 
-      console.log('���� Saving OneSignal settings...');
+      console.log(' Saving OneSignal settings...');
       
       // 1️⃣ Save to Supabase (primary storage - syncs across devices)
       try {
@@ -283,6 +282,9 @@ export const OneSignalSettings = () => {
   const handleTestNotification = async () => {
     setIsTestMode(true);
     try {
+      // Dynamically import oneSignalService
+      const { oneSignalService } = await import('../../utils/oneSignal');
+      
       // Check if user is subscribed
       const isSubscribed = await oneSignalService.isSubscribed();
       if (!isSubscribed) {
@@ -317,6 +319,9 @@ export const OneSignalSettings = () => {
 
   const handleSubscribe = async () => {
     try {
+      // Dynamically import oneSignalService
+      const { oneSignalService } = await import('../../utils/oneSignal');
+      
       const userId = await oneSignalService.subscribe();
       if (userId) {
         toast.success(`Подписка оформлена! Player ID: ${userId}`);
