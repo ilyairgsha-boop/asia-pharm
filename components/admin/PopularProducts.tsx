@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { createClient } from '../../utils/supabase/client';
-import { Star, GripVertical, ChevronUp, ChevronDown, X, Plus, Loader2, Eye, Save } from 'lucide-react';
+import { Star, GripVertical, ChevronUp, ChevronDown, X, Plus, Loader2, Eye, Save, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Product {
@@ -12,7 +12,6 @@ interface Product {
   weight: number;
   store: string;
   popular_order: number | null;
-  disease_categories?: string[] | null;
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -39,16 +38,18 @@ export const PopularProducts = () => {
     try {
       const supabase = createClient();
       
+      console.log(`🔄 Loading popular products for store: ${currentStore}`);
+      
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order, disease_categories')
+        .select('id, name, image, price, weight, store, popular_order')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
 
       if (popularError) {
-        console.error('Error loading popular products:', popularError);
+        console.error('❌ Error loading popular products:', popularError);
         toast.error(t('errorLoadingProducts'));
         return;
       }
@@ -56,82 +57,36 @@ export const PopularProducts = () => {
       // Load all products for search
       const { data: all, error: allError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order, disease_categories')
+        .select('id, name, image, price, weight, store, popular_order')
         .eq('store', currentStore)
         .order('name', { ascending: true });
 
       if (allError) {
-        console.error('Error loading all products:', allError);
+        console.error('❌ Error loading all products:', allError);
         toast.error(t('errorLoadingProducts'));
         return;
       }
 
+      console.log(`✅ Loaded ${popular?.length || 0} popular products for ${currentStore}`);
+      console.log(`📦 Total products for ${currentStore}: ${all?.length || 0}`);
+      
+      if (popular && popular.length > 0) {
+        console.log('🔍 Popular products details:', popular.map(p => ({
+          name: p.name,
+          order: p.popular_order,
+          store: p.store
+        })));
+      } else {
+        console.log('⚠️ No popular products found. Check if popular_order values are set in database.');
+      }
+
       setPopularProducts(popular || []);
       setAllProducts(all || []);
-      
-      // Auto-load products with 'popular' tag that don't have popular_order yet
-      await autoLoadPopularProducts(all || []);
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ Error:', error);
       toast.error(t('errorLoadingProducts'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Auto-load products with 'popular' disease category tag
-  const autoLoadPopularProducts = async (allProducts: Product[]) => {
-    try {
-      const supabase = createClient();
-      
-      // Find products with 'popular' tag but no popular_order
-      const productsToAdd = allProducts.filter(product => {
-        const hasPopularTag = product.disease_categories?.includes('popular');
-        const hasNoOrder = product.popular_order === null || product.popular_order === undefined;
-        return hasPopularTag && hasNoOrder;
-      });
-
-      if (productsToAdd.length === 0) {
-        return; // Nothing to auto-add
-      }
-
-      console.log(`🔄 Auto-loading ${productsToAdd.length} products with 'popular' tag`);
-
-      // Get current max order
-      const { data: existingPopular } = await supabase
-        .from('products')
-        .select('popular_order')
-        .eq('store', currentStore)
-        .not('popular_order', 'is', null)
-        .order('popular_order', { ascending: false })
-        .limit(1);
-
-      let nextOrder = existingPopular && existingPopular.length > 0 
-        ? (existingPopular[0].popular_order || 0) + 1 
-        : 1;
-
-      // Add popular_order to each product
-      for (const product of productsToAdd) {
-        const { error } = await supabase
-          .from('products')
-          .update({ popular_order: nextOrder })
-          .eq('id', product.id);
-
-        if (error) {
-          console.error('Error auto-adding product:', error);
-        } else {
-          console.log(`✅ Auto-added "${product.name}" with order ${nextOrder}`);
-          nextOrder++;
-        }
-      }
-
-      if (productsToAdd.length > 0) {
-        toast.success(`Автоматически добавлено ${productsToAdd.length} товаров с тегом "popular"`);
-        // Reload products after auto-add
-        setTimeout(() => loadProducts(), 500);
-      }
-    } catch (error) {
-      console.error('Error in auto-load:', error);
     }
   };
 
@@ -164,6 +119,71 @@ export const PopularProducts = () => {
     } catch (error) {
       console.error('Error saving order:', error);
       toast.error(t('errorSavingOrder'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSyncWithCatalog = async () => {
+    setSaving(true);
+    try {
+      const supabase = createClient();
+      
+      console.log('🔄 Starting synchronization with catalog...');
+      console.log(`📊 Current popular products: ${popularProducts.length}`);
+      
+      // Get all product IDs from current popular list
+      const popularIds = popularProducts.map(p => p.id);
+      
+      // Check which products still exist in the database
+      const { data: existingProducts, error: checkError } = await supabase
+        .from('products')
+        .select('id')
+        .in('id', popularIds);
+      
+      if (checkError) {
+        console.error('❌ Error checking products:', checkError);
+        throw checkError;
+      }
+      
+      const existingIds = new Set(existingProducts?.map(p => p.id) || []);
+      console.log(`✅ Existing products in catalog: ${existingIds.size}`);
+      
+      // Filter out deleted products
+      const validProducts = popularProducts.filter(p => existingIds.has(p.id));
+      const deletedCount = popularProducts.length - validProducts.length;
+      
+      console.log(`🗑️ Deleted products found: ${deletedCount}`);
+      console.log(`✅ Valid products remaining: ${validProducts.length}`);
+      
+      if (deletedCount === 0) {
+        toast.info('Все популярные товары актуальны');
+        setSaving(false);
+        return;
+      }
+      
+      // Renumber the remaining products (1, 2, 3...)
+      for (let i = 0; i < validProducts.length; i++) {
+        const { error } = await supabase
+          .from('products')
+          .update({ popular_order: i + 1 })
+          .eq('id', validProducts[i].id);
+        
+        if (error) {
+          console.error('❌ Error updating product order:', error);
+          throw error;
+        }
+      }
+      
+      console.log('✅ Synchronization complete!');
+      toast.success(`Синхронизация завершена! Удалено: ${deletedCount}, Осталось: ${validProducts.length}`);
+      
+      // Reload products
+      await loadProducts();
+      setHasChanges(false);
+    } catch (error) {
+      console.error('❌ Sync error:', error);
+      toast.error('Ошибка синхронизации');
     } finally {
       setSaving(false);
     }
@@ -395,25 +415,49 @@ export const PopularProducts = () => {
               <h4 className="text-gray-800">
                 {t('popularProductsList')} ({popularProducts.length})
               </h4>
-              {hasChanges && (
-                <button
-                  onClick={handleSaveOrder}
-                  disabled={saving}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="animate-spin" size={18} />
-                      {t('saving')}
-                    </>
-                  ) : (
-                    <>
-                      <Save size={18} />
-                      {t('saveOrder')}
-                    </>
-                  )}
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {/* Sync Button */}
+                {popularProducts.length > 0 && (
+                  <button
+                    onClick={handleSyncWithCatalog}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    title="Синхронизировать с каталогом (удалить несуществующие товары)"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        Синхронизация...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={18} />
+                        Синхронизировать
+                      </>
+                    )}
+                  </button>
+                )}
+                {/* Save Button */}
+                {hasChanges && (
+                  <button
+                    onClick={handleSaveOrder}
+                    disabled={saving}
+                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  >
+                    {saving ? (
+                      <>
+                        <Loader2 className="animate-spin" size={18} />
+                        {t('saving')}
+                      </>
+                    ) : (
+                      <>
+                        <Save size={18} />
+                        {t('saveOrder')}
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
             </div>
 
             {popularProducts.length === 0 ? (

@@ -481,8 +481,14 @@ export const CatalogCSV = () => {
               if (numValue && numValue !== '' && numValue !== '0') {
                 const parsed = parseInt(numValue.replace(/[^\d]/g, ''));
                 product.popular_order = !isNaN(parsed) ? parsed : null;
+                if (i <= 3) {
+                  console.log(`🔢 Row ${i}: popular_order = ${product.popular_order} (from "${cleanValue}")`);
+                }
               } else {
                 product.popular_order = null;
+                if (i <= 3 && cleanValue) {
+                  console.log(`⚪ Row ${i}: popular_order = null (empty/zero value: "${cleanValue}")`);
+                }
               }
             }
           });
@@ -649,6 +655,10 @@ export const CatalogCSV = () => {
           if (p.description_en) cleaned.description_en = p.description_en;
           if (p.description_zh) cleaned.description_zh = p.description_zh;
           if (p.description_vi) cleaned.description_vi = p.description_vi;
+          
+          // Add popular_order (can be null or number)
+          cleaned.popular_order = p.popular_order !== undefined ? p.popular_order : null;
+          
           if (p.image && p.image.trim() !== '') {
             cleaned.image = p.image.trim();
             console.log(`💾 Saving image for "${p.name}": ${p.image.substring(0, 50)}...`);
