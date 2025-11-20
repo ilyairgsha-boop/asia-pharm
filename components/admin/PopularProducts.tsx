@@ -27,10 +27,39 @@ export const PopularProducts = () => {
   const [showSearch, setShowSearch] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
+  const [storeCounts, setStoreCounts] = useState<Record<Store, number>>({
+    china: 0,
+    thailand: 0,
+    vietnam: 0,
+  });
 
   useEffect(() => {
     loadProducts();
+    loadStoreCounts();
   }, [currentStore]);
+
+  const loadStoreCounts = async () => {
+    try {
+      const supabase = createClient();
+      const counts: Record<Store, number> = { china: 0, thailand: 0, vietnam: 0 };
+      
+      for (const store of ['china', 'thailand', 'vietnam'] as Store[]) {
+        const { count, error } = await supabase
+          .from('products')
+          .select('id', { count: 'exact', head: true })
+          .eq('store', store)
+          .not('popular_order', 'is', null);
+        
+        if (!error && count !== null) {
+          counts[store] = count;
+        }
+      }
+      
+      setStoreCounts(counts);
+    } catch (error) {
+      console.error('Error loading store counts:', error);
+    }
+  };
 
   const loadProducts = async () => {
     setLoading(true);
@@ -71,11 +100,14 @@ export const PopularProducts = () => {
       console.log(`📦 Total products for ${currentStore}: ${all?.length || 0}`);
       
       if (popular && popular.length > 0) {
-        console.log('🔍 Popular products details:', popular.map(p => ({
-          name: p.name,
-          order: p.popular_order,
-          store: p.store
-        })));
+        console.log('🔍 Popular products details:', popular);
+        // Group by store to debug
+        const byStore = popular.reduce((acc, p) => {
+          acc[p.store] = (acc[p.store] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>);
+        console.log('📊 Popular products by store:', byStore);
+        console.log('📌 Current store filter:', currentStore);
       } else {
         console.log('⚠️ No popular products found. Check if popular_order values are set in database.');
       }
@@ -116,6 +148,7 @@ export const PopularProducts = () => {
       toast.success(t('popularOrderSaved'));
       setHasChanges(false);
       await loadProducts();
+      await loadStoreCounts(); // Reload counts after save
     } catch (error) {
       console.error('Error saving order:', error);
       toast.error(t('errorSavingOrder'));
@@ -152,11 +185,22 @@ export const PopularProducts = () => {
       const catalogIds = new Set(catalogProducts?.map(p => p.id) || []);
       console.log(`📦 Current catalog products: ${catalogIds.size}`);
       
+      // DEBUG: Show sample of catalog IDs
+      const catalogIdsSample = Array.from(catalogIds).slice(0, 5);
+      console.log('📝 Sample catalog IDs:', catalogIdsSample);
+      
+      // DEBUG: Show sample of popular IDs
+      const popularIdsSample = popularProducts.slice(0, 5).map(p => ({ id: p.id, name: p.name }));
+      console.log('📝 Sample popular products:', popularIdsSample);
+      
       // Find products that are in popular but NOT in catalog (deleted products)
       const productsToRemove = popularProducts.filter(p => !catalogIds.has(p.id));
       const deletedCount = productsToRemove.length;
       
       console.log(`🗑️ Products to remove (deleted from catalog): ${deletedCount}`);
+      if (deletedCount > 0) {
+        console.log('🗑️ Products to remove:', productsToRemove.map(p => ({ id: p.id, name: p.name })));
+      }
       
       if (deletedCount === 0) {
         toast.info(t('syncNoChanges'));
@@ -252,6 +296,7 @@ export const PopularProducts = () => {
 
       toast.success(t('removedFromPopular'));
       await loadProducts();
+      await loadStoreCounts(); // Reload counts after remove
       setHasChanges(false);
     } catch (error) {
       console.error('Error removing from popular:', error);
@@ -279,6 +324,7 @@ export const PopularProducts = () => {
       setSearchQuery('');
       setShowSearch(false);
       await loadProducts();
+      await loadStoreCounts(); // Reload counts after add
     } catch (error) {
       console.error('Error adding to popular:', error);
       toast.error(t('errorAddingToPopular'));
@@ -360,7 +406,7 @@ export const PopularProducts = () => {
             <span className="text-xl">{getStoreIcon(store)}</span>
             <span>{getStoreName(store)}</span>
             <span className="px-2 py-0.5 rounded-full bg-gray-200 text-gray-800 text-xs">
-              {popularProducts.filter(p => p.store === store).length}
+              {storeCounts[store]}
             </span>
           </button>
         ))}
