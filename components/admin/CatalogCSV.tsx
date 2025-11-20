@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createClient } from '../../utils/supabase/client';
-import { Download, Upload, FileText, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Download, Upload, FileText, Loader2, AlertCircle, CheckCircle, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Category {
@@ -32,6 +32,7 @@ export const CatalogCSV = () => {
     message: string;
     details?: any;
   } | null>(null);
+  const [showResultModal, setShowResultModal] = useState(false);
   const [categories, setCategories] = useState<CategoryData>({
     topMenu: [],
     sidebar: [],
@@ -696,6 +697,9 @@ export const CatalogCSV = () => {
           },
         });
         
+        // Show modal with results
+        setShowResultModal(true);
+        
         if (updateErrors.length === 0) {
           toast.success(successMsg);
           // Reload page after successful sync
@@ -895,6 +899,143 @@ export const CatalogCSV = () => {
           )}
         </div>
       </div>
+
+      {/* Result Modal */}
+      {showResultModal && uploadResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className={`p-6 border-b ${uploadResult.success ? 'bg-green-50' : 'bg-red-50'}`}>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  {uploadResult.success ? (
+                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                      <CheckCircle className="text-green-600" size={24} />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                      <AlertCircle className="text-red-600" size={24} />
+                    </div>
+                  )}
+                  <div>
+                    <h3 className={`text-xl ${uploadResult.success ? 'text-green-800' : 'text-red-800'}`}>
+                      {uploadResult.success ? t('csvImportSuccess') : t('csvImportErrors')}
+                    </h3>
+                    <p className={`text-sm mt-1 ${uploadResult.success ? 'text-green-700' : 'text-red-700'}`}>
+                      {uploadResult.message}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowResultModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto flex-1">
+              {uploadResult.details && (
+                <div className="space-y-4">
+                  {/* Statistics */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {uploadResult.details.created > 0 && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="text-2xl text-green-600">
+                          {uploadResult.details.created}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">{t('csvCreated')}</div>
+                      </div>
+                    )}
+                    {uploadResult.details.updated !== undefined && uploadResult.details.updated > 0 && (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div className="text-2xl text-blue-600">
+                          {uploadResult.details.updated}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">{t('csvUpdated')}</div>
+                      </div>
+                    )}
+                    {uploadResult.details.deleted !== undefined && uploadResult.details.deleted > 0 && (
+                      <div className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                        <div className="text-2xl text-orange-600">
+                          {uploadResult.details.deleted}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">{t('csvDeleted')}</div>
+                      </div>
+                    )}
+                    {uploadResult.details.skipped > 0 && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="text-2xl text-red-600">
+                          {uploadResult.details.skipped}
+                        </div>
+                        <div className="text-sm text-gray-600 mt-1">{t('skipped')}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Errors List */}
+                  {uploadResult.details.errors && uploadResult.details.errors.length > 0 && (
+                    <div className="mt-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <AlertCircle className="text-red-600" size={20} />
+                        <h4 className="text-gray-800">
+                          {t('csvValidationErrors')} ({uploadResult.details.errors.length})
+                        </h4>
+                      </div>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                        <ul className="space-y-2">
+                          {uploadResult.details.errors.map((error: string, idx: number) => (
+                            <li key={idx} className="flex items-start gap-2 text-sm">
+                              <span className="text-red-600 flex-shrink-0 mt-0.5">•</span>
+                              <span className="text-red-800">{error}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Database Error */}
+                  {uploadResult.details.dbError && (
+                    <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <h4 className="text-red-600 font-semibold mb-2">{t('csvDbError')}:</h4>
+                      <p className="text-sm text-red-700">{uploadResult.details.dbError.message}</p>
+                      {uploadResult.details.dbError.details && (
+                        <p className="text-xs text-red-600 mt-2">{uploadResult.details.dbError.details}</p>
+                      )}
+                      {uploadResult.details.dbError.hint && (
+                        <p className="text-xs text-red-600 mt-2">
+                          💡 {uploadResult.details.dbError.hint}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
+              <button
+                onClick={() => setShowResultModal(false)}
+                className="px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                {t('close')}
+              </button>
+              {uploadResult.success && (
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  {t('reload')}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h4 className="text-gray-800 mb-3">📋 {t('csvFormatInfo')}</h4>
