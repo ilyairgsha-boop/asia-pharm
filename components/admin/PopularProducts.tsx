@@ -193,6 +193,27 @@ export const PopularProducts = () => {
       const popularIdsSample = popularProducts.slice(0, 5).map(p => ({ id: p.id, name: p.name }));
       console.log('📝 Sample popular products:', popularIdsSample);
       
+      // DEBUG: Check if sample popular IDs exist in catalog
+      console.log('🔍 Checking if sample popular products exist in catalog:');
+      popularProducts.slice(0, 5).forEach(p => {
+        const exists = catalogIds.has(p.id);
+        console.log(`   ${p.name}: ${exists ? '✅ EXISTS' : '❌ MISSING'}`);
+      });
+      
+      // DEBUG: Show all popular product IDs
+      const allPopularIds = popularProducts.map(p => p.id);
+      console.log('📋 All popular product IDs:', allPopularIds);
+      
+      // DEBUG: Find missing products manually
+      const missingProducts = popularProducts.filter(p => {
+        const exists = catalogIds.has(p.id);
+        if (!exists) {
+          console.log(`❌ Missing product: ${p.name} (${p.id})`);
+        }
+        return !exists;
+      });
+      console.log(`🔍 Manually found missing products: ${missingProducts.length}`);
+      
       // Find products that are in popular but NOT in catalog (deleted products)
       const productsToRemove = popularProducts.filter(p => !catalogIds.has(p.id));
       const deletedCount = productsToRemove.length;
