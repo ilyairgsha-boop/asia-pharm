@@ -476,8 +476,14 @@ export const CatalogCSV = () => {
                                  normalized === 'true' || 
                                  normalized === '1';
             } else if (header.includes('Позиция в популярных')) {
-              const numValue = cleanValue.replace(/[^\d.,]/g, '').replace(',', '.');
-              product.popular_order = parseFloat(numValue) || 0;
+              const numValue = cleanValue.trim();
+              // Only set popular_order if value exists and is not empty
+              if (numValue && numValue !== '' && numValue !== '0') {
+                const parsed = parseInt(numValue.replace(/[^\d]/g, ''));
+                product.popular_order = !isNaN(parsed) ? parsed : null;
+              } else {
+                product.popular_order = null;
+              }
             }
           });
 
