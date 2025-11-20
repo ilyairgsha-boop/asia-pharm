@@ -575,7 +575,13 @@ export const CatalogCSV = () => {
         });
         
         console.log('📋 Initial products in database:', existingProductsMap.size);
+        console.log('📋 Database product names (first 10):', 
+          Array.from(existingProductsMap.keys()).slice(0, 10)
+        );
         console.log('📋 Products in CSV to process:', products.length);
+        console.log('📋 CSV product names (first 10):', 
+          products.slice(0, 10).map(p => p.name.trim().toLowerCase())
+        );
         
         // Track operations
         let updated = 0;

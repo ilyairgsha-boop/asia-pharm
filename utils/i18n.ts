@@ -1539,6 +1539,7 @@ export const translations = {
     // Order details extended
     orderItems: 'Order Items',
     shippingDetails: 'Shipping Details',
+    close: 'Close',
     paid: 'Paid',
     
     // Payment Info Page
@@ -2593,6 +2594,7 @@ export const translations = {
     // Order details extended
     orderItems: '订单商品',
     shippingDetails: '配送详情',
+    close: '关闭',
     paid: '已付款',
     
     // Payment Info Page
@@ -3628,6 +3630,7 @@ export const translations = {
     // Order details extended
     orderItems: 'Sản phẩm trong đơn hàng',
     shippingDetails: 'Chi tiết giao hàng',
+    close: 'Đóng',
     paid: 'Đã thanh toán',
     
     // Payment Info Page
