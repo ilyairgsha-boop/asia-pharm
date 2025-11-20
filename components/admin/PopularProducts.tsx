@@ -226,6 +226,43 @@ export const PopularProducts = () => {
       
       // Check for products that need data updates (price, name, image changes)
       const catalogProductsMap = new Map(catalogProducts?.map(p => [p.id, p]) || []);
+      
+      // DEBUG: Check first 5 products in detail
+      console.log('🔍 Detailed comparison for first 5 products:');
+      popularProducts.slice(0, 5).forEach((popular, idx) => {
+        const catalogProduct = catalogProductsMap.get(popular.id);
+        if (!catalogProduct) {
+          console.log(`${idx + 1}. ❌ MISSING in catalog: ${popular.name}`);
+          return;
+        }
+        
+        console.log(`${idx + 1}. Checking: ${popular.name}`);
+        console.log(`   Popular data:`, {
+          name: popular.name,
+          price: popular.price,
+          wholesale: popular.wholesale_price,
+          image: popular.image?.substring(0, 50)
+        });
+        console.log(`   Catalog data:`, {
+          name: catalogProduct.name,
+          price: catalogProduct.price,
+          wholesale: catalogProduct.wholesale_price,
+          image: catalogProduct.image?.substring(0, 50)
+        });
+        
+        const namesDiffer = popular.name !== catalogProduct.name;
+        const pricesDiffer = popular.price !== catalogProduct.price;
+        const wholesaleDiffer = popular.wholesale_price !== catalogProduct.wholesale_price;
+        const imagesDiffer = popular.image !== catalogProduct.image;
+        
+        console.log(`   Differences:`, {
+          name: namesDiffer,
+          price: pricesDiffer,
+          wholesale: wholesaleDiffer,
+          image: imagesDiffer
+        });
+      });
+      
       const productsNeedingUpdate = popularProducts.filter(popular => {
         const catalogProduct = catalogProductsMap.get(popular.id);
         if (!catalogProduct) return false;
