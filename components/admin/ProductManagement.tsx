@@ -434,6 +434,137 @@ export const ProductManagement = () => {
     setShowForm(false);
   };
 
+  // Функция автоперевода через серверный API (для отдельного товара в форме)
+  const autoTranslate = async () => {
+    if (!accessToken) {
+      toast.error('Необходима авторизация');
+      return;
+    }
+
+    if (!formData.name || !formData.shortDescription) {
+      toast.error('Заполните русские поля (Название и Краткое описание) перед переводом');
+      return;
+    }
+
+    setLoading(true);
+    toast.info('Перевод текстов...');
+
+    try {
+      const fieldsToTranslate = [
+        { field: 'name', text: formData.name },
+        { field: 'shortDescription', text: formData.shortDescription },
+        { field: 'description', text: formData.description },
+      ];
+
+      const languages = ['en', 'zh', 'vi'];
+      const translations: any = {};
+
+      // Проверяем наличие API ключа
+      const checkKeyResponse = await fetch(getServerUrl('/api/translate/key'), {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const keyData = await checkKeyResponse.json();
+      const hasApiKey = keyData.hasKey;
+
+      if (!hasApiKey) {
+        console.warn('⚠️ Google Translate API key not configured');
+        toast.warning('API ключ Google Translate не настроен. Используется заглушка.');
+        
+        // Fallback: использовать заглушку
+        for (const lang of languages) {
+          for (const { field, text } of fieldsToTranslate) {
+            if (!text) continue;
+            const key = `${field}_${lang}`;
+            translations[key] = `[${lang.toUpperCase()}] ${text}`;
+          }
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          ...translations,
+        }));
+        
+        setLoading(false);
+        return;
+      }
+
+      // Переводим для каждого языка
+      for (const lang of languages) {
+        console.log(`🌐 Translating to ${lang}...`);
+        
+        // Собираем все тексты для пакетного перевода
+        const textsToTranslate = fieldsToTranslate
+          .filter(({ text }) => text)
+          .map(({ text }) => text);
+
+        if (textsToTranslate.length === 0) continue;
+
+        try {
+          // Используем пакетный перевод для эффективности
+          const response = await fetch(getServerUrl('/api/translate/batch'), {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${accessToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              texts: textsToTranslate,
+              targetLanguage: lang,
+              sourceLanguage: 'ru',
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || `Translation to ${lang} failed`);
+          }
+
+          const data = await response.json();
+          
+          if (data.success && data.translations) {
+            // Применяем переводы к полям
+            fieldsToTranslate.forEach(({ field, text }, index) => {
+              if (text && data.translations[index]) {
+                const key = `${field}_${lang}`;
+                translations[key] = data.translations[index].translatedText;
+                console.log(`✅ Translated ${field} to ${lang}: ${translations[key].substring(0, 50)}...`);
+              }
+            });
+          }
+        } catch (langError) {
+          console.error(`❌ Error translating to ${lang}:`, langError);
+          // Fallback для этого языка
+          for (const { field, text } of fieldsToTranslate) {
+            if (!text) continue;
+            const key = `${field}_${lang}`;
+            translations[key] = `[${lang.toUpperCase()}] ${text}`;
+          }
+        }
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        ...translations,
+      }));
+
+      const translatedCount = Object.keys(translations).length;
+      if (translatedCount > 0) {
+        toast.success(`Перевод завершен! Переведено полей: ${translatedCount}`);
+      } else {
+        toast.warning('Не удалось перевести поля. Заполните их вручную.');
+      }
+    } catch (error) {
+      console.error('Translation error:', error);
+      toast.error('Ошибка перевода. Попробуйте позже или заполните поля вручную.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Функция массового автоперевода всех товаров в каталоге
   const autoTranslateAllProducts = async () => {
     if (!accessToken) {
