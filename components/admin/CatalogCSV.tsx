@@ -548,10 +548,10 @@ export const CatalogCSV = () => {
         
         const supabase = createClient();
         
-        // Check Supabase connection and get existing products
-        const { data: existingProducts, error: fetchError } = await supabase
+        // Check Supabase connection and get ALL existing products (no limit)
+        const { data: existingProducts, error: fetchError, count } = await supabase
           .from('products')
-          .select('id, name');
+          .select('id, name', { count: 'exact' });
           
         if (fetchError) {
           console.error('❌ Supabase connection error:', fetchError);
@@ -564,17 +564,32 @@ export const CatalogCSV = () => {
           return;
         }
         
-        console.log('✅ Supabase connection OK. Existing products:', existingProducts?.length || 0);
+        console.log('✅ Supabase connection OK.');
+        console.log('📊 Total products in database (from count):', count);
+        console.log('📊 Products fetched from database:', existingProducts?.length || 0);
         
         // Create a map of existing products by name
         const existingProductsMap = new Map<string, string>();
+        let productsWithoutName = 0;
+        let duplicateNames = 0;
+        
         (existingProducts || []).forEach(p => {
-          if (p.name) {
-            existingProductsMap.set(p.name.trim().toLowerCase(), p.id);
+          if (p.name && p.name.trim() !== '') {
+            const nameKey = p.name.trim().toLowerCase();
+            if (existingProductsMap.has(nameKey)) {
+              duplicateNames++;
+              console.warn(`⚠️ Duplicate product name in DB: "${p.name}" (ID: ${p.id})`);
+            }
+            existingProductsMap.set(nameKey, p.id);
+          } else {
+            productsWithoutName++;
+            console.warn(`⚠️ Product without name in DB (ID: ${p.id})`);
           }
         });
         
-        console.log('📋 Initial products in database:', existingProductsMap.size);
+        console.log('📋 Products in database with valid names:', existingProductsMap.size);
+        console.log('📋 Products without names:', productsWithoutName);
+        console.log('📋 Duplicate product names:', duplicateNames);
         console.log('📋 Database product names (first 10):', 
           Array.from(existingProductsMap.keys()).slice(0, 10)
         );
