@@ -132,35 +132,53 @@ export const PopularProducts = () => {
       console.log('🔄 Starting synchronization with catalog...');
       console.log(`📊 Current popular products: ${popularProducts.length}`);
       
-      // Get all product IDs from current popular list
+      // CRITICAL FIX: Instead of checking if products exist in DB,
+      // we need to get CURRENT catalog products for this store
+      // and remove popular_order from products that are no longer in the catalog
+      
       const popularIds = popularProducts.map(p => p.id);
       
-      // Check which products still exist in the database
-      const { data: existingProducts, error: checkError } = await supabase
+      // Get current catalog products for this store
+      const { data: catalogProducts, error: catalogError } = await supabase
         .from('products')
         .select('id')
-        .in('id', popularIds);
+        .eq('store', currentStore);
       
-      if (checkError) {
-        console.error('❌ Error checking products:', checkError);
-        throw checkError;
+      if (catalogError) {
+        console.error('❌ Error loading catalog:', catalogError);
+        throw catalogError;
       }
       
-      const existingIds = new Set(existingProducts?.map(p => p.id) || []);
-      console.log(`✅ Existing products in catalog: ${existingIds.size}`);
+      const catalogIds = new Set(catalogProducts?.map(p => p.id) || []);
+      console.log(`📦 Current catalog products: ${catalogIds.size}`);
       
-      // Filter out deleted products
-      const validProducts = popularProducts.filter(p => existingIds.has(p.id));
-      const deletedCount = popularProducts.length - validProducts.length;
+      // Find products that are in popular but NOT in catalog (deleted products)
+      const productsToRemove = popularProducts.filter(p => !catalogIds.has(p.id));
+      const deletedCount = productsToRemove.length;
       
-      console.log(`🗑️ Deleted products found: ${deletedCount}`);
-      console.log(`✅ Valid products remaining: ${validProducts.length}`);
+      console.log(`🗑️ Products to remove (deleted from catalog): ${deletedCount}`);
       
       if (deletedCount === 0) {
-        toast.info('Все популярные товары актуальны');
+        toast.info(t('syncNoChanges'));
         setSaving(false);
         return;
       }
+      
+      // Remove popular_order from deleted products
+      for (const product of productsToRemove) {
+        const { error } = await supabase
+          .from('products')
+          .update({ popular_order: null })
+          .eq('id', product.id);
+        
+        if (error) {
+          console.error('❌ Error removing popular_order:', error);
+          // Continue even if one fails
+        }
+      }
+      
+      // Get remaining valid products
+      const validProducts = popularProducts.filter(p => catalogIds.has(p.id));
       
       // Renumber the remaining products (1, 2, 3...)
       for (let i = 0; i < validProducts.length; i++) {
@@ -176,14 +194,19 @@ export const PopularProducts = () => {
       }
       
       console.log('✅ Synchronization complete!');
-      toast.success(`Синхронизация завершена! Удалено: ${deletedCount}, Осталось: ${validProducts.length}`);
+      console.log(`✅ Removed ${deletedCount} products, ${validProducts.length} remaining`);
+      
+      const message = t('syncSuccess')
+        .replace('{deleted}', deletedCount.toString())
+        .replace('{remaining}', validProducts.length.toString());
+      toast.success(message);
       
       // Reload products
       await loadProducts();
       setHasChanges(false);
     } catch (error) {
       console.error('❌ Sync error:', error);
-      toast.error('Ошибка синхронизации');
+      toast.error(t('syncError'));
     } finally {
       setSaving(false);
     }
@@ -422,17 +445,17 @@ export const PopularProducts = () => {
                     onClick={handleSyncWithCatalog}
                     disabled={saving}
                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    title="Синхронизировать с каталогом (удалить несуществующие товары)"
+                    title={t('syncWithCatalog')}
                   >
                     {saving ? (
                       <>
                         <Loader2 className="animate-spin" size={18} />
-                        Синхронизация...
+                        {t('syncing')}
                       </>
                     ) : (
                       <>
                         <RefreshCw size={18} />
-                        Синхронизировать
+                        {t('syncWithCatalog')}
                       </>
                     )}
                   </button>
