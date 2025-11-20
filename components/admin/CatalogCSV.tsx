@@ -574,6 +574,9 @@ export const CatalogCSV = () => {
           }
         });
         
+        console.log('📋 Initial products in database:', existingProductsMap.size);
+        console.log('📋 Products in CSV to process:', products.length);
+        
         // Track operations
         let updated = 0;
         let inserted = 0;
@@ -663,10 +666,15 @@ export const CatalogCSV = () => {
           }
         }
         
+        console.log('📊 After processing CSV:');
+        console.log('  - Products remaining in map (to delete):', existingProductsMap.size);
+        console.log('  - Product names remaining:', Array.from(existingProductsMap.keys()));
+        
         // Delete products that are not in CSV (remaining in map)
         const productsToDelete = Array.from(existingProductsMap.values());
         if (productsToDelete.length > 0) {
           console.log(`🗑️ Deleting ${productsToDelete.length} products not in CSV`);
+          console.log(`🗑️ Product IDs to delete:`, productsToDelete);
           const { error: deleteError } = await supabase
             .from('products')
             .delete()
