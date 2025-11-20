@@ -25,6 +25,7 @@ export interface Product {
   store: StoreType; // Магазин товара (china/thailand/vietnam) - только ОДИН
   weight?: number; // Вес в кг (для расчета доставки)
   isSample?: boolean; // Пробник (только для магазина Китай)
+  popularOrder?: number | null; // Порядок отображения в популярных товарах
   saleEnabled?: boolean; // Акция включена
   saleDiscount?: number | null; // Процент скидки (1-100)
   saleEndDate?: string | null; // Дата окончания акции (ISO string)

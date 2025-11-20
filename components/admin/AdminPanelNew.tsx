@@ -19,6 +19,7 @@ import { OneSignalSettings } from './OneSignalSettings';
 import { PushNotifications } from './PushNotifications';
 import { PopUpSettings } from './PopUpSettings';
 import { ThemeSettings } from './ThemeSettings';
+import { PopularProducts } from './PopularProducts';
 import { EdgeFunctionStatus } from '../EdgeFunctionStatus';
 import { 
   Package, 
@@ -39,10 +40,11 @@ import {
   Bell,
   BellRing,
   MessageSquare,
-  Palette
+  Palette,
+  Star
 } from 'lucide-react';
 
-type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications' | 'popup' | 'themes';
+type AdminTab = 'products' | 'orders' | 'promos' | 'users' | 'payment' | 'pages' | 'parser' | 'chat' | 'email' | 'broadcast' | 'analytics' | 'seo' | 'categories' | 'csv' | 'debug' | 'pushSettings' | 'pushNotifications' | 'popup' | 'themes' | 'popular';
 
 export const AdminPanelNew = () => {
   const { t } = useLanguage();
@@ -68,6 +70,7 @@ export const AdminPanelNew = () => {
     { id: 'themes' as AdminTab, label: t('themeSettings'), icon: Palette },
     { id: 'seo' as AdminTab, label: t('seoSettings'), icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
+    { id: 'popular' as AdminTab, label: t('popularProducts'), icon: Star },
   ];
 
   const renderTabContent = () => {
@@ -110,6 +113,8 @@ export const AdminPanelNew = () => {
         return <CatalogCSV />;
       case 'analytics':
         return <Analytics />;
+      case 'popular':
+        return <PopularProducts />;
       default:
         return <ProductManagement />;
     }

@@ -165,6 +165,7 @@ export const CatalogCSV = () => {
         { key: 'image', header: 'Изображение' },
         { key: 'in_stock', header: 'В наличии' },
         { key: 'is_sample', header: 'Пробник' },
+        { key: 'popular_order', header: 'Позиция в популярных' },
       ];
 
       const SEPARATOR = ';';
@@ -410,7 +411,7 @@ export const CatalogCSV = () => {
               product.short_description_en = cleanValue;
             } else if (header.includes('Краткое описание (ZH)')) {
               product.short_description_zh = cleanValue;
-            } else if (header.includes('Краткое оп��сание (VI)')) {
+            } else if (header.includes('Краткое опсание (VI)')) {
               product.short_description_vi = cleanValue;
             } else if (header.includes('Описание (RU)')) {
               product.description = cleanValue;
@@ -474,6 +475,9 @@ export const CatalogCSV = () => {
                                  normalized === 'yes' || 
                                  normalized === 'true' || 
                                  normalized === '1';
+            } else if (header.includes('Позиция в популярных')) {
+              const numValue = cleanValue.replace(/[^\d.,]/g, '').replace(',', '.');
+              product.popular_order = parseFloat(numValue) || 0;
             }
           });
 
@@ -735,7 +739,7 @@ export const CatalogCSV = () => {
         // Delete products that are not in CSV (remaining in map)
         const productsToDelete = Array.from(existingProductsMap.values()).flat();
         if (productsToDelete.length > 0) {
-          console.log(`🗑��� Deleting ${productsToDelete.length} products not in CSV`);
+          console.log(`🗑 Deleting ${productsToDelete.length} products not in CSV`);
           console.log(`🗑️ Product IDs to delete:`, productsToDelete);
           const { error: deleteError } = await supabase
             .from('products')

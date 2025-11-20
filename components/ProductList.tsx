@@ -77,13 +77,23 @@ export const ProductList = ({ selectedCategory, selectedDisease, currentStore, o
     return true;
   });
 
+  // Sort popular products by popular_order
+  const sortedProducts = selectedDisease === 'popular' 
+    ? [...filteredProducts].sort((a, b) => {
+        // Products with popular_order come first, sorted by order
+        const orderA = a.popularOrder ?? Number.MAX_SAFE_INTEGER;
+        const orderB = b.popularOrder ?? Number.MAX_SAFE_INTEGER;
+        return orderA - orderB;
+      })
+    : filteredProducts;
+
   // Debug logging for popular products
   useEffect(() => {
     if (selectedDisease === 'popular') {
       console.log('🔍 Filtering for popular products');
       console.log('📊 Total products:', products.length);
       console.log('🏪 Current store:', currentStore);
-      console.log('✅ Filtered products:', filteredProducts.length);
+      console.log('✅ Filtered products:', sortedProducts.length);
       console.log('📦 Sample products with "popular":', 
         products.filter(p => {
           const diseases = p.diseaseCategories || [p.disease];
@@ -91,7 +101,7 @@ export const ProductList = ({ selectedCategory, selectedDisease, currentStore, o
         }).map(p => ({ name: p.name, diseases: p.diseaseCategories, store: p.store }))
       );
     }
-  }, [selectedDisease, filteredProducts.length, products.length, currentStore]);
+  }, [selectedDisease, sortedProducts.length, products.length, currentStore]);
 
   if (loading) {
     return (
@@ -101,7 +111,7 @@ export const ProductList = ({ selectedCategory, selectedDisease, currentStore, o
     );
   }
 
-  if (filteredProducts.length === 0) {
+  if (sortedProducts.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600 text-lg">{t('noProductsFound')}</p>
@@ -124,7 +134,7 @@ export const ProductList = ({ selectedCategory, selectedDisease, currentStore, o
         </div>
       )}
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-6">
-        {filteredProducts.map((product) => (
+        {sortedProducts.map((product) => (
           <ProductCard 
             key={product.id} 
             product={product} 

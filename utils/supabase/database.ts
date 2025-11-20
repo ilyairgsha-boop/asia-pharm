@@ -27,6 +27,7 @@ function mapProductFromDB(dbProduct: any) {
     store: dbProduct.store,
     weight: dbProduct.weight || 0,
     isSample: dbProduct.is_sample || false,
+    popularOrder: dbProduct.popular_order || null,
     wholesalePrice: dbProduct.wholesale_price,
     saleEnabled: dbProduct.sale_enabled || false,
     saleDiscount: dbProduct.sale_discount || null,
