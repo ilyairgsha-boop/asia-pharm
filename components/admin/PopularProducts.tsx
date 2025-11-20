@@ -13,7 +13,7 @@ interface Product {
   store: string;
   popular_order: number | null;
   wholesale_price: number | null;
-  diseaseCategories: string[];
+  disease_categories: string[];
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -74,7 +74,7 @@ export const PopularProducts = () => {
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order, wholesale_price, diseaseCategories')
+        .select('id, name, image, price, weight, store, popular_order, wholesale_price, disease_categories')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
@@ -170,7 +170,7 @@ export const PopularProducts = () => {
       // Get ALL products for current store with their diseaseCategories
       const { data: allStoreProducts, error: allError } = await supabase
         .from('products')
-        .select('id, name, name_en, name_zh, name_vi, price, wholesale_price, image, diseaseCategories, popular_order')
+        .select('id, name, name_en, name_zh, name_vi, price, wholesale_price, image, disease_categories, popular_order')
         .eq('store', currentStore);
       
       if (allError) {
@@ -182,7 +182,7 @@ export const PopularProducts = () => {
       
       // Find products that SHOULD be popular (have "popular" in diseaseCategories)
       const shouldBePopular = allStoreProducts?.filter(p => 
-        Array.isArray(p.diseaseCategories) && p.diseaseCategories.includes('popular')
+        Array.isArray(p.disease_categories) && p.disease_categories.includes('popular')
       ) || [];
       
       console.log(`✨ Products with "popular" category: ${shouldBePopular.length}`);
@@ -201,7 +201,7 @@ export const PopularProducts = () => {
       
       // Products to REMOVE (have popular_order but no "popular" category)
       const toRemove = currentlyPopular.filter(p => 
-        !Array.isArray(p.diseaseCategories) || !p.diseaseCategories.includes('popular')
+        !Array.isArray(p.disease_categories) || !p.disease_categories.includes('popular')
       );
       console.log(`➖ Products to remove: ${toRemove.length}`);
       if (toRemove.length > 0) {
