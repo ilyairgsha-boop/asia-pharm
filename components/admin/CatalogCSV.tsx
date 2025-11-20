@@ -37,9 +37,18 @@ export const CatalogCSV = () => {
     topMenu: [],
     sidebar: [],
   });
+  const [dbStats, setDbStats] = useState<{
+    total: number;
+    china: number;
+    thailand: number;
+    vietnam: number;
+    popular: number;
+  } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
 
   useEffect(() => {
     loadCategories();
+    loadDbStats();
   }, []);
 
   const loadCategories = async () => {
@@ -70,6 +79,51 @@ export const CatalogCSV = () => {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
+    }
+  };
+
+  const loadDbStats = async () => {
+    setLoadingStats(true);
+    try {
+      const supabase = createClient();
+      const { data: products, error } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading products:', error);
+        return;
+      }
+
+      if (!products || products.length === 0) {
+        setDbStats({
+          total: 0,
+          china: 0,
+          thailand: 0,
+          vietnam: 0,
+          popular: 0,
+        });
+        return;
+      }
+
+      const total = products.length;
+      const china = products.filter(p => p.store === 'china').length;
+      const thailand = products.filter(p => p.store === 'thailand').length;
+      const vietnam = products.filter(p => p.store === 'vietnam').length;
+      const popular = products.filter(p => p.popular_order !== null).length;
+
+      setDbStats({
+        total,
+        china,
+        thailand,
+        vietnam,
+        popular,
+      });
+    } catch (error) {
+      console.error('Error loading products:', error);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -803,9 +857,13 @@ export const CatalogCSV = () => {
         
         if (updateErrors.length === 0) {
           toast.success(successMsg);
+          // Update database statistics
+          loadDbStats();
           // User will reload manually via modal button
         } else {
           toast.error(t('csvSyncCompleteWithErrors'));
+          // Update database statistics even if there were errors
+          loadDbStats();
         }
       } else {
         console.log('❌ No valid products. Total lines:', lines.length - 1, 'Skipped:', skipped);
@@ -1136,6 +1194,62 @@ export const CatalogCSV = () => {
           </div>
         </div>
       )}
+
+      {/* Database Statistics */}
+      <div className="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h4 className="text-gray-800">📊 Статистика базы данных</h4>
+          <button
+            onClick={loadDbStats}
+            disabled={loadingStats}
+            className="flex items-center gap-2 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            {loadingStats ? (
+              <>
+                <Loader2 className="animate-spin" size={16} />
+                Загрузка...
+              </>
+            ) : (
+              <>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+                Обновить
+              </>
+            )}
+          </button>
+        </div>
+
+        {dbStats ? (
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
+              <div className="text-3xl font-bold text-purple-600">{dbStats.total}</div>
+              <div className="text-sm text-gray-600 mt-1">Всего товаров</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-red-100">
+              <div className="text-3xl font-bold text-red-600">{dbStats.china}</div>
+              <div className="text-sm text-gray-600 mt-1">🇨🇳 Китай</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-yellow-100">
+              <div className="text-3xl font-bold text-yellow-600">{dbStats.thailand}</div>
+              <div className="text-sm text-gray-600 mt-1">🇹🇭 Таиланд</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100">
+              <div className="text-3xl font-bold text-green-600">{dbStats.vietnam}</div>
+              <div className="text-sm text-gray-600 mt-1">🇻🇳 Вьетнам</div>
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
+              <div className="text-3xl font-bold text-blue-600">{dbStats.popular}</div>
+              <div className="text-sm text-gray-600 mt-1">⭐ Популярные</div>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center py-4 text-gray-500">
+            <Loader2 className="animate-spin mx-auto mb-2" size={24} />
+            <p className="text-sm">Загрузка статистики...</p>
+          </div>
+        )}
+      </div>
 
       <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h4 className="text-gray-800 mb-3">📋 {t('csvFormatInfo')}</h4>
