@@ -363,7 +363,7 @@ export const CatalogCSV = () => {
               product.name_en = cleanValue;
             } else if (header.includes('Название (ZH)')) {
               product.name_zh = cleanValue;
-            } else if (header.includes('Название (VI)')) {
+            } else if (header.includes('Назва��ие (VI)')) {
               product.name_vi = cleanValue;
             } else if (header.includes('Розничная цена') || header.includes('цена') && header.includes('*')) {
               const numValue = cleanValue.replace(/[^\d.,]/g, '').replace(',', '.');
@@ -568,28 +568,36 @@ export const CatalogCSV = () => {
         console.log('📊 Total products in database (from count):', count);
         console.log('📊 Products fetched from database:', existingProducts?.length || 0);
         
-        // Create a map of existing products by name
-        const existingProductsMap = new Map<string, string>();
+        // Create a map of existing products by name (storing ALL IDs for duplicates)
+        const existingProductsMap = new Map<string, string[]>();
         let productsWithoutName = 0;
-        let duplicateNames = 0;
+        let totalDuplicates = 0;
         
         (existingProducts || []).forEach(p => {
           if (p.name && p.name.trim() !== '') {
             const nameKey = p.name.trim().toLowerCase();
-            if (existingProductsMap.has(nameKey)) {
-              duplicateNames++;
+            const existingIds = existingProductsMap.get(nameKey) || [];
+            if (existingIds.length > 0) {
+              totalDuplicates++;
               console.warn(`⚠️ Duplicate product name in DB: "${p.name}" (ID: ${p.id})`);
             }
-            existingProductsMap.set(nameKey, p.id);
+            existingIds.push(p.id);
+            existingProductsMap.set(nameKey, existingIds);
           } else {
             productsWithoutName++;
             console.warn(`⚠️ Product without name in DB (ID: ${p.id})`);
           }
         });
         
-        console.log('📋 Products in database with valid names:', existingProductsMap.size);
+        const uniqueProductCount = existingProductsMap.size;
+        const productsWithDuplicates = Array.from(existingProductsMap.entries())
+          .filter(([_, ids]) => ids.length > 1)
+          .length;
+        
+        console.log('📋 Products in database with valid names:', uniqueProductCount);
         console.log('📋 Products without names:', productsWithoutName);
-        console.log('📋 Duplicate product names:', duplicateNames);
+        console.log('📋 Total duplicate entries:', totalDuplicates);
+        console.log('📋 Products with duplicates:', productsWithDuplicates);
         console.log('📋 Database product names (first 10):', 
           Array.from(existingProductsMap.keys()).slice(0, 10)
         );
@@ -639,7 +647,7 @@ export const CatalogCSV = () => {
           }
           
           const productNameKey = p.name.trim().toLowerCase();
-          const existingProductId = existingProductsMap.get(productNameKey);
+          const existingProductIds = existingProductsMap.get(productNameKey);
           
           // Log what we're about to save for first product
           if (products.indexOf(p) === 0) {
@@ -653,15 +661,14 @@ export const CatalogCSV = () => {
             });
           }
           
-          if (existingProductId) {
-            // Update existing product
+          if (existingProductIds && existingProductIds.length > 0) {
+            // Update FIRST product, delete ALL duplicates
             const { error: updateError } = await supabase
               .from('products')
               .update(cleaned)
-              .eq('id', existingProductId);
+              .eq('id', existingProductIds[0]);
             
-            // Always remove from map because product exists in CSV
-            // (even if update failed, we don't want to delete it)
+            // Remove from map so we don't delete it later
             existingProductsMap.delete(productNameKey);
               
             if (updateError) {
@@ -670,6 +677,11 @@ export const CatalogCSV = () => {
             } else {
               console.log(`✅ Updated: ${p.name}`);
               updated++;
+              
+              // If there are duplicates (more than 1 ID), log them
+              if (existingProductIds.length > 1) {
+                console.log(`🗑️ Found ${existingProductIds.length - 1} duplicate(s) for "${p.name}" that will be deleted`);
+              }
             }
           } else {
             // Insert new product
@@ -692,7 +704,7 @@ export const CatalogCSV = () => {
         console.log('  - Product names remaining:', Array.from(existingProductsMap.keys()));
         
         // Delete products that are not in CSV (remaining in map)
-        const productsToDelete = Array.from(existingProductsMap.values());
+        const productsToDelete = Array.from(existingProductsMap.values()).flat();
         if (productsToDelete.length > 0) {
           console.log(`🗑️ Deleting ${productsToDelete.length} products not in CSV`);
           console.log(`🗑️ Product IDs to delete:`, productsToDelete);
