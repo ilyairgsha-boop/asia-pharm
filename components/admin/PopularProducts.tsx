@@ -13,7 +13,6 @@ interface Product {
   store: string;
   popular_order: number | null;
   wholesale_price: number | null;
-  stock: number | null;
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -74,7 +73,7 @@ export const PopularProducts = () => {
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order, wholesale_price, stock')
+        .select('id, name, image, price, weight, store, popular_order, wholesale_price')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
@@ -176,7 +175,7 @@ export const PopularProducts = () => {
       // Get current catalog products for this store
       const { data: catalogProducts, error: catalogError } = await supabase
         .from('products')
-        .select('id, name, price, wholesale_price, image, stock')
+        .select('id, name, name_en, name_zh, name_vi, price, wholesale_price, image')
         .eq('store', currentStore);
       
       if (catalogError) {
@@ -236,8 +235,7 @@ export const PopularProducts = () => {
           popular.name !== catalogProduct.name ||
           popular.price !== catalogProduct.price ||
           popular.wholesale_price !== catalogProduct.wholesale_price ||
-          popular.image !== catalogProduct.image ||
-          popular.stock !== catalogProduct.stock;
+          popular.image !== catalogProduct.image;
         
         if (needsUpdate) {
           console.log(`🔄 Product needs update: ${popular.name}`);
@@ -273,7 +271,6 @@ export const PopularProducts = () => {
             price: catalogProduct.price,
             wholesale_price: catalogProduct.wholesale_price,
             image: catalogProduct.image,
-            stock: catalogProduct.stock,
           })
           .eq('id', popular.id);
         
