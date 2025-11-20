@@ -764,6 +764,15 @@ export const translations = {
     autoTranslateConfirm: 'Вы уверены? Это переведет ВСЕ товары в каталоге. Процесс может занять несколько минут.',
     autoTranslateWarning: '⚠️ ВНИМАНИЕ: Эта операция переведет названия и описания всех товаров с русского языка на английский, китайский и вьетнамский. Существующие переводы будут перезаписаны.',
     
+    // Select products for translation
+    selectProducts: 'Выбрать товары',
+    selectedCount: 'Выбрано: {count}',
+    selectAll: 'Выбрать все',
+    deselectAll: 'Снять выделение',
+    translateSelected: 'Перевести выбранные',
+    noProductsSelected: 'Не выбрано ни одного товара',
+    selectProductsHint: 'Выберите товары для перевода, отметив их галочками',
+    
     // Profile Settings
     profileSettings: 'Настройки профиля',
     changeEmail: 'Изменить email',
@@ -1744,6 +1753,15 @@ export const translations = {
     autoTranslateError: 'Auto-translation error',
     autoTranslateConfirm: 'Are you sure? This will translate ALL products in the catalog. The process may take several minutes.',
     autoTranslateWarning: '⚠️ WARNING: This operation will translate names and descriptions of all products from Russian to English, Chinese and Vietnamese. Existing translations will be overwritten.',
+    
+    // Select products for translation
+    selectProducts: 'Select products',
+    selectedCount: 'Selected: {count}',
+    selectAll: 'Select all',
+    deselectAll: 'Deselect all',
+    translateSelected: 'Translate selected',
+    noProductsSelected: 'No products selected',
+    selectProductsHint: 'Select products for translation by checking them',
     
     // Profile Settings
     profileSettings: 'Profile Settings',
@@ -2793,6 +2811,15 @@ export const translations = {
     autoTranslateConfirm: '您确定吗？这将翻译目录中的所有产品。该过程可能需要几分钟。',
     autoTranslateWarning: '⚠️ 警告：此操作将把所有产品的名称和描述从俄语翻译成英语、中文和越南语。现有翻译将被覆盖。',
     
+    // Select products for translation
+    selectProducts: '选择产品',
+    selectedCount: '已选择：{count}',
+    selectAll: '全选',
+    deselectAll: '取消全选',
+    translateSelected: '翻译选中',
+    noProductsSelected: '未选择产品',
+    selectProductsHint: '通过勾选来选择要翻译的产品',
+    
     // Profile Settings
     profileSettings: '个人资料设置',
     changeEmail: '更改电子邮件',
@@ -3839,6 +3866,15 @@ export const translations = {
     autoTranslateError: 'Lỗi tự động dịch',
     autoTranslateConfirm: 'Bạn có chắc chắn? Thao tác này sẽ dịch TẤT CẢ sản phẩm trong danh mục. Quá trình có thể mất vài phút.',
     autoTranslateWarning: '⚠️ CẢNH BÁO: Thao tác này sẽ dịch tên và mô tả của tất cả sản phẩm từ tiếng Nga sang tiếng Anh, tiếng Trung và tiếng Việt. Các bản dịch hiện có sẽ bị ghi đè.',
+    
+    // Select products for translation
+    selectProducts: 'Chọn sản phẩm',
+    selectedCount: 'Đã chọn: {count}',
+    selectAll: 'Chọn tất cả',
+    deselectAll: 'Bỏ chọn tất cả',
+    translateSelected: 'Dịch đã chọn',
+    noProductsSelected: 'Chưa chọn sản phẩm',
+    selectProductsHint: 'Chọn sản phẩm để dịch bằng cách đánh dấu chúng',
     
     // Profile Settings
     profileSettings: 'Cài đặt hồ sơ',

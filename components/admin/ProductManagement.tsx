@@ -38,6 +38,7 @@ export const ProductManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAutoTranslating, setIsAutoTranslating] = useState(false);
   const [translateProgress, setTranslateProgress] = useState({ current: 0, total: 0 });
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]); // IDs выбранных товаров
 
   // Get translated product name based on current language
   const getProductName = (product: Product): string => {
@@ -689,6 +690,144 @@ export const ProductManagement = () => {
     }
   };
 
+  // Функция автоперевода выбранных товаров
+  const autoTranslateSelectedProducts = async () => {
+    if (!accessToken) {
+      toast.error(t('authRequired') || 'Необходима авторизация');
+      return;
+    }
+
+    if (selectedProducts.length === 0) {
+      toast.error(t('noProductsSelected') || 'Не выбрано ни одного товара');
+      return;
+    }
+
+    const confirmed = confirm(
+      t('autoTranslateConfirm').replace('ВСЕ товары', `выбранные товары (${selectedProducts.length})`)
+    );
+    if (!confirmed) return;
+
+    setIsAutoTranslating(true);
+    setTranslateProgress({ current: 0, total: selectedProducts.length });
+    
+    let successCount = 0;
+    let errorCount = 0;
+
+    try {
+      const supabase = createClient();
+      const productsToTranslate = products.filter(p => selectedProducts.includes(p.id));
+
+      for (let i = 0; i < productsToTranslate.length; i++) {
+        const product = productsToTranslate[i];
+        setTranslateProgress({ current: i + 1, total: productsToTranslate.length });
+
+        if (!product.name || !product.shortDescription) {
+          console.log(`⚠️ Skipping product ${product.id}: missing Russian name or description`);
+          errorCount++;
+          continue;
+        }
+
+        try {
+          const textsToTranslate = [
+            product.name,
+            product.shortDescription,
+            product.description || '',
+          ];
+
+          const translations: any = {
+            name_en: '',
+            name_zh: '',
+            name_vi: '',
+            short_description_en: '',
+            short_description_zh: '',
+            short_description_vi: '',
+            description_en: '',
+            description_zh: '',
+            description_vi: '',
+          };
+
+          for (const lang of ['en', 'zh', 'vi']) {
+            try {
+              const response = await fetch(getServerUrl('/api/translate'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  text: textsToTranslate.join('|||'),
+                  targetLanguage: lang,
+                  sourceLanguage: 'ru',
+                }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.translatedText) {
+                  const translatedParts = data.translatedText.split('|||');
+                  translations[`name_${lang}`] = translatedParts[0] || textsToTranslate[0];
+                  translations[`short_description_${lang}`] = translatedParts[1] || textsToTranslate[1];
+                  translations[`description_${lang}`] = translatedParts[2] || textsToTranslate[2];
+                }
+              }
+            } catch (langError) {
+              console.error(`Error translating to ${lang}:`, langError);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+
+          const { error: updateError } = await supabase
+            .from('products')
+            .update(translations)
+            .eq('id', product.id);
+
+          if (updateError) {
+            console.error(`Error updating product ${product.id}:`, updateError);
+            errorCount++;
+          } else {
+            successCount++;
+            console.log(`✅ Product ${product.id} translated successfully`);
+          }
+
+        } catch (productError) {
+          console.error(`Error processing product ${product.id}:`, productError);
+          errorCount++;
+        }
+      }
+
+      await loadProducts();
+      setSelectedProducts([]);
+
+      const message = t('autoTranslateSuccess').replace('{count}', successCount.toString());
+      toast.success(message + (errorCount > 0 ? ` (Ошибок: ${errorCount})` : ''));
+
+    } catch (error) {
+      console.error('Auto-translate error:', error);
+      toast.error(t('autoTranslateError'));
+    } finally {
+      setIsAutoTranslating(false);
+      setTranslateProgress({ current: 0, total: 0 });
+    }
+  };
+
+  // Функции для работы с выбором товаров
+  const handleSelectProduct = (productId: string) => {
+    setSelectedProducts(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedProducts(filteredProducts.map(p => p.id));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedProducts([]);
+  };
+
   // Fallback categories if none are loaded from API
   const fallbackTopMenuCategories = ['ointments', 'patches', 'sprays', 'teas', 'elixirs', 'pills', 'cosmetics', 'accessories'];
   const fallbackSidebarCategories = ['popular', 'allProducts', 'cold', 'digestive', 'skin', 'joints', 'heart', 'liverKidneys', 'nervous', 'womensHealth', 'mensHealth', 'forChildren', 'vision', 'hemorrhoids', 'oncology', 'thyroid', 'lungs'];
@@ -775,6 +914,41 @@ export const ProductManagement = () => {
             </button>
           </div>
 
+          {/* Selection controls */}
+          <div className="mb-4 flex flex-wrap items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
+            <button
+              onClick={handleSelectAll}
+              disabled={filteredProducts.length === 0 || isAutoTranslating}
+              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+            >
+              {t('selectAll')}
+            </button>
+            <span className="text-gray-300">|</span>
+            <button
+              onClick={handleDeselectAll}
+              disabled={selectedProducts.length === 0 || isAutoTranslating}
+              className="text-sm text-gray-600 hover:text-gray-800 disabled:text-gray-400"
+            >
+              {t('deselectAll')}
+            </button>
+            <div className="flex-1" />
+            {selectedProducts.length > 0 && (
+              <>
+                <span className="text-sm text-gray-700">
+                  {t('selectedCount').replace('{count}', selectedProducts.length.toString())}
+                </span>
+                <button
+                  onClick={autoTranslateSelectedProducts}
+                  disabled={isAutoTranslating}
+                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                >
+                  🌐
+                  <span>{t('translateSelected')}</span>
+                </button>
+              </>
+            )}
+          </div>
+
           {/* Warning banner */}
           {!isAutoTranslating && products.length > 0 && (
             <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -849,6 +1023,15 @@ export const ProductManagement = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
+                      <th className="px-2 sm:px-4 py-3 text-left">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.length > 0 && selectedProducts.length === filteredProducts.length}
+                          onChange={(e) => e.target.checked ? handleSelectAll() : handleDeselectAll()}
+                          className="w-4 h-4 text-blue-600 rounded"
+                          disabled={isAutoTranslating}
+                        />
+                      </th>
                       <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('productName')}</th>
                       <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('price')}</th>
                       <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('category')}</th>
@@ -859,6 +1042,15 @@ export const ProductManagement = () => {
                   <tbody>
                     {filteredProducts.map((product) => (
                       <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
+                        <td className="px-2 sm:px-4 py-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedProducts.includes(product.id)}
+                            onChange={() => handleSelectProduct(product.id)}
+                            className="w-4 h-4 text-blue-600 rounded"
+                            disabled={isAutoTranslating}
+                          />
+                        </td>
                         <td className="px-2 sm:px-6 py-4">
                           <div className="flex items-center gap-2 sm:gap-3">
                             <img

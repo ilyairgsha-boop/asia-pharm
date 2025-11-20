@@ -1337,6 +1337,88 @@ app.delete('/make-server-a75b5353/api/translate/key', requireAdmin, async (c) =>
   }
 });
 
+// Translate text endpoint (alias for /text for backwards compatibility)
+app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
+  try {
+    const { text, targetLanguage, sourceLanguage } = await c.req.json();
+    
+    if (!text || !targetLanguage) {
+      return c.json({ error: 'Text and target language are required' }, 400);
+    }
+    
+    console.log(`🌍 Translating from ${sourceLanguage || 'auto'} to ${targetLanguage}`);
+    console.log(`📝 Text length: ${text.length} chars`);
+    
+    const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
+    const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
+    const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
+    
+    // MyMemory API имеет лимит 500 символов, разбиваем на части
+    const chunks = splitTextIntoChunks(text, 450);
+    console.log(`📦 Split into ${chunks.length} chunk(s)`);
+    
+    const translatedChunks: string[] = [];
+    
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      console.log(`🔄 Translating chunk ${i + 1}/${chunks.length} (${chunk.length} chars)...`);
+      
+      const translateUrl = new URL('https://api.mymemory.translated.net/get');
+      translateUrl.searchParams.set('q', chunk);
+      translateUrl.searchParams.set('langpair', langPair);
+      
+      const response = await fetch(translateUrl.toString(), {
+        headers: {
+          'Accept': 'application/json',
+        }
+      });
+      
+      if (!response.ok) {
+        console.error(`❌ MyMemory API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        console.error(`Error details: ${errorText}`);
+        throw new Error(`Translation failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Проверяем на ошибки в ответе
+      if (data.responseStatus !== 200 && data.responseData?.translatedText?.includes('LIMIT EXCEEDED')) {
+        console.error('❌ MyMemory API limit exceeded');
+        throw new Error('Translation limit exceeded. Please try with shorter text.');
+      }
+      
+      if (!data || !data.responseData || !data.responseData.translatedText) {
+        console.error('❌ Invalid response format:', data);
+        throw new Error('Invalid response format from MyMemory API');
+      }
+      
+      translatedChunks.push(data.responseData.translatedText);
+      console.log(`✅ Chunk ${i + 1}/${chunks.length} translated`);
+      
+      // Небольшая задержка между запросами
+      if (i < chunks.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+    }
+    
+    const translatedText = translatedChunks.join('');
+    console.log(`✅ Translation complete: ${translatedText.length} chars`);
+    
+    return c.json({ 
+      success: true, 
+      translatedText,
+      provider: 'MyMemory',
+      chunks: chunks.length
+    });
+  } catch (error) {
+    console.error('❌ Translation error:', error);
+    return c.json({ 
+      error: error instanceof Error ? error.message : 'Translation failed' 
+    }, 500);
+  }
+});
+
 // Translate text endpoint
 app.post('/make-server-a75b5353/api/translate/text', requireAdmin, async (c) => {
   try {
