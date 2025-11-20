@@ -410,7 +410,7 @@ export const CatalogCSV = () => {
               product.short_description_en = cleanValue;
             } else if (header.includes('Краткое описание (ZH)')) {
               product.short_description_zh = cleanValue;
-            } else if (header.includes('Краткое описание (VI)')) {
+            } else if (header.includes('Краткое оп��сание (VI)')) {
               product.short_description_vi = cleanValue;
             } else if (header.includes('Описание (RU)')) {
               product.description = cleanValue;
@@ -649,6 +649,17 @@ export const CatalogCSV = () => {
           const productNameKey = p.name.trim().toLowerCase();
           const existingProductIds = existingProductsMap.get(productNameKey);
           
+          // CRITICAL DEBUG: Log matching process
+          if (products.indexOf(p) < 3) {
+            console.log(`🔍 DEBUG Product ${products.indexOf(p) + 1}: "${p.name}"`);
+            console.log(`  - Name key: "${productNameKey}"`);
+            console.log(`  - Found in DB: ${existingProductIds ? 'YES' : 'NO'}`);
+            console.log(`  - IDs count: ${existingProductIds?.length || 0}`);
+            if (existingProductIds) {
+              console.log(`  - IDs:`, existingProductIds);
+            }
+          }
+          
           // Log what we're about to save for first product
           if (products.indexOf(p) === 0) {
             console.log('💾 First product data being saved:', {
@@ -664,6 +675,10 @@ export const CatalogCSV = () => {
           if (existingProductIds && existingProductIds.length > 0) {
             // Update FIRST product, keep duplicates for deletion
             const firstId = existingProductIds[0];
+            
+            console.log(`🔄 Updating product "${p.name}" (ID: ${firstId})`);
+            console.log(`   - Total IDs for this name: ${existingProductIds.length}`);
+            
             const { error: updateError } = await supabase
               .from('products')
               .update(cleaned)
@@ -672,13 +687,17 @@ export const CatalogCSV = () => {
             // Remove ONLY the first ID from the array
             const remainingDuplicates = existingProductIds.slice(1);
             
+            console.log(`   - Remaining duplicates after update: ${remainingDuplicates.length}`);
+            
             // If there are remaining duplicates, keep them in the map for deletion
             if (remainingDuplicates.length > 0) {
               existingProductsMap.set(productNameKey, remainingDuplicates);
               console.log(`🗑️ Kept ${remainingDuplicates.length} duplicate(s) for deletion: "${p.name}"`);
+              console.log(`   - Duplicate IDs:`, remainingDuplicates);
             } else {
               // No duplicates, remove from map completely
               existingProductsMap.delete(productNameKey);
+              console.log(`✓ No duplicates, removed from map: "${p.name}"`);
             }
               
             if (updateError) {
@@ -716,7 +735,7 @@ export const CatalogCSV = () => {
         // Delete products that are not in CSV (remaining in map)
         const productsToDelete = Array.from(existingProductsMap.values()).flat();
         if (productsToDelete.length > 0) {
-          console.log(`🗑️ Deleting ${productsToDelete.length} products not in CSV`);
+          console.log(`🗑��� Deleting ${productsToDelete.length} products not in CSV`);
           console.log(`🗑️ Product IDs to delete:`, productsToDelete);
           const { error: deleteError } = await supabase
             .from('products')
