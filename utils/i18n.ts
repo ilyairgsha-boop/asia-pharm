@@ -4366,7 +4366,6 @@ export const translations = {
     kg: 'kg',
     searchProducts: 'Tìm kiếm sản phẩm',
     noProductsFound: 'Không tìm thấy sản phẩm',
-    saving: 'Đang lưu...',
   },
 };
 

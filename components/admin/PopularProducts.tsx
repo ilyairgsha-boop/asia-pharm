@@ -12,6 +12,8 @@ interface Product {
   weight: number;
   store: string;
   popular_order: number | null;
+  wholesale_price: number | null;
+  stock: number | null;
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -72,7 +74,7 @@ export const PopularProducts = () => {
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order')
+        .select('id, name, image, price, weight, store, popular_order, wholesale_price, stock')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
@@ -174,7 +176,7 @@ export const PopularProducts = () => {
       // Get current catalog products for this store
       const { data: catalogProducts, error: catalogError } = await supabase
         .from('products')
-        .select('id')
+        .select('id, name, price, wholesale_price, image, stock')
         .eq('store', currentStore);
       
       if (catalogError) {
@@ -223,10 +225,64 @@ export const PopularProducts = () => {
         console.log('🗑️ Products to remove:', productsToRemove.map(p => ({ id: p.id, name: p.name })));
       }
       
-      if (deletedCount === 0) {
+      // Check for products that need data updates (price, name, image changes)
+      const catalogProductsMap = new Map(catalogProducts?.map(p => [p.id, p]) || []);
+      const productsNeedingUpdate = popularProducts.filter(popular => {
+        const catalogProduct = catalogProductsMap.get(popular.id);
+        if (!catalogProduct) return false;
+        
+        // Check if any field differs
+        const needsUpdate = 
+          popular.name !== catalogProduct.name ||
+          popular.price !== catalogProduct.price ||
+          popular.wholesale_price !== catalogProduct.wholesale_price ||
+          popular.image !== catalogProduct.image ||
+          popular.stock !== catalogProduct.stock;
+        
+        if (needsUpdate) {
+          console.log(`🔄 Product needs update: ${popular.name}`);
+          console.log(`   Old: name=${popular.name}, price=${popular.price}, image=${popular.image?.substring(0, 30)}...`);
+          console.log(`   New: name=${catalogProduct.name}, price=${catalogProduct.price}, image=${catalogProduct.image?.substring(0, 30)}...`);
+        }
+        
+        return needsUpdate;
+      });
+      
+      console.log(`🔄 Products needing data updates: ${productsNeedingUpdate.length}`);
+      
+      if (deletedCount === 0 && productsNeedingUpdate.length === 0) {
         toast.info(t('syncNoChanges'));
         setSaving(false);
         return;
+      }
+      
+      let updatedCount = 0;
+      
+      // Update data for existing products that have changes
+      for (const popular of productsNeedingUpdate) {
+        const catalogProduct = catalogProductsMap.get(popular.id);
+        if (!catalogProduct) continue;
+        
+        const { error } = await supabase
+          .from('products')
+          .update({
+            name: catalogProduct.name,
+            name_en: catalogProduct.name_en,
+            name_zh: catalogProduct.name_zh,
+            name_vi: catalogProduct.name_vi,
+            price: catalogProduct.price,
+            wholesale_price: catalogProduct.wholesale_price,
+            image: catalogProduct.image,
+            stock: catalogProduct.stock,
+          })
+          .eq('id', popular.id);
+        
+        if (error) {
+          console.error('❌ Error updating product data:', error);
+          // Continue even if one fails
+        } else {
+          updatedCount++;
+        }
       }
       
       // Remove popular_order from deleted products
@@ -259,11 +315,19 @@ export const PopularProducts = () => {
       }
       
       console.log('✅ Synchronization complete!');
-      console.log(`✅ Removed ${deletedCount} products, ${validProducts.length} remaining`);
+      console.log(`✅ Removed ${deletedCount} products, updated ${updatedCount} products, ${validProducts.length} remaining`);
       
-      const message = t('syncSuccess')
-        .replace('{deleted}', deletedCount.toString())
-        .replace('{remaining}', validProducts.length.toString());
+      let message = '';
+      if (deletedCount > 0 && updatedCount > 0) {
+        message = `Синхронизация завершена: удалено ${deletedCount}, обновлено ${updatedCount}, осталось ${validProducts.length}`;
+      } else if (deletedCount > 0) {
+        message = t('syncSuccess')
+          .replace('{deleted}', deletedCount.toString())
+          .replace('{remaining}', validProducts.length.toString());
+      } else if (updatedCount > 0) {
+        message = `Обновлено ${updatedCount} товаров (цены, названия, изображения)`;
+      }
+      
       toast.success(message);
       
       // Reload products
