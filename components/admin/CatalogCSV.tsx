@@ -702,10 +702,7 @@ export const CatalogCSV = () => {
         
         if (updateErrors.length === 0) {
           toast.success(successMsg);
-          // Reload page after successful sync
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
+          // User will reload manually via modal button
         } else {
           toast.error(`Синхронизация завершена с ошибками`);
         }
@@ -716,6 +713,8 @@ export const CatalogCSV = () => {
           message: 'Нет валидных товаров для импорта',
           details: { errors, skipped, totalRows: lines.length - 1 },
         });
+        // Show modal with errors
+        setShowResultModal(true);
         toast.error('Нет валидных товаров для импорта');
       }
     } catch (error) {
