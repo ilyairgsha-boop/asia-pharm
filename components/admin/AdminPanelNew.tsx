@@ -53,6 +53,7 @@ export const AdminPanelNew = () => {
   const tabs = [
     { id: 'products' as AdminTab, label: t('productManagement'), icon: Package },
     { id: 'orders' as AdminTab, label: t('orderManagement'), icon: ShoppingBag },
+    { id: 'popular' as AdminTab, label: t('popularProducts'), icon: Star },
     { id: 'promos' as AdminTab, label: t('promoCodes'), icon: Tag },
     { id: 'users' as AdminTab, label: t('userManagement'), icon: Users },
     { id: 'categories' as AdminTab, label: t('categoryManagement'), icon: Layers },
@@ -70,7 +71,6 @@ export const AdminPanelNew = () => {
     { id: 'themes' as AdminTab, label: t('themeSettings'), icon: Palette },
     { id: 'seo' as AdminTab, label: t('seoSettings'), icon: Globe },
     { id: 'analytics' as AdminTab, label: t('analytics'), icon: BarChart3 },
-    { id: 'popular' as AdminTab, label: t('popularProducts'), icon: Star },
   ];
 
   const renderTabContent = () => {

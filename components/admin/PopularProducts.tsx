@@ -12,6 +12,7 @@ interface Product {
   weight: number;
   store: string;
   popular_order: number | null;
+  disease_categories?: string[] | null;
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -41,7 +42,7 @@ export const PopularProducts = () => {
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order')
+        .select('id, name, image, price, weight, store, popular_order, disease_categories')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
@@ -55,7 +56,7 @@ export const PopularProducts = () => {
       // Load all products for search
       const { data: all, error: allError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order')
+        .select('id, name, image, price, weight, store, popular_order, disease_categories')
         .eq('store', currentStore)
         .order('name', { ascending: true });
 
@@ -67,11 +68,70 @@ export const PopularProducts = () => {
 
       setPopularProducts(popular || []);
       setAllProducts(all || []);
+      
+      // Auto-load products with 'popular' tag that don't have popular_order yet
+      await autoLoadPopularProducts(all || []);
     } catch (error) {
       console.error('Error:', error);
       toast.error(t('errorLoadingProducts'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Auto-load products with 'popular' disease category tag
+  const autoLoadPopularProducts = async (allProducts: Product[]) => {
+    try {
+      const supabase = createClient();
+      
+      // Find products with 'popular' tag but no popular_order
+      const productsToAdd = allProducts.filter(product => {
+        const hasPopularTag = product.disease_categories?.includes('popular');
+        const hasNoOrder = product.popular_order === null || product.popular_order === undefined;
+        return hasPopularTag && hasNoOrder;
+      });
+
+      if (productsToAdd.length === 0) {
+        return; // Nothing to auto-add
+      }
+
+      console.log(`🔄 Auto-loading ${productsToAdd.length} products with 'popular' tag`);
+
+      // Get current max order
+      const { data: existingPopular } = await supabase
+        .from('products')
+        .select('popular_order')
+        .eq('store', currentStore)
+        .not('popular_order', 'is', null)
+        .order('popular_order', { ascending: false })
+        .limit(1);
+
+      let nextOrder = existingPopular && existingPopular.length > 0 
+        ? (existingPopular[0].popular_order || 0) + 1 
+        : 1;
+
+      // Add popular_order to each product
+      for (const product of productsToAdd) {
+        const { error } = await supabase
+          .from('products')
+          .update({ popular_order: nextOrder })
+          .eq('id', product.id);
+
+        if (error) {
+          console.error('Error auto-adding product:', error);
+        } else {
+          console.log(`✅ Auto-added "${product.name}" with order ${nextOrder}`);
+          nextOrder++;
+        }
+      }
+
+      if (productsToAdd.length > 0) {
+        toast.success(`Автоматически добавлено ${productsToAdd.length} товаров с тегом "popular"`);
+        // Reload products after auto-add
+        setTimeout(() => loadProducts(), 500);
+      }
+    } catch (error) {
+      console.error('Error in auto-load:', error);
     }
   };
 
