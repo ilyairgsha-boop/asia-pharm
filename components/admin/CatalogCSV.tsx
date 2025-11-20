@@ -1198,7 +1198,7 @@ export const CatalogCSV = () => {
       {/* Database Statistics */}
       <div className="mt-6 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg p-6">
         <div className="flex items-center justify-between mb-4">
-          <h4 className="text-gray-800">📊 Статистика базы данных</h4>
+          <h4 className="text-gray-800">📊 {t('dbStatistics')}</h4>
           <button
             onClick={loadDbStats}
             disabled={loadingStats}
@@ -1207,14 +1207,14 @@ export const CatalogCSV = () => {
             {loadingStats ? (
               <>
                 <Loader2 className="animate-spin" size={16} />
-                Загрузка...
+                {t('loading')}
               </>
             ) : (
               <>
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12a9 9 0 11-6.219-8.56"/>
                 </svg>
-                Обновить
+                {t('refreshStats')}
               </>
             )}
           </button>
@@ -1224,23 +1224,23 @@ export const CatalogCSV = () => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-white rounded-lg p-4 shadow-sm border border-purple-100">
               <div className="text-3xl font-bold text-purple-600">{dbStats.total}</div>
-              <div className="text-sm text-gray-600 mt-1">Всего товаров</div>
+              <div className="text-sm text-gray-600 mt-1">{t('totalProducts')}</div>
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-red-100">
               <div className="text-3xl font-bold text-red-600">{dbStats.china}</div>
-              <div className="text-sm text-gray-600 mt-1">🇨🇳 Китай</div>
+              <div className="text-sm text-gray-600 mt-1">🇨🇳 {t('storeChina')}</div>
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-yellow-100">
               <div className="text-3xl font-bold text-yellow-600">{dbStats.thailand}</div>
-              <div className="text-sm text-gray-600 mt-1">🇹🇭 Таиланд</div>
+              <div className="text-sm text-gray-600 mt-1">🇹🇭 {t('storeThailand')}</div>
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-green-100">
               <div className="text-3xl font-bold text-green-600">{dbStats.vietnam}</div>
-              <div className="text-sm text-gray-600 mt-1">🇻🇳 Вьетнам</div>
+              <div className="text-sm text-gray-600 mt-1">🇻🇳 {t('storeVietnam')}</div>
             </div>
             <div className="bg-white rounded-lg p-4 shadow-sm border border-blue-100">
               <div className="text-3xl font-bold text-blue-600">{dbStats.popular}</div>
-              <div className="text-sm text-gray-600 mt-1">⭐ Популярные</div>
+              <div className="text-sm text-gray-600 mt-1">⭐ {t('popularProductsStats')}</div>
             </div>
           </div>
         ) : (

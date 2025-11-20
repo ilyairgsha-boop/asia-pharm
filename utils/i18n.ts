@@ -406,7 +406,7 @@ export const translations = {
     // Wholesale
     wholesalePrice: 'Оптовая цена',
     wholesaler: 'Оптовик',
-    isWholesaler: 'С��атус оптовика',
+    isWholesaler: 'Статус оптовика',
     retailPrice: 'Розничная цена',
     yuan: '¥',
     cny: 'CNY',
@@ -781,6 +781,12 @@ export const translations = {
     skipped: 'Пропущено',
     csvDbError: 'Ошибка базы данных',
     csvValidationErrors: 'Ошибки валидации',
+    
+    // Database Statistics
+    dbStatistics: 'Статистика базы данных',
+    refreshStats: 'Обновить',
+    totalProducts: 'Всего товаров',
+    popularProductsStats: 'Популярные',
     
     // Profile Settings
     profileSettings: 'Настройки профиля',
@@ -1779,6 +1785,12 @@ export const translations = {
     skipped: 'Skipped',
     csvDbError: 'Database Error',
     csvValidationErrors: 'Validation Errors',
+    
+    // Database Statistics
+    dbStatistics: 'Database Statistics',
+    refreshStats: 'Refresh',
+    totalProducts: 'Total Products',
+    popularProductsStats: 'Popular',
     
     // Profile Settings
     profileSettings: 'Profile Settings',
@@ -2875,6 +2887,12 @@ export const translations = {
     csvDbError: '数据库错误',
     csvValidationErrors: '验证错误',
     
+    // Database Statistics
+    dbStatistics: '数据库统计',
+    refreshStats: '刷新',
+    totalProducts: '总产品数',
+    popularProductsStats: '热门',
+    
     // Profile Settings
     profileSettings: '个人资料设置',
     changeEmail: '更改电子邮件',
@@ -3966,6 +3984,12 @@ export const translations = {
     csvDbError: 'Lỗi cơ sở dữ liệu',
     csvValidationErrors: 'Lỗi xác thực',
     
+    // Database Statistics
+    dbStatistics: 'Thống kê cơ sở dữ liệu',
+    refreshStats: 'Làm mới',
+    totalProducts: 'Tổng số sản phẩm',
+    popularProductsStats: 'Phổ biến',
+    
     // Profile Settings
     profileSettings: 'Cài đặt hồ sơ',
     changeEmail: 'Thay đổi email',
@@ -4363,9 +4387,6 @@ export const translations = {
     popularTip2: 'Sử dụng nút mũi tên hoặc menu số để thay đổi vị trí',
     popularTip3: 'Mỗi cửa hàng có danh sách sản phẩm phổ biến riêng',
     popularTip4: 'Thứ tự được hiển thị trên trang chủ',
-    kg: 'kg',
-    searchProducts: 'Tìm kiếm sản phẩm',
-    noProductsFound: 'Không tìm thấy sản phẩm',
   },
 };
 
