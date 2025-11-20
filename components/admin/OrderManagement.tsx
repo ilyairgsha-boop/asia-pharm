@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createClient, getServerUrl, getAnonKey } from '../../utils/supabase/client';
-import { Loader2, Send, Eye, X, Trash2 } from 'lucide-react';
+import { Loader2, Send, Eye, X, Trash2, Search } from 'lucide-react';
 import { getMockOrders } from '../../utils/mockData';
 import { toast } from 'sonner';
 
@@ -33,6 +33,7 @@ export const OrderManagement = () => {
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [orderToChangeStatus, setOrderToChangeStatus] = useState<Order | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     loadOrders();
@@ -450,8 +451,57 @@ export const OrderManagement = () => {
     );
   }
 
+  // Filter orders based on search query
+  const filteredOrders = orders.filter(order => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const orderNumber = order.orderNumber || order.id.slice(0, 8);
+    const userName = (order.userName || '').toLowerCase();
+    const userEmail = (order.userEmail || '').toLowerCase();
+    const fullName = (order.shippingInfo?.fullName || '').toLowerCase();
+    const phone = (order.shippingInfo?.phone || '').toLowerCase();
+    const trackingNumber = (order.trackingNumber || '').toLowerCase();
+    const status = t(order.status).toLowerCase();
+    
+    return (
+      orderNumber.toLowerCase().includes(query) ||
+      userName.includes(query) ||
+      userEmail.includes(query) ||
+      fullName.includes(query) ||
+      phone.includes(query) ||
+      trackingNumber.includes(query) ||
+      status.includes(query)
+    );
+  });
+
   return (
     <div className="bg-white rounded-lg shadow-md">
+      {/* Search Bar */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={`${t('search')} (${t('orderNumber')}, Email, ${t('fullNameLabel')}, ${t('phoneLabel')}, ${t('trackNumber')}...)`}
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          {t('totalFound')}: {filteredOrders.length} {t('of')} {orders.length}
+        </p>
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-gray-50 border-b border-gray-200">
@@ -466,7 +516,7 @@ export const OrderManagement = () => {
             </tr>
           </thead>
           <tbody>
-            {orders.map((order) => (
+            {filteredOrders.map((order) => (
               <tr key={order.id} className="border-b border-gray-200 hover:bg-gray-50">
                 <td className="px-2 sm:px-6 py-4 text-gray-800 text-xs sm:text-sm">
                   #{order.orderNumber || order.id.slice(0, 8)}

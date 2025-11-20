@@ -149,6 +149,8 @@ export const translations = {
     search: 'Поиск',
     filter: 'Фильтр',
     actions: 'Действия',
+    totalFound: 'Найдено',
+    of: 'из',
     
     // Sale/Promotion
     salePromotion: 'Акция / Распродажа',
@@ -1203,6 +1205,8 @@ export const translations = {
     search: 'Search',
     filter: 'Filter',
     actions: 'Actions',
+    totalFound: 'Found',
+    of: 'of',
     
     // Sale/Promotion
     salePromotion: 'Sale / Promotion',
@@ -2249,6 +2253,8 @@ export const translations = {
     search: '搜索',
     filter: '筛选',
     actions: '操作',
+    totalFound: '找到',
+    of: '共',
     
     // Sale/Promotion
     salePromotion: '促销活动',
@@ -3297,6 +3303,8 @@ export const translations = {
     search: 'Tìm kiếm',
     filter: 'Lọc',
     actions: 'Hành động',
+    totalFound: 'Tìm thấy',
+    of: 'trên',
     
     // Sale/Promotion
     salePromotion: 'Khuyến mãi / Giảm giá',

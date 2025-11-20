@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { Product } from '../../contexts/CartContext';
 import { createClient, getServerUrl } from '../../utils/supabase/client';
-import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Plus, Edit, Trash2, Loader2, Search, X } from 'lucide-react';
 import { getMockProducts } from '../../utils/mockData';
 import { toast } from 'sonner';
 
@@ -35,6 +35,7 @@ export const ProductManagement = () => {
     topMenu: [],
     sidebar: [],
   });
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Get translated product name based on current language
   const getProductName = (product: Product): string => {
@@ -586,6 +587,30 @@ export const ProductManagement = () => {
     return t(categoryId);
   }, [categories, currentLanguage, t]);
 
+  // Filter products based on search query
+  const filteredProducts = products.filter(product => {
+    if (!searchQuery.trim()) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const name = (product.name || '').toLowerCase();
+    const name_en = (product.name_en || '').toLowerCase();
+    const name_zh = (product.name_zh || '').toLowerCase();
+    const name_vi = (product.name_vi || '').toLowerCase();
+    const category = t(product.category).toLowerCase();
+    const description = (product.description || '').toLowerCase();
+    const shortDescription = (product.shortDescription || '').toLowerCase();
+    
+    return (
+      name.includes(query) ||
+      name_en.includes(query) ||
+      name_zh.includes(query) ||
+      name_vi.includes(query) ||
+      category.includes(query) ||
+      description.includes(query) ||
+      shortDescription.includes(query)
+    );
+  });
+
   return (
     <div>
       {!showForm ? (
@@ -604,6 +629,31 @@ export const ProductManagement = () => {
             </div>
           ) : (
             <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              {/* Search Bar */}
+              <div className="p-4 border-b border-gray-200">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={`${t('search')} (${t('productName')}, ${t('category')}, ${t('productDescription')}...)`}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      <X size={18} />
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-sm text-gray-500">
+                  {t('totalFound')}: {filteredProducts.length} {t('of')} {products.length}
+                </p>
+              </div>
+
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b border-gray-200">
@@ -616,7 +666,7 @@ export const ProductManagement = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {products.map((product) => (
+                    {filteredProducts.map((product) => (
                       <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
                         <td className="px-2 sm:px-6 py-4">
                           <div className="flex items-center gap-2 sm:gap-3">
