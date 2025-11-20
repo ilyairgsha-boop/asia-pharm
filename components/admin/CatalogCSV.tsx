@@ -635,6 +635,10 @@ export const CatalogCSV = () => {
               .from('products')
               .update(cleaned)
               .eq('id', existingProductId);
+            
+            // Always remove from map because product exists in CSV
+            // (even if update failed, we don't want to delete it)
+            existingProductsMap.delete(productNameKey);
               
             if (updateError) {
               console.error(`❌ Error updating "${p.name}":`, updateError);
@@ -642,8 +646,6 @@ export const CatalogCSV = () => {
             } else {
               console.log(`✅ Updated: ${p.name}`);
               updated++;
-              // Remove from map so we know it was processed
-              existingProductsMap.delete(productNameKey);
             }
           } else {
             // Insert new product
@@ -683,7 +685,16 @@ export const CatalogCSV = () => {
         const allErrors = [...errors, ...updateErrors];
         
         created = inserted + updated;
-        const successMsg = `Синхронизация завершена: обновлено ${updated}, добавлено ${inserted}, удалено ${deleted}${skipped > 0 ? `, пропущено ${skipped}` : ''}`;
+        
+        // Build success message using translations
+        const syncMessageKey = skipped > 0 ? 'csvSyncMessageSkipped' : 'csvSyncMessage';
+        const syncMessage = t(syncMessageKey)
+          .replace('{updated}', updated.toString())
+          .replace('{created}', inserted.toString())
+          .replace('{deleted}', deleted.toString())
+          .replace('{skipped}', skipped.toString());
+        
+        const successMsg = `${t('csvSyncComplete')}: ${syncMessage}`;
         
         setUploadResult({
           success: updateErrors.length === 0,
@@ -704,7 +715,7 @@ export const CatalogCSV = () => {
           toast.success(successMsg);
           // User will reload manually via modal button
         } else {
-          toast.error(`Синхронизация завершена с ошибками`);
+          toast.error(t('csvSyncCompleteWithErrors'));
         }
       } else {
         console.log('❌ No valid products. Total lines:', lines.length - 1, 'Skipped:', skipped);
