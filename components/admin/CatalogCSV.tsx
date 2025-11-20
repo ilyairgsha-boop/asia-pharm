@@ -363,7 +363,7 @@ export const CatalogCSV = () => {
               product.name_en = cleanValue;
             } else if (header.includes('Название (ZH)')) {
               product.name_zh = cleanValue;
-            } else if (header.includes('Назва��ие (VI)')) {
+            } else if (header.includes('Назваие (VI)')) {
               product.name_vi = cleanValue;
             } else if (header.includes('Розничная цена') || header.includes('цена') && header.includes('*')) {
               const numValue = cleanValue.replace(/[^\d.,]/g, '').replace(',', '.');
@@ -662,14 +662,24 @@ export const CatalogCSV = () => {
           }
           
           if (existingProductIds && existingProductIds.length > 0) {
-            // Update FIRST product, delete ALL duplicates
+            // Update FIRST product, keep duplicates for deletion
+            const firstId = existingProductIds[0];
             const { error: updateError } = await supabase
               .from('products')
               .update(cleaned)
-              .eq('id', existingProductIds[0]);
+              .eq('id', firstId);
             
-            // Remove from map so we don't delete it later
-            existingProductsMap.delete(productNameKey);
+            // Remove ONLY the first ID from the array
+            const remainingDuplicates = existingProductIds.slice(1);
+            
+            // If there are remaining duplicates, keep them in the map for deletion
+            if (remainingDuplicates.length > 0) {
+              existingProductsMap.set(productNameKey, remainingDuplicates);
+              console.log(`🗑️ Kept ${remainingDuplicates.length} duplicate(s) for deletion: "${p.name}"`);
+            } else {
+              // No duplicates, remove from map completely
+              existingProductsMap.delete(productNameKey);
+            }
               
             if (updateError) {
               console.error(`❌ Error updating "${p.name}":`, updateError);
@@ -678,9 +688,9 @@ export const CatalogCSV = () => {
               console.log(`✅ Updated: ${p.name}`);
               updated++;
               
-              // If there are duplicates (more than 1 ID), log them
-              if (existingProductIds.length > 1) {
-                console.log(`🗑️ Found ${existingProductIds.length - 1} duplicate(s) for "${p.name}" that will be deleted`);
+              // Log duplicate info
+              if (remainingDuplicates.length > 0) {
+                console.log(`🗑️ Found ${remainingDuplicates.length} duplicate(s) for "${p.name}" that will be deleted`);
               }
             }
           } else {
