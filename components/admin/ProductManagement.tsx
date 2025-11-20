@@ -36,6 +36,8 @@ export const ProductManagement = () => {
     sidebar: [],
   });
   const [searchQuery, setSearchQuery] = useState('');
+  const [isAutoTranslating, setIsAutoTranslating] = useState(false);
+  const [translateProgress, setTranslateProgress] = useState({ current: 0, total: 0 });
 
   // Get translated product name based on current language
   const getProductName = (product: Product): string => {
@@ -432,134 +434,127 @@ export const ProductManagement = () => {
     setShowForm(false);
   };
 
-  // Функция автоперевода через серверный API
-  const autoTranslate = async () => {
+  // Функция массового автоперевода всех товаров в каталоге
+  const autoTranslateAllProducts = async () => {
     if (!accessToken) {
-      toast.error('Необходима авторизация');
+      toast.error(t('authRequired') || 'Необходима авторизация');
       return;
     }
 
-    if (!formData.name || !formData.shortDescription) {
-      toast.error('Заполните русские поля (Название и Краткое описание) перед переводом');
+    if (products.length === 0) {
+      toast.error(t('noProductsFound') || 'Нет товаров для перевода');
       return;
     }
 
-    setLoading(true);
-    toast.info('Перевод текстов...');
+    const confirmed = confirm(t('autoTranslateConfirm'));
+    if (!confirmed) return;
+
+    setIsAutoTranslating(true);
+    setTranslateProgress({ current: 0, total: products.length });
+    
+    let successCount = 0;
+    let errorCount = 0;
 
     try {
-      const fieldsToTranslate = [
-        { field: 'name', text: formData.name },
-        { field: 'shortDescription', text: formData.shortDescription },
-        { field: 'description', text: formData.description },
-      ];
+      const supabase = createClient();
 
-      const languages = ['en', 'zh', 'vi'];
-      const translations: any = {};
+      for (let i = 0; i < products.length; i++) {
+        const product = products[i];
+        setTranslateProgress({ current: i + 1, total: products.length });
 
-      // Проверяем наличие API ключа
-      const checkKeyResponse = await fetch(getServerUrl('/api/translate/key'), {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const keyData = await checkKeyResponse.json();
-      const hasApiKey = keyData.hasKey;
-
-      if (!hasApiKey) {
-        console.warn('⚠️ Google Translate API key not configured');
-        toast.warning('API ключ Google Translate не настроен. Используется заглушка.');
-        
-        // Fallback: использовать заглушку
-        for (const lang of languages) {
-          for (const { field, text } of fieldsToTranslate) {
-            if (!text) continue;
-            const key = `${field}_${lang}`;
-            translations[key] = `[${lang.toUpperCase()}] ${text}`;
-          }
+        // Пропустить, если нет русского названия
+        if (!product.name || !product.shortDescription) {
+          console.log(`⚠️ Skipping product ${product.id}: missing Russian name or description`);
+          errorCount++;
+          continue;
         }
-        
-        setFormData(prev => ({
-          ...prev,
-          ...translations,
-        }));
-        
-        setLoading(false);
-        return;
-      }
-
-      // Переводим для каждого языка
-      for (const lang of languages) {
-        console.log(`🌐 Translating to ${lang}...`);
-        
-        // Собираем все тексты для пакетного перевода
-        const textsToTranslate = fieldsToTranslate
-          .filter(({ text }) => text)
-          .map(({ text }) => text);
-
-        if (textsToTranslate.length === 0) continue;
 
         try {
-          // Используем пакетный перевод для эффективности
-          const response = await fetch(getServerUrl('/api/translate/batch'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              texts: textsToTranslate,
-              targetLanguage: lang,
-              sourceLanguage: 'ru',
-            }),
-          });
+          // Переводим название и описания
+          const textsToTranslate = [
+            product.name,
+            product.shortDescription,
+            product.description || '',
+          ];
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Translation to ${lang} failed`);
-          }
+          const translations: any = {
+            name_en: '',
+            name_zh: '',
+            name_vi: '',
+            short_description_en: '',
+            short_description_zh: '',
+            short_description_vi: '',
+            description_en: '',
+            description_zh: '',
+            description_vi: '',
+          };
 
-          const data = await response.json();
-          
-          if (data.success && data.translations) {
-            // Применяем переводы к полям
-            fieldsToTranslate.forEach(({ field, text }, index) => {
-              if (text && data.translations[index]) {
-                const key = `${field}_${lang}`;
-                translations[key] = data.translations[index].translatedText;
-                console.log(`✅ Translated ${field} to ${lang}: ${translations[key].substring(0, 50)}...`);
+          // Переводим на каждый язык
+          for (const lang of ['en', 'zh', 'vi']) {
+            try {
+              const response = await fetch(getServerUrl('/api/translate'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  text: textsToTranslate.join('|||'), // Используем разделитель
+                  targetLanguage: lang,
+                  sourceLanguage: 'ru',
+                }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.translatedText) {
+                  const translatedParts = data.translatedText.split('|||');
+                  translations[`name_${lang}`] = translatedParts[0] || textsToTranslate[0];
+                  translations[`short_description_${lang}`] = translatedParts[1] || textsToTranslate[1];
+                  translations[`description_${lang}`] = translatedParts[2] || textsToTranslate[2];
+                }
               }
-            });
+            } catch (langError) {
+              console.error(`Error translating to ${lang}:`, langError);
+            }
+
+            // Небольшая задержка между запросами
+            await new Promise(resolve => setTimeout(resolve, 300));
           }
-        } catch (langError) {
-          console.error(`❌ Error translating to ${lang}:`, langError);
-          // Fallback для этого языка
-          for (const { field, text } of fieldsToTranslate) {
-            if (!text) continue;
-            const key = `${field}_${lang}`;
-            translations[key] = `[${lang.toUpperCase()}] ${text}`;
+
+          // Обновляем товар в базе данных
+          const { error: updateError } = await supabase
+            .from('products')
+            .update(translations)
+            .eq('id', product.id);
+
+          if (updateError) {
+            console.error(`Error updating product ${product.id}:`, updateError);
+            errorCount++;
+          } else {
+            successCount++;
+            console.log(`✅ Product ${product.id} translated successfully`);
           }
+
+        } catch (productError) {
+          console.error(`Error processing product ${product.id}:`, productError);
+          errorCount++;
         }
       }
 
-      setFormData(prev => ({
-        ...prev,
-        ...translations,
-      }));
+      // Обновляем список товаров
+      await loadProducts();
 
-      const translatedCount = Object.keys(translations).length;
-      if (translatedCount > 0) {
-        toast.success(`Перевод завершен! Переведено полей: ${translatedCount}`);
-      } else {
-        toast.warning('Не удалось перевести поля. Заполните их вручную.');
-      }
+      // Показываем результат
+      const message = t('autoTranslateSuccess').replace('{count}', successCount.toString());
+      toast.success(message + (errorCount > 0 ? ` (Ошибок: ${errorCount})` : ''));
+
     } catch (error) {
-      console.error('Translation error:', error);
-      toast.error('Ошибка перевода. Попробуйте позже или заполните поля вручную.');
+      console.error('Auto-translate error:', error);
+      toast.error(t('autoTranslateError'));
     } finally {
-      setLoading(false);
+      setIsAutoTranslating(false);
+      setTranslateProgress({ current: 0, total: 0 });
     }
   };
 
@@ -615,13 +610,78 @@ export const ProductManagement = () => {
     <div>
       {!showForm ? (
         <>
-          <button
-            onClick={() => setShowForm(true)}
-            className="mb-6 flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            <Plus size={20} />
-            <span>{t('addProduct')}</span>
-          </button>
+          <div className="mb-6 flex flex-wrap gap-3">
+            <button
+              onClick={() => setShowForm(true)}
+              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+            >
+              <Plus size={20} />
+              <span>{t('addProduct')}</span>
+            </button>
+
+            <button
+              onClick={autoTranslateAllProducts}
+              disabled={isAutoTranslating || products.length === 0}
+              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              title={t('autoTranslateProductsDesc')}
+            >
+              {isAutoTranslating ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  <span>{t('autoTranslating')}</span>
+                  {translateProgress.total > 0 && (
+                    <span className="text-xs">
+                      ({translateProgress.current}/{translateProgress.total})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  🌐
+                  <span>{t('autoTranslateProducts')}</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Warning banner */}
+          {!isAutoTranslating && products.length > 0 && (
+            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                {t('autoTranslateWarning')}
+              </p>
+            </div>
+          )}
+
+          {/* Progress banner */}
+          {isAutoTranslating && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm text-blue-800">
+                  {t('autoTranslateProgress')
+                    .replace('{current}', translateProgress.current.toString())
+                    .replace('{total}', translateProgress.total.toString())}
+                </p>
+                <span className="text-sm text-blue-600">
+                  {translateProgress.total > 0
+                    ? Math.round((translateProgress.current / translateProgress.total) * 100)
+                    : 0}%
+                </span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${
+                      translateProgress.total > 0
+                        ? (translateProgress.current / translateProgress.total) * 100
+                        : 0
+                    }%`,
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
