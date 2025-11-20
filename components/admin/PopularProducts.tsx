@@ -13,6 +13,7 @@ interface Product {
   store: string;
   popular_order: number | null;
   wholesale_price: number | null;
+  diseaseCategories: string[];
 }
 
 type Store = 'china' | 'thailand' | 'vietnam';
@@ -73,7 +74,7 @@ export const PopularProducts = () => {
       // Load popular products for current store
       const { data: popular, error: popularError } = await supabase
         .from('products')
-        .select('id, name, image, price, weight, store, popular_order, wholesale_price')
+        .select('id, name, image, price, weight, store, popular_order, wholesale_price, diseaseCategories')
         .eq('store', currentStore)
         .not('popular_order', 'is', null)
         .order('popular_order', { ascending: true });
@@ -163,141 +164,103 @@ export const PopularProducts = () => {
     try {
       const supabase = createClient();
       
-      console.log('🔄 Starting synchronization with catalog...');
-      console.log(`📊 Current popular products: ${popularProducts.length}`);
+      console.log('🔄 Starting synchronization with catalog (category-based)...');
+      console.log(`📊 Current popular products (with popular_order): ${popularProducts.length}`);
       
-      // CRITICAL FIX: Instead of checking if products exist in DB,
-      // we need to get CURRENT catalog products for this store
-      // and remove popular_order from products that are no longer in the catalog
-      
-      const popularIds = popularProducts.map(p => p.id);
-      
-      // Get current catalog products for this store
-      const { data: catalogProducts, error: catalogError } = await supabase
+      // Get ALL products for current store with their diseaseCategories
+      const { data: allStoreProducts, error: allError } = await supabase
         .from('products')
-        .select('id, name, name_en, name_zh, name_vi, price, wholesale_price, image')
+        .select('id, name, name_en, name_zh, name_vi, price, wholesale_price, image, diseaseCategories, popular_order')
         .eq('store', currentStore);
       
-      if (catalogError) {
-        console.error('❌ Error loading catalog:', catalogError);
-        throw catalogError;
+      if (allError) {
+        console.error('❌ Error loading all products:', allError);
+        throw allError;
       }
       
-      const catalogIds = new Set(catalogProducts?.map(p => p.id) || []);
-      console.log(`📦 Current catalog products: ${catalogIds.size}`);
+      console.log(`📦 Total products in store: ${allStoreProducts?.length || 0}`);
       
-      // DEBUG: Show sample of catalog IDs
-      const catalogIdsSample = Array.from(catalogIds).slice(0, 5);
-      console.log('📝 Sample catalog IDs:', catalogIdsSample);
+      // Find products that SHOULD be popular (have "popular" in diseaseCategories)
+      const shouldBePopular = allStoreProducts?.filter(p => 
+        Array.isArray(p.diseaseCategories) && p.diseaseCategories.includes('popular')
+      ) || [];
       
-      // DEBUG: Show sample of popular IDs
-      const popularIdsSample = popularProducts.slice(0, 5).map(p => ({ id: p.id, name: p.name }));
-      console.log('📝 Sample popular products:', popularIdsSample);
+      console.log(`✨ Products with "popular" category: ${shouldBePopular.length}`);
       
-      // DEBUG: Check if sample popular IDs exist in catalog
-      console.log('🔍 Checking if sample popular products exist in catalog:');
-      popularProducts.slice(0, 5).forEach(p => {
-        const exists = catalogIds.has(p.id);
-        console.log(`   ${p.name}: ${exists ? '✅ EXISTS' : '❌ MISSING'}`);
-      });
+      // Find products that currently ARE popular (have popular_order)
+      const currentlyPopular = allStoreProducts?.filter(p => p.popular_order !== null) || [];
       
-      // DEBUG: Show all popular product IDs
-      const allPopularIds = popularProducts.map(p => p.id);
-      console.log('📋 All popular product IDs:', allPopularIds);
+      console.log(`📌 Products with popular_order: ${currentlyPopular.length}`);
       
-      // DEBUG: Find missing products manually
-      const missingProducts = popularProducts.filter(p => {
-        const exists = catalogIds.has(p.id);
-        if (!exists) {
-          console.log(`❌ Missing product: ${p.name} (${p.id})`);
-        }
-        return !exists;
-      });
-      console.log(`🔍 Manually found missing products: ${missingProducts.length}`);
-      
-      // Find products that are in popular but NOT in catalog (deleted products)
-      const productsToRemove = popularProducts.filter(p => !catalogIds.has(p.id));
-      const deletedCount = productsToRemove.length;
-      
-      console.log(`🗑️ Products to remove (deleted from catalog): ${deletedCount}`);
-      if (deletedCount > 0) {
-        console.log('🗑️ Products to remove:', productsToRemove.map(p => ({ id: p.id, name: p.name })));
+      // Products to ADD (have "popular" category but no popular_order)
+      const toAdd = shouldBePopular.filter(p => p.popular_order === null);
+      console.log(`➕ Products to add: ${toAdd.length}`);
+      if (toAdd.length > 0) {
+        console.log('   Products to add:', toAdd.map(p => p.name));
       }
       
-      // Check for products that need data updates (price, name, image changes)
-      const catalogProductsMap = new Map(catalogProducts?.map(p => [p.id, p]) || []);
+      // Products to REMOVE (have popular_order but no "popular" category)
+      const toRemove = currentlyPopular.filter(p => 
+        !Array.isArray(p.diseaseCategories) || !p.diseaseCategories.includes('popular')
+      );
+      console.log(`➖ Products to remove: ${toRemove.length}`);
+      if (toRemove.length > 0) {
+        console.log('   Products to remove:', toRemove.map(p => p.name));
+      }
       
-      // DEBUG: Check first 5 products in detail
-      console.log('🔍 Detailed comparison for first 5 products:');
-      popularProducts.slice(0, 5).forEach((popular, idx) => {
-        const catalogProduct = catalogProductsMap.get(popular.id);
-        if (!catalogProduct) {
-          console.log(`${idx + 1}. ❌ MISSING in catalog: ${popular.name}`);
-          return;
-        }
-        
-        console.log(`${idx + 1}. Checking: ${popular.name}`);
-        console.log(`   Popular data:`, {
-          name: popular.name,
-          price: popular.price,
-          wholesale: popular.wholesale_price,
-          image: popular.image?.substring(0, 50)
-        });
-        console.log(`   Catalog data:`, {
-          name: catalogProduct.name,
-          price: catalogProduct.price,
-          wholesale: catalogProduct.wholesale_price,
-          image: catalogProduct.image?.substring(0, 50)
-        });
-        
-        const namesDiffer = popular.name !== catalogProduct.name;
-        const pricesDiffer = popular.price !== catalogProduct.price;
-        const wholesaleDiffer = popular.wholesale_price !== catalogProduct.wholesale_price;
-        const imagesDiffer = popular.image !== catalogProduct.image;
-        
-        console.log(`   Differences:`, {
-          name: namesDiffer,
-          price: pricesDiffer,
-          wholesale: wholesaleDiffer,
-          image: imagesDiffer
-        });
-      });
+      // Products that need data updates (have both popular_order and "popular" category)
+      const shouldStayPopular = shouldBePopular.filter(p => p.popular_order !== null);
+      const catalogProductsMap = new Map(allStoreProducts?.map(p => [p.id, p]) || []);
       
-      const productsNeedingUpdate = popularProducts.filter(popular => {
+      const toUpdate = shouldStayPopular.filter(popular => {
         const catalogProduct = catalogProductsMap.get(popular.id);
         if (!catalogProduct) return false;
         
         // Check if any field differs
-        const needsUpdate = 
+        return (
           popular.name !== catalogProduct.name ||
           popular.price !== catalogProduct.price ||
           popular.wholesale_price !== catalogProduct.wholesale_price ||
-          popular.image !== catalogProduct.image;
-        
-        if (needsUpdate) {
-          console.log(`🔄 Product needs update: ${popular.name}`);
-          console.log(`   Old: name=${popular.name}, price=${popular.price}, image=${popular.image?.substring(0, 30)}...`);
-          console.log(`   New: name=${catalogProduct.name}, price=${catalogProduct.price}, image=${catalogProduct.image?.substring(0, 30)}...`);
-        }
-        
-        return needsUpdate;
+          popular.image !== catalogProduct.image
+        );
       });
       
-      console.log(`🔄 Products needing data updates: ${productsNeedingUpdate.length}`);
+      console.log(`🔄 Products needing data updates: ${toUpdate.length}`);
+      if (toUpdate.length > 0) {
+        console.log('   Products to update:', toUpdate.map(p => p.name));
+      }
       
-      if (deletedCount === 0 && productsNeedingUpdate.length === 0) {
+      if (toAdd.length === 0 && toRemove.length === 0 && toUpdate.length === 0) {
         toast.info(t('syncNoChanges'));
         setSaving(false);
         return;
       }
       
+      let addedCount = 0;
+      let removedCount = 0;
       let updatedCount = 0;
       
-      // Update data for existing products that have changes
-      for (const popular of productsNeedingUpdate) {
-        const catalogProduct = catalogProductsMap.get(popular.id);
+      // 1. Remove popular_order from products without "popular" category
+      for (const product of toRemove) {
+        console.log(`🗑️ Removing from popular: ${product.name}`);
+        const { error } = await supabase
+          .from('products')
+          .update({ popular_order: null })
+          .eq('id', product.id);
+        
+        if (error) {
+          console.error('❌ Error removing popular_order:', error);
+        } else {
+          removedCount++;
+        }
+      }
+      
+      // 2. Update data for existing popular products
+      for (const product of toUpdate) {
+        const catalogProduct = catalogProductsMap.get(product.id);
         if (!catalogProduct) continue;
         
+        console.log(`🔄 Updating data: ${product.name}`);
         const { error } = await supabase
           .from('products')
           .update({
@@ -309,63 +272,74 @@ export const PopularProducts = () => {
             wholesale_price: catalogProduct.wholesale_price,
             image: catalogProduct.image,
           })
-          .eq('id', popular.id);
+          .eq('id', product.id);
         
         if (error) {
           console.error('❌ Error updating product data:', error);
-          // Continue even if one fails
         } else {
           updatedCount++;
         }
       }
       
-      // Remove popular_order from deleted products
-      for (const product of productsToRemove) {
-        const { error } = await supabase
-          .from('products')
-          .update({ popular_order: null })
-          .eq('id', product.id);
-        
-        if (error) {
-          console.error('❌ Error removing popular_order:', error);
-          // Continue even if one fails
-        }
+      // 3. Get remaining popular products to renumber them
+      const { data: remainingPopular, error: remainingError } = await supabase
+        .from('products')
+        .select('id, name, popular_order')
+        .eq('store', currentStore)
+        .not('popular_order', 'is', null)
+        .order('popular_order', { ascending: true });
+      
+      if (remainingError) {
+        console.error('❌ Error loading remaining popular:', remainingError);
+        throw remainingError;
       }
       
-      // Get remaining valid products
-      const validProducts = popularProducts.filter(p => catalogIds.has(p.id));
-      
-      // Renumber the remaining products (1, 2, 3...)
-      for (let i = 0; i < validProducts.length; i++) {
+      // 4. Renumber existing popular products (1, 2, 3...)
+      for (let i = 0; i < (remainingPopular?.length || 0); i++) {
         const { error } = await supabase
           .from('products')
           .update({ popular_order: i + 1 })
-          .eq('id', validProducts[i].id);
+          .eq('id', remainingPopular![i].id);
         
         if (error) {
-          console.error('❌ Error updating product order:', error);
-          throw error;
+          console.error('❌ Error renumbering:', error);
+        }
+      }
+      
+      // 5. Add new products to the end
+      const nextOrder = (remainingPopular?.length || 0) + 1;
+      for (let i = 0; i < toAdd.length; i++) {
+        const product = toAdd[i];
+        console.log(`➕ Adding to popular: ${product.name} (position ${nextOrder + i})`);
+        const { error } = await supabase
+          .from('products')
+          .update({ popular_order: nextOrder + i })
+          .eq('id', product.id);
+        
+        if (error) {
+          console.error('❌ Error adding to popular:', error);
+        } else {
+          addedCount++;
         }
       }
       
       console.log('✅ Synchronization complete!');
-      console.log(`✅ Removed ${deletedCount} products, updated ${updatedCount} products, ${validProducts.length} remaining`);
+      console.log(`✅ Added: ${addedCount}, Removed: ${removedCount}, Updated: ${updatedCount}`);
       
-      let message = '';
-      if (deletedCount > 0 && updatedCount > 0) {
-        message = `Синхронизация завершена: удалено ${deletedCount}, обновлено ${updatedCount}, осталось ${validProducts.length}`;
-      } else if (deletedCount > 0) {
-        message = t('syncSuccess')
-          .replace('{deleted}', deletedCount.toString())
-          .replace('{remaining}', validProducts.length.toString());
-      } else if (updatedCount > 0) {
-        message = `Обновлено ${updatedCount} товаров (цены, названия, изображения)`;
-      }
+      // Build success message
+      const messages = [];
+      if (addedCount > 0) messages.push(`добавлено ${addedCount}`);
+      if (removedCount > 0) messages.push(`удалено ${removedCount}`);
+      if (updatedCount > 0) messages.push(`обновлено ${updatedCount}`);
+      
+      const finalCount = (remainingPopular?.length || 0) - removedCount + addedCount;
+      const message = `Синхронизация: ${messages.join(', ')}. Итого: ${finalCount} товаров`;
       
       toast.success(message);
       
       // Reload products
       await loadProducts();
+      await loadStoreCounts();
       setHasChanges(false);
     } catch (error) {
       console.error('❌ Sync error:', error);
