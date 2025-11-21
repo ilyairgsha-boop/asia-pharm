@@ -1346,26 +1346,32 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
       return c.json({ error: 'Text and target language are required' }, 400);
     }
     
-    console.log(`🌍 Translating from ${sourceLanguage || 'auto'} to ${targetLanguage}`);
-    console.log(`📝 Text length: ${text.length} chars`);
+    const requestId = Math.random().toString(36).substring(7);
+    console.log(`\n🔵 [${requestId}] NEW TRANSLATION REQUEST`);
+    console.log(`🌍 [${requestId}] From ${sourceLanguage || 'auto'} to ${targetLanguage}`);
+    console.log(`📝 [${requestId}] Input text: "${text.substring(0, 100)}..." (${text.length} chars)`);
     
     const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
     const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
     const langPair = sourceLangCode === 'auto' ? targetLangCode : `${sourceLangCode}|${targetLangCode}`;
     
+    console.log(`🔤 [${requestId}] Language pair: ${langPair}`);
+    
     // MyMemory API имеет лимит 500 символов, разбиваем на части
     const chunks = splitTextIntoChunks(text, 450);
-    console.log(`📦 Split into ${chunks.length} chunk(s)`);
+    console.log(`📦 [${requestId}] Split into ${chunks.length} chunk(s)`);
     
     const translatedChunks: string[] = [];
     
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      console.log(`🔄 Translating chunk ${i + 1}/${chunks.length} (${chunk.length} chars)...`);
+      console.log(`🔄 [${requestId}] Translating chunk ${i + 1}/${chunks.length}: "${chunk.substring(0, 50)}..."`);
       
       const translateUrl = new URL('https://api.mymemory.translated.net/get');
       translateUrl.searchParams.set('q', chunk);
       translateUrl.searchParams.set('langpair', langPair);
+      
+      console.log(`🌐 [${requestId}] API URL: ${translateUrl.toString().substring(0, 150)}...`);
       
       const response = await fetch(translateUrl.toString(), {
         headers: {
@@ -1374,9 +1380,9 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
       });
       
       if (!response.ok) {
-        console.error(`❌ MyMemory API error: ${response.status} ${response.statusText}`);
+        console.error(`❌ [${requestId}] MyMemory API error: ${response.status} ${response.statusText}`);
         const errorText = await response.text();
-        console.error(`Error details: ${errorText}`);
+        console.error(`[${requestId}] Error details: ${errorText}`);
         throw new Error(`Translation failed: ${response.status}`);
       }
       
@@ -1384,17 +1390,18 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
       
       // Проверяем на ошибки в ответе
       if (data.responseStatus !== 200 && data.responseData?.translatedText?.includes('LIMIT EXCEEDED')) {
-        console.error('❌ MyMemory API limit exceeded');
+        console.error(`❌ [${requestId}] MyMemory API limit exceeded`);
         throw new Error('Translation limit exceeded. Please try with shorter text.');
       }
       
       if (!data || !data.responseData || !data.responseData.translatedText) {
-        console.error('❌ Invalid response format:', data);
+        console.error(`❌ [${requestId}] Invalid response format:`, data);
         throw new Error('Invalid response format from MyMemory API');
       }
       
-      translatedChunks.push(data.responseData.translatedText);
-      console.log(`✅ Chunk ${i + 1}/${chunks.length} translated`);
+      const translatedChunk = data.responseData.translatedText;
+      translatedChunks.push(translatedChunk);
+      console.log(`✅ [${requestId}] Chunk ${i + 1}/${chunks.length} result: "${translatedChunk.substring(0, 50)}..."`);
       
       // Небольшая задержка между запросами
       if (i < chunks.length - 1) {
@@ -1403,7 +1410,7 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
     }
     
     const translatedText = translatedChunks.join('');
-    console.log(`✅ Translation complete: ${translatedText.length} chars`);
+    console.log(`🎯 [${requestId}] FINAL OUTPUT: "${translatedText.substring(0, 100)}..." (${translatedText.length} chars)\n`);
     
     return c.json({ 
       success: true, 
