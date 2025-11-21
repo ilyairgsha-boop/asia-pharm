@@ -147,6 +147,17 @@ export class OneSignalService {
       return;
     }
 
+    // ✅ ПРОВЕРКА ДОМЕНА - OneSignal работает только на production
+    const isProduction = window.location.hostname === 'asia-pharm.vercel.app' || 
+                        window.location.hostname === 'asia-pharm.com';
+    
+    if (!isProduction) {
+      console.log('ℹ️ OneSignal initialization skipped: Not on production domain');
+      console.log('💡 OneSignal will work on: https://asia-pharm.vercel.app');
+      console.log('🌐 Current domain:', window.location.hostname);
+      return;
+    }
+
     // If already initialized, skip
     if (this.isInitialized) {
       console.log('✅ OneSignal already initialized in service, skipping');

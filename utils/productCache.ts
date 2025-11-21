@@ -30,21 +30,53 @@ export function setCachedProducts(products: Product[]): void {
     memoryCacheTimestamp = Date.now();
 
     // Сохраняем в sessionStorage (только для текущей вкладки)
+    // ✅ ОПТИМИЗАЦИЯ: Сохраняем только нужные поля для уменьшения размера
+    const lightweightProducts = products.map(p => ({
+      id: p.id,
+      name: p.name,
+      store: p.store,
+      category_id: p.category_id,
+      price: p.price,
+      wholesale_price: p.wholesale_price,
+      currency: p.currency,
+      image_url: p.image_url,
+      short_description: p.short_description,
+      in_stock: p.in_stock,
+    }));
+    
     const cacheData: CacheData = {
-      products,
+      products: lightweightProducts as Product[],
       timestamp: Date.now(),
       version: CACHE_VERSION,
     };
-    sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
     
-    console.log(`✅ Cached ${products.length} products (memory + session)`);
+    try {
+      sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+      console.log(`✅ Cached ${products.length} products (memory + session)`);
+    } catch (storageError) {
+      // Если sessionStorage переполнен, очищаем его и пробуем снова
+      if (storageError instanceof DOMException && storageError.name === 'QuotaExceededError') {
+        console.warn('⚠️ sessionStorage quota exceeded, clearing old data...');
+        sessionStorage.clear();
+        try {
+          sessionStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
+          console.log(`✅ Cached ${products.length} products after clearing storage`);
+        } catch (retryError) {
+          console.error('❌ Failed to cache even after clearing:', retryError);
+          // В памяти все равно сохранили, так что продолжаем работу
+        }
+      } else {
+        throw storageError;
+      }
+    }
   } catch (error) {
     console.error('Error caching products:', error);
+    // Даже если sessionStorage не работает, in-memory кэш все равно работает
   }
 }
 
 /**
- * Получить товары из кэша
+ * Получить товары из кэ��а
  */
 export function getCachedProducts(): Product[] | null {
   // Сначала проверяем memory cache (мгновенно)
