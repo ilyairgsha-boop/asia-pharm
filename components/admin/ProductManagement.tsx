@@ -481,7 +481,7 @@ export const ProductManagement = () => {
                 console.log(`✅ Translated ${field} to ${lang}: "${valuePreview}"`);
               }
 
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 2000));
             } catch (fieldError) {
               console.error(`❌ Error translating ${field} to ${lang}:`, fieldError);
               const key = `${field}_${lang}`;
@@ -517,7 +517,7 @@ export const ProductManagement = () => {
     }
   };
 
-  // Функция автоперевода выбранных товаров с задержками 1000ms
+  // Функция автоперевода выбранных товаров с задержками 2000ms между запросами
   const autoTranslateSelectedProducts = async () => {
     if (!accessToken) {
       toast.error(t('authRequired') || 'Необходима авторизация');
@@ -567,7 +567,7 @@ export const ProductManagement = () => {
             description_vi: '',
           };
 
-          // Переводим на каждый язык с задержками 1000ms между запросами
+          // Переводим на каждый язык с задержками 2000ms между запросами
           for (const lang of ['en', 'zh', 'vi']) {
             console.log(`🔵 Product ${product.id} - Translating to ${lang.toUpperCase()}`);
             
@@ -592,7 +592,7 @@ export const ProductManagement = () => {
                   translations[`name_${lang}`] = data.translatedText.trim();
                 }
               }
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 2000));
             } catch (error) {
               console.error(`❌ Error translating name to ${lang}:`, error);
             }
@@ -618,7 +618,7 @@ export const ProductManagement = () => {
                   translations[`short_description_${lang}`] = data.translatedText.trim();
                 }
               }
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise(resolve => setTimeout(resolve, 2000));
             } catch (error) {
               console.error(`❌ Error translating short description to ${lang}:`, error);
             }
@@ -645,7 +645,7 @@ export const ProductManagement = () => {
                     translations[`description_${lang}`] = data.translatedText.trim();
                   }
                 }
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
               } catch (error) {
                 console.error(`❌ Error translating description to ${lang}:`, error);
               }
