@@ -1,4 +1,5 @@
 import { createClient } from './client';
+import { getCachedProducts, setCachedProducts, clearProductCache } from '../productCache';
 
 const supabase = createClient();
 
@@ -145,6 +146,7 @@ export async function fetchProducts(store?: string) {
     
     const mappedProducts = (result || []).map(mapProductFromDB);
     console.log(`✅ Fetched ${mappedProducts.length} products from database${store ? ` (store: ${store})` : ''}`);
+    setCachedProducts(mappedProducts);
     return { success: true, products: mappedProducts };
   } catch (error: any) {
     console.error('Error fetching products after retries:', {
@@ -168,6 +170,7 @@ export async function createProduct(productData: any) {
       .single();
     
     if (error) throw error;
+    clearProductCache(); // Очищаем кэш при изменениях
     return { success: true, product: mapProductFromDB(data) };
   } catch (error: any) {
     console.error('Error creating product:', error);
@@ -186,6 +189,7 @@ export async function updateProduct(id: string, productData: any) {
       .single();
     
     if (error) throw error;
+    clearProductCache(); // Очищаем кэш при изменениях
     return { success: true, product: mapProductFromDB(data) };
   } catch (error: any) {
     console.error('Error updating product:', error);
@@ -201,6 +205,7 @@ export async function deleteProduct(id: string) {
       .eq('id', id);
     
     if (error) throw error;
+    clearProductCache(); // Очищаем кэш при изменениях
     return { success: true };
   } catch (error: any) {
     console.error('Error deleting product:', error);

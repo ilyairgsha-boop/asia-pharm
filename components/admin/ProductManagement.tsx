@@ -448,7 +448,7 @@ export const ProductManagement = () => {
     }
 
     setLoading(true);
-    toast.info('Перевод текстов...');
+    toast.info('Перевод те��стов...');
 
     try {
       const fieldsToTranslate = [
@@ -460,81 +460,49 @@ export const ProductManagement = () => {
       const languages = ['en', 'zh', 'vi'];
       const translations: any = {};
 
-      // Проверяем наличие API ключа
-      const checkKeyResponse = await fetch(getServerUrl('/api/translate/key'), {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const keyData = await checkKeyResponse.json();
-      const hasApiKey = keyData.hasKey;
-
-      if (!hasApiKey) {
-        console.warn('⚠️ Google Translate API key not configured');
-        toast.warning('API ключ Google Translate не настроен. Используется заглушка.');
-        
-        // Fallback: использовать заглушку
-        for (const lang of languages) {
-          for (const { field, text } of fieldsToTranslate) {
-            if (!text) continue;
-            const key = `${field}_${lang}`;
-            translations[key] = `[${lang.toUpperCase()}] ${text}`;
-          }
-        }
-        
-        setFormData(prev => ({
-          ...prev,
-          ...translations,
-        }));
-        
-        setLoading(false);
-        return;
-      }
-
-      // Переводим для каждого языка
+      // Переводим для каждого языка используя MyMemory API (работает без API ключа)
       for (const lang of languages) {
         console.log(`🌐 Translating to ${lang}...`);
         
-        // Собираем все тексты для пакетного перевода
-        const textsToTranslate = fieldsToTranslate
-          .filter(({ text }) => text)
-          .map(({ text }) => text);
-
-        if (textsToTranslate.length === 0) continue;
-
         try {
-          // Используем пакетный перевод для эффективности
-          const response = await fetch(getServerUrl('/api/translate/batch'), {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${accessToken}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              texts: textsToTranslate,
-              targetLanguage: lang,
-              sourceLanguage: 'ru',
-            }),
-          });
+          // Переводим каждое поле отдельно для точности (избегаем проблем с разделителем)
+          for (const { field, text } of fieldsToTranslate) {
+            if (!text) continue;
 
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Translation to ${lang} failed`);
-          }
+            try {
+              const response = await fetch(getServerUrl('/api/translate'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  text: text,
+                  targetLanguage: lang,
+                  sourceLanguage: 'ru',
+                }),
+              });
 
-          const data = await response.json();
-          
-          if (data.success && data.translations) {
-            // Применяем переводы к полям
-            fieldsToTranslate.forEach(({ field, text }, index) => {
-              if (text && data.translations[index]) {
-                const key = `${field}_${lang}`;
-                translations[key] = data.translations[index].translatedText;
-                console.log(`✅ Translated ${field} to ${lang}: ${translations[key].substring(0, 50)}...`);
+              if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Translation failed`);
               }
-            });
+
+              const data = await response.json();
+              
+              if (data.success && data.translatedText) {
+                const key = `${field}_${lang}`;
+                translations[key] = data.translatedText.trim();
+                console.log(`✅ Translated ${field} to ${lang}: "${data.translatedText.substring(0, 50)}..."`);
+              }
+
+              // Небольшая задержка между запросами (избегаем rate limit)
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (fieldError) {
+              console.error(`❌ Error translating ${field} to ${lang}:`, fieldError);
+              const key = `${field}_${lang}`;
+              translations[key] = `[${lang.toUpperCase()}] ${text}`;
+            }
           }
         } catch (langError) {
           console.error(`❌ Error translating to ${lang}:`, langError);
@@ -602,13 +570,6 @@ export const ProductManagement = () => {
         }
 
         try {
-          // Переводим название и описания
-          const textsToTranslate = [
-            product.name,
-            product.shortDescription,
-            product.description || '',
-          ];
-
           const translations: any = {
             name_en: '',
             name_zh: '',
@@ -621,8 +582,9 @@ export const ProductManagement = () => {
             description_vi: '',
           };
 
-          // Переводим на каждый язык
+          // Переводим на каждый язык (каждое поле отдельно для точности)
           for (const lang of ['en', 'zh', 'vi']) {
+            // Переводим название
             try {
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
@@ -631,7 +593,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: textsToTranslate.join('|||'), // Используем разделитель
+                  text: product.name,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -640,18 +602,67 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  const translatedParts = data.translatedText.split('|||');
-                  translations[`name_${lang}`] = translatedParts[0] || textsToTranslate[0];
-                  translations[`short_description_${lang}`] = translatedParts[1] || textsToTranslate[1];
-                  translations[`description_${lang}`] = translatedParts[2] || textsToTranslate[2];
+                  translations[`name_${lang}`] = data.translatedText.trim();
                 }
               }
-            } catch (langError) {
-              console.error(`Error translating to ${lang}:`, langError);
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (error) {
+              console.error(`Error translating name to ${lang}:`, error);
             }
 
-            // Небольшая задержка между запросами
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Переводим краткое описание
+            try {
+              const response = await fetch(getServerUrl('/api/translate'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  text: product.shortDescription,
+                  targetLanguage: lang,
+                  sourceLanguage: 'ru',
+                }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.translatedText) {
+                  translations[`short_description_${lang}`] = data.translatedText.trim();
+                }
+              }
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (error) {
+              console.error(`Error translating short description to ${lang}:`, error);
+            }
+
+            // Переводим полное описание (если есть)
+            if (product.description) {
+              try {
+                const response = await fetch(getServerUrl('/api/translate'), {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    text: product.description,
+                    targetLanguage: lang,
+                    sourceLanguage: 'ru',
+                  }),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.success && data.translatedText) {
+                    translations[`description_${lang}`] = data.translatedText.trim();
+                  }
+                }
+                await new Promise(resolve => setTimeout(resolve, 200));
+              } catch (error) {
+                console.error(`Error translating description to ${lang}:`, error);
+              }
+            }
           }
 
           // Обновляем товар в базе данных
@@ -728,12 +739,6 @@ export const ProductManagement = () => {
         }
 
         try {
-          const textsToTranslate = [
-            product.name,
-            product.shortDescription,
-            product.description || '',
-          ];
-
           const translations: any = {
             name_en: '',
             name_zh: '',
@@ -747,6 +752,7 @@ export const ProductManagement = () => {
           };
 
           for (const lang of ['en', 'zh', 'vi']) {
+            // Переводим название
             try {
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
@@ -755,7 +761,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: textsToTranslate.join('|||'),
+                  text: product.name,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -764,17 +770,67 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  const translatedParts = data.translatedText.split('|||');
-                  translations[`name_${lang}`] = translatedParts[0] || textsToTranslate[0];
-                  translations[`short_description_${lang}`] = translatedParts[1] || textsToTranslate[1];
-                  translations[`description_${lang}`] = translatedParts[2] || textsToTranslate[2];
+                  translations[`name_${lang}`] = data.translatedText.trim();
                 }
               }
-            } catch (langError) {
-              console.error(`Error translating to ${lang}:`, langError);
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (error) {
+              console.error(`Error translating name to ${lang}:`, error);
             }
 
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Переводим краткое описание
+            try {
+              const response = await fetch(getServerUrl('/api/translate'), {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  text: product.shortDescription,
+                  targetLanguage: lang,
+                  sourceLanguage: 'ru',
+                }),
+              });
+
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.translatedText) {
+                  translations[`short_description_${lang}`] = data.translatedText.trim();
+                }
+              }
+              await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (error) {
+              console.error(`Error translating short description to ${lang}:`, error);
+            }
+
+            // Переводим полное описание (если есть)
+            if (product.description) {
+              try {
+                const response = await fetch(getServerUrl('/api/translate'), {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    text: product.description,
+                    targetLanguage: lang,
+                    sourceLanguage: 'ru',
+                  }),
+                });
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.success && data.translatedText) {
+                    translations[`description_${lang}`] = data.translatedText.trim();
+                  }
+                }
+                await new Promise(resolve => setTimeout(resolve, 200));
+              } catch (error) {
+                console.error(`Error translating description to ${lang}:`, error);
+              }
+            }
           }
 
           const { error: updateError } = await supabase

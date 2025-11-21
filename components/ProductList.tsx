@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ProductCard } from './ProductCard';
 import { Product } from '../contexts/CartContext';
 import { fetchProducts } from '../utils/supabase/database';
+import { getCachedProducts } from '../utils/productCache';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Loader2 } from 'lucide-react';
 import { getMockProducts } from '../utils/mockData';
@@ -36,6 +37,16 @@ export const ProductList = ({ selectedCategory, selectedDisease, currentStore, o
         return;
       }
 
+      // Пробуем получить и�� кэша
+      const cachedProducts = getCachedProducts();
+      if (cachedProducts && cachedProducts.length > 0) {
+        console.log('⚡ Using cached products (instant load)');
+        setProducts(cachedProducts);
+        setLoading(false);
+        return;
+      }
+
+      // Загружаем из БД
       const result = await fetchProducts();
       
       if (result.success && result.products.length > 0) {

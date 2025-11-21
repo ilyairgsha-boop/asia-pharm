@@ -165,6 +165,7 @@ export const ProductCard = ({ product, onProductClick }: ProductCardProps) => {
           className="w-full h-full object-cover product-image"
           onContextMenu={(e) => e.preventDefault()}
           draggable={false}
+          loading="lazy"
         />
         
         {/* Badges container */}
