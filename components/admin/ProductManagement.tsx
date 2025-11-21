@@ -492,12 +492,14 @@ export const ProductManagement = () => {
               
               if (data.success && data.translatedText) {
                 const key = `${field}_${lang}`;
-                translations[key] = data.translatedText.trim();
-                console.log(`✅ Translated ${field} to ${lang}: "${data.translatedText.substring(0, 50)}..."`);
+                const translatedValue = data.translatedText.trim();
+                translations[key] = translatedValue;
+                const valuePreview = translatedValue.length > 50 ? translatedValue.substring(0, 50) + '...' : translatedValue;
+                console.log(`✅ Translated ${field} to ${lang}: "${valuePreview}"`);
               }
 
               // Небольшая задержка между запросами (избегаем rate limit)
-              await new Promise(resolve => setTimeout(resolve, 200));
+              await new Promise(resolve => setTimeout(resolve, 300));
             } catch (fieldError) {
               console.error(`❌ Error translating ${field} to ${lang}:`, fieldError);
               const key = `${field}_${lang}`;
@@ -625,7 +627,8 @@ export const ProductManagement = () => {
             // Переводим краткое описание
             try {
               const shortDescToTranslate = product.shortDescription;
-              console.log(`📤 [SHORT-${lang}] Sending: "${shortDescToTranslate.substring(0, 50)}..."`);
+              const shortPreview = shortDescToTranslate.length > 50 ? shortDescToTranslate.substring(0, 50) + '...' : shortDescToTranslate;
+              console.log(`📤 [SHORT-${lang}] Sending: "${shortPreview}"`);
               
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
@@ -645,7 +648,8 @@ export const ProductManagement = () => {
                 if (data.success && data.translatedText) {
                   const translatedShortDesc = data.translatedText.trim();
                   translations[`short_description_${lang}`] = translatedShortDesc;
-                  console.log(`📥 [SHORT-${lang}] Received: "${translatedShortDesc.substring(0, 50)}..."`);
+                  const receivedPreview = translatedShortDesc.length > 50 ? translatedShortDesc.substring(0, 50) + '...' : translatedShortDesc;
+                  console.log(`📥 [SHORT-${lang}] Received: "${receivedPreview}"`);
                   console.log(`✅ [SHORT-${lang}] Saved to: short_description_${lang}`);
                 } else {
                   console.error(`❌ [SHORT-${lang}] Invalid response:`, data);
@@ -662,7 +666,8 @@ export const ProductManagement = () => {
             if (product.description) {
               try {
                 const descToTranslate = product.description;
-                console.log(`📤 [DESC-${lang}] Sending: "${descToTranslate.substring(0, 50)}..."`);
+                const descPreview = descToTranslate.length > 50 ? descToTranslate.substring(0, 50) + '...' : descToTranslate;
+                console.log(`📤 [DESC-${lang}] Sending: "${descPreview}"`);
                 
                 const response = await fetch(getServerUrl('/api/translate'), {
                   method: 'POST',
@@ -682,7 +687,8 @@ export const ProductManagement = () => {
                   if (data.success && data.translatedText) {
                     const translatedDesc = data.translatedText.trim();
                     translations[`description_${lang}`] = translatedDesc;
-                    console.log(`📥 [DESC-${lang}] Received: "${translatedDesc.substring(0, 50)}..."`);
+                    const descResultPreview = translatedDesc.length > 50 ? translatedDesc.substring(0, 50) + '...' : translatedDesc;
+                    console.log(`📥 [DESC-${lang}] Received: "${descResultPreview}"`);
                     console.log(`✅ [DESC-${lang}] Saved to: description_${lang}`);
                   } else {
                     console.error(`❌ [DESC-${lang}] Invalid response:`, data);
@@ -786,8 +792,13 @@ export const ProductManagement = () => {
           };
 
           for (const lang of ['en', 'zh', 'vi']) {
+            console.log(`\n🔵 Product ${product.id} - Starting translation to ${lang.toUpperCase()}`);
+            
             // Переводим название
             try {
+              const nameToTranslate = product.name;
+              console.log(`📤 [NAME-${lang}] Sending: "${nameToTranslate}"`);
+              
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
                 headers: {
@@ -795,7 +806,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: product.name,
+                  text: nameToTranslate,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -804,16 +815,27 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  translations[`name_${lang}`] = data.translatedText.trim();
+                  const translatedName = data.translatedText.trim();
+                  translations[`name_${lang}`] = translatedName;
+                  console.log(`📥 [NAME-${lang}] Received: "${translatedName}"`);
+                  console.log(`✅ [NAME-${lang}] Saved to: name_${lang}`);
+                } else {
+                  console.error(`❌ [NAME-${lang}] Invalid response:`, data);
                 }
+              } else {
+                console.error(`❌ [NAME-${lang}] HTTP error: ${response.status}`);
               }
-              await new Promise(resolve => setTimeout(resolve, 200));
+              await new Promise(resolve => setTimeout(resolve, 300));
             } catch (error) {
-              console.error(`Error translating name to ${lang}:`, error);
+              console.error(`❌ [NAME-${lang}] Exception:`, error);
             }
 
             // Переводим краткое описание
             try {
+              const shortDescToTranslate = product.shortDescription;
+              const shortPreview = shortDescToTranslate.length > 50 ? shortDescToTranslate.substring(0, 50) + '...' : shortDescToTranslate;
+              console.log(`📤 [SHORT-${lang}] Sending: "${shortPreview}"`);
+              
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
                 headers: {
@@ -821,7 +843,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: product.shortDescription,
+                  text: shortDescToTranslate,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -830,17 +852,29 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  translations[`short_description_${lang}`] = data.translatedText.trim();
+                  const translatedShortDesc = data.translatedText.trim();
+                  translations[`short_description_${lang}`] = translatedShortDesc;
+                  const receivedPreview = translatedShortDesc.length > 50 ? translatedShortDesc.substring(0, 50) + '...' : translatedShortDesc;
+                  console.log(`📥 [SHORT-${lang}] Received: "${receivedPreview}"`);
+                  console.log(`✅ [SHORT-${lang}] Saved to: short_description_${lang}`);
+                } else {
+                  console.error(`❌ [SHORT-${lang}] Invalid response:`, data);
                 }
+              } else {
+                console.error(`❌ [SHORT-${lang}] HTTP error: ${response.status}`);
               }
-              await new Promise(resolve => setTimeout(resolve, 200));
+              await new Promise(resolve => setTimeout(resolve, 300));
             } catch (error) {
-              console.error(`Error translating short description to ${lang}:`, error);
+              console.error(`❌ [SHORT-${lang}] Exception:`, error);
             }
 
             // Переводим полное описание (если есть)
             if (product.description) {
               try {
+                const descToTranslate = product.description;
+                const descPreview = descToTranslate.length > 50 ? descToTranslate.substring(0, 50) + '...' : descToTranslate;
+                console.log(`📤 [DESC-${lang}] Sending: "${descPreview}"`);
+                
                 const response = await fetch(getServerUrl('/api/translate'), {
                   method: 'POST',
                   headers: {
@@ -848,7 +882,7 @@ export const ProductManagement = () => {
                     'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                    text: product.description,
+                    text: descToTranslate,
                     targetLanguage: lang,
                     sourceLanguage: 'ru',
                   }),
@@ -857,15 +891,25 @@ export const ProductManagement = () => {
                 if (response.ok) {
                   const data = await response.json();
                   if (data.success && data.translatedText) {
-                    translations[`description_${lang}`] = data.translatedText.trim();
+                    const translatedDesc = data.translatedText.trim();
+                    translations[`description_${lang}`] = translatedDesc;
+                    const descResultPreview = translatedDesc.length > 50 ? translatedDesc.substring(0, 50) + '...' : translatedDesc;
+                    console.log(`📥 [DESC-${lang}] Received: "${descResultPreview}"`);
+                    console.log(`✅ [DESC-${lang}] Saved to: description_${lang}`);
+                  } else {
+                    console.error(`❌ [DESC-${lang}] Invalid response:`, data);
                   }
+                } else {
+                  console.error(`❌ [DESC-${lang}] HTTP error: ${response.status}`);
                 }
-                await new Promise(resolve => setTimeout(resolve, 200));
+                await new Promise(resolve => setTimeout(resolve, 300));
               } catch (error) {
-                console.error(`Error translating description to ${lang}:`, error);
+                console.error(`❌ [DESC-${lang}] Exception:`, error);
               }
             }
           }
+          
+          console.log(`🎯 Product ${product.id} - Final translations:`, translations);
 
           const { error: updateError } = await supabase
             .from('products')

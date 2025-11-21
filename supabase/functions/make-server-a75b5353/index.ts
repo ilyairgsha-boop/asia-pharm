@@ -1349,7 +1349,8 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
     const requestId = Math.random().toString(36).substring(7);
     console.log(`\n🔵 [${requestId}] NEW TRANSLATION REQUEST`);
     console.log(`🌍 [${requestId}] From ${sourceLanguage || 'auto'} to ${targetLanguage}`);
-    console.log(`📝 [${requestId}] Input text: "${text.substring(0, 100)}..." (${text.length} chars)`);
+    const textPreview = text.length > 100 ? text.substring(0, 100) + '...' : text;
+    console.log(`📝 [${requestId}] Input text: "${textPreview}" (${text.length} chars)`);
     
     const sourceLangCode = mapLanguageCodeForMyMemory(sourceLanguage || 'auto');
     const targetLangCode = mapLanguageCodeForMyMemory(targetLanguage);
@@ -1365,13 +1366,15 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
     
     for (let i = 0; i < chunks.length; i++) {
       const chunk = chunks[i];
-      console.log(`🔄 [${requestId}] Translating chunk ${i + 1}/${chunks.length}: "${chunk.substring(0, 50)}..."`);
+      const chunkPreview = chunk.length > 50 ? chunk.substring(0, 50) + '...' : chunk;
+      console.log(`🔄 [${requestId}] Translating chunk ${i + 1}/${chunks.length}: "${chunkPreview}"`);
       
       const translateUrl = new URL('https://api.mymemory.translated.net/get');
       translateUrl.searchParams.set('q', chunk);
       translateUrl.searchParams.set('langpair', langPair);
       
-      console.log(`🌐 [${requestId}] API URL: ${translateUrl.toString().substring(0, 150)}...`);
+      const urlPreview = translateUrl.toString().length > 150 ? translateUrl.toString().substring(0, 150) + '...' : translateUrl.toString();
+      console.log(`🌐 [${requestId}] API URL: ${urlPreview}`);
       
       const response = await fetch(translateUrl.toString(), {
         headers: {
@@ -1401,7 +1404,8 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
       
       const translatedChunk = data.responseData.translatedText;
       translatedChunks.push(translatedChunk);
-      console.log(`✅ [${requestId}] Chunk ${i + 1}/${chunks.length} result: "${translatedChunk.substring(0, 50)}..."`);
+      const resultPreview = translatedChunk.length > 50 ? translatedChunk.substring(0, 50) + '...' : translatedChunk;
+      console.log(`✅ [${requestId}] Chunk ${i + 1}/${chunks.length} result: "${resultPreview}"`);
       
       // Небольшая задержка между запросами
       if (i < chunks.length - 1) {
@@ -1410,7 +1414,8 @@ app.post('/make-server-a75b5353/api/translate', requireAdmin, async (c) => {
     }
     
     const translatedText = translatedChunks.join('');
-    console.log(`🎯 [${requestId}] FINAL OUTPUT: "${translatedText.substring(0, 100)}..." (${translatedText.length} chars)\n`);
+    const finalPreview = translatedText.length > 100 ? translatedText.substring(0, 100) + '...' : translatedText;
+    console.log(`🎯 [${requestId}] FINAL OUTPUT: "${finalPreview}" (${translatedText.length} chars)\n`);
     
     return c.json({ 
       success: true, 
