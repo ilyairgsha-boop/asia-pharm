@@ -38,7 +38,7 @@ export const ProductManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isAutoTranslating, setIsAutoTranslating] = useState(false);
   const [translateProgress, setTranslateProgress] = useState({ current: 0, total: 0 });
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]); // IDs выбранных товаров
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
 
   // Get translated product name based on current language
   const getProductName = (product: Product): string => {
@@ -51,7 +51,6 @@ export const ProductManagement = () => {
     if (currentLanguage === 'vi' && product.name_vi) {
       return product.name_vi;
     }
-    // Default to Russian (name)
     return product.name || '';
   };
 
@@ -62,9 +61,9 @@ export const ProductManagement = () => {
     name_vi: '',
     price: '',
     wholesalePrice: '',
-    category: 'ointments', // Категория товара (только ОДНА)
-    disease: 'cold', // Основная категория заболевания
-    diseaseCategories: [] as string[], // Множественные категории заболеваний
+    category: 'ointments',
+    disease: 'cold',
+    diseaseCategories: [] as string[],
     store: 'china' as 'china' | 'thailand' | 'vietnam',
     weight: '0.1',
     shortDescription: '',
@@ -87,7 +86,6 @@ export const ProductManagement = () => {
     loadProducts();
     loadCategories();
     
-    // Listen for category updates
     const handleCategoriesUpdate = () => {
       console.log('📢 ProductManagement: Categories updated, reloading...');
       loadCategories();
@@ -102,7 +100,6 @@ export const ProductManagement = () => {
 
   const loadCategories = async () => {
     try {
-      // First try to load from localStorage
       const storedCategories = localStorage.getItem('categories');
       if (storedCategories) {
         try {
@@ -122,7 +119,6 @@ export const ProductManagement = () => {
         }
       }
 
-      // Load from Supabase kv_store
       console.log('⚠️ No categories in localStorage, fetching from Supabase...');
       
       const supabase = createClient();
@@ -134,7 +130,6 @@ export const ProductManagement = () => {
 
       if (error) {
         console.error('❌ Failed to load categories:', error);
-        // Use empty categories as fallback
         setCategories({ topMenu: [], sidebar: [] });
       } else if (data?.value) {
         const categoriesData = data.value;
@@ -142,7 +137,6 @@ export const ProductManagement = () => {
         localStorage.setItem('categories', JSON.stringify(categoriesData));
         console.log('✅ Categories loaded from kv_store');
       } else {
-        // No categories in database, use empty
         console.log('⚠️ No categories found in database, using empty');
         setCategories({ topMenu: [], sidebar: [] });
       }
@@ -163,7 +157,6 @@ export const ProductManagement = () => {
         console.warn('⚠️ Error loading products:', error);
         setProducts(getMockProducts());
       } else if (data && data.length > 0) {
-        // Map server format to frontend format
         const mappedProducts = data.map((p: any) => ({
           ...p,
           inStock: p.in_stock ?? p.inStock ?? true,
@@ -206,7 +199,6 @@ export const ProductManagement = () => {
     });
   };
 
-  // Handle disease category checkboxes (вертикальное меню - может быть несколько)
   const handleDiseaseCategoryToggle = (categoryId: string) => {
     const newDiseaseCategories = formData.diseaseCategories.includes(categoryId)
       ? formData.diseaseCategories.filter(c => c !== categoryId)
@@ -215,7 +207,6 @@ export const ProductManagement = () => {
     setFormData({
       ...formData,
       diseaseCategories: newDiseaseCategories,
-      // Update main disease to first selected disease category
       disease: newDiseaseCategories.length > 0 ? newDiseaseCategories[0] : 'cold'
     });
   };
@@ -223,7 +214,6 @@ export const ProductManagement = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent double submission
     if (loading) {
       console.log('⚠️ Submission already in progress, ignoring...');
       return;
@@ -238,14 +228,12 @@ export const ProductManagement = () => {
         return;
       }
 
-      // Validate that at least one disease category is selected
       if (formData.diseaseCategories.length === 0) {
         toast.error(t('pleaseSelectCategory') || 'Выберите хотя бы одну категорию заболевания');
         setLoading(false);
         return;
       }
 
-      // Validate sale fields if sale is enabled
       if (formData.saleEnabled) {
         if (!formData.saleDiscount || parseFloat(formData.saleDiscount) <= 0 || parseFloat(formData.saleDiscount) > 100) {
           toast.error('Укажите скидку от 1% до 100%');
@@ -266,7 +254,6 @@ export const ProductManagement = () => {
         }
       }
 
-      // Exclude frontend-only fields and map to DB column names
       const { inStock, isSample, wholesalePrice, description_en, description_zh, description_vi, saleEnabled, saleDiscount, saleEndDate, ...restFormData } = formData;
       
       const productData = {
@@ -303,7 +290,6 @@ export const ProductManagement = () => {
       
       let result;
       if (editingProduct) {
-        // Update existing product
         result = await supabase
           .from('products')
           .update(productData)
@@ -311,7 +297,6 @@ export const ProductManagement = () => {
           .select()
           .single();
       } else {
-        // Insert new product
         result = await supabase
           .from('products')
           .insert([productData])
@@ -340,7 +325,7 @@ export const ProductManagement = () => {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    const wholesalePriceValue = (product as any).wholesalePrice; // Keep as any for backwards compatibility
+    const wholesalePriceValue = (product as any).wholesalePrice;
     const saleEnabled = product.saleEnabled || false;
     const saleDiscount = product.saleDiscount;
     const saleEndDate = product.saleEndDate;
@@ -448,7 +433,7 @@ export const ProductManagement = () => {
     }
 
     setLoading(true);
-    toast.info('Перевод те��стов...');
+    toast.info('Перевод текстов...');
 
     try {
       const fieldsToTranslate = [
@@ -460,12 +445,10 @@ export const ProductManagement = () => {
       const languages = ['en', 'zh', 'vi'];
       const translations: any = {};
 
-      // Переводим для каждого языка используя MyMemory API (работает без API ключа)
       for (const lang of languages) {
         console.log(`🌐 Translating to ${lang}...`);
         
         try {
-          // Переводим каждое поле отдельно для точности (избегаем проблем с разделителем)
           for (const { field, text } of fieldsToTranslate) {
             if (!text) continue;
 
@@ -498,8 +481,7 @@ export const ProductManagement = () => {
                 console.log(`✅ Translated ${field} to ${lang}: "${valuePreview}"`);
               }
 
-              // Небольшая задержка между запросами (избегаем rate limit)
-              await new Promise(resolve => setTimeout(resolve, 300));
+              await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (fieldError) {
               console.error(`❌ Error translating ${field} to ${lang}:`, fieldError);
               const key = `${field}_${lang}`;
@@ -508,7 +490,6 @@ export const ProductManagement = () => {
           }
         } catch (langError) {
           console.error(`❌ Error translating to ${lang}:`, langError);
-          // Fallback для этого языка
           for (const { field, text } of fieldsToTranslate) {
             if (!text) continue;
             const key = `${field}_${lang}`;
@@ -536,212 +517,7 @@ export const ProductManagement = () => {
     }
   };
 
-  // Функция массового автоперевода всех товаров в каталоге
-  const autoTranslateAllProducts = async () => {
-    if (!accessToken) {
-      toast.error(t('authRequired') || 'Необходима авторизация');
-      return;
-    }
-
-    if (products.length === 0) {
-      toast.error(t('noProductsFound') || 'Нет товаров для перевода');
-      return;
-    }
-
-    const confirmed = confirm(t('autoTranslateConfirm'));
-    if (!confirmed) return;
-
-    setIsAutoTranslating(true);
-    setTranslateProgress({ current: 0, total: products.length });
-    
-    let successCount = 0;
-    let errorCount = 0;
-
-    try {
-      const supabase = createClient();
-
-      for (let i = 0; i < products.length; i++) {
-        const product = products[i];
-        setTranslateProgress({ current: i + 1, total: products.length });
-
-        // Пропустить, если нет русского названия
-        if (!product.name || !product.shortDescription) {
-          console.log(`⚠️ Skipping product ${product.id}: missing Russian name or description`);
-          errorCount++;
-          continue;
-        }
-
-        try {
-          const translations: any = {
-            name_en: '',
-            name_zh: '',
-            name_vi: '',
-            short_description_en: '',
-            short_description_zh: '',
-            short_description_vi: '',
-            description_en: '',
-            description_zh: '',
-            description_vi: '',
-          };
-
-          // Переводим на каждый язык (каждое поле отдельно для точности)
-          for (const lang of ['en', 'zh', 'vi']) {
-            console.log(`\n🔵 Product ${product.id} - Starting translation to ${lang.toUpperCase()}`);
-            
-            // Переводим название
-            try {
-              const nameToTranslate = product.name;
-              console.log(`📤 [NAME-${lang}] Sending: "${nameToTranslate}"`);
-              
-              const response = await fetch(getServerUrl('/api/translate'), {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${accessToken}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  text: nameToTranslate,
-                  targetLanguage: lang,
-                  sourceLanguage: 'ru',
-                }),
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.translatedText) {
-                  const translatedName = data.translatedText.trim();
-                  translations[`name_${lang}`] = translatedName;
-                  console.log(`📥 [NAME-${lang}] Received: "${translatedName}"`);
-                  console.log(`✅ [NAME-${lang}] Saved to: name_${lang}`);
-                } else {
-                  console.error(`❌ [NAME-${lang}] Invalid response:`, data);
-                }
-              } else {
-                console.error(`❌ [NAME-${lang}] HTTP error: ${response.status}`);
-              }
-              await new Promise(resolve => setTimeout(resolve, 300));
-            } catch (error) {
-              console.error(`❌ [NAME-${lang}] Exception:`, error);
-            }
-
-            // Переводим краткое описание
-            try {
-              const shortDescToTranslate = product.shortDescription;
-              const shortPreview = shortDescToTranslate.length > 50 ? shortDescToTranslate.substring(0, 50) + '...' : shortDescToTranslate;
-              console.log(`📤 [SHORT-${lang}] Sending: "${shortPreview}"`);
-              
-              const response = await fetch(getServerUrl('/api/translate'), {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${accessToken}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  text: shortDescToTranslate,
-                  targetLanguage: lang,
-                  sourceLanguage: 'ru',
-                }),
-              });
-
-              if (response.ok) {
-                const data = await response.json();
-                if (data.success && data.translatedText) {
-                  const translatedShortDesc = data.translatedText.trim();
-                  translations[`short_description_${lang}`] = translatedShortDesc;
-                  const receivedPreview = translatedShortDesc.length > 50 ? translatedShortDesc.substring(0, 50) + '...' : translatedShortDesc;
-                  console.log(`📥 [SHORT-${lang}] Received: "${receivedPreview}"`);
-                  console.log(`✅ [SHORT-${lang}] Saved to: short_description_${lang}`);
-                } else {
-                  console.error(`❌ [SHORT-${lang}] Invalid response:`, data);
-                }
-              } else {
-                console.error(`❌ [SHORT-${lang}] HTTP error: ${response.status}`);
-              }
-              await new Promise(resolve => setTimeout(resolve, 300));
-            } catch (error) {
-              console.error(`❌ [SHORT-${lang}] Exception:`, error);
-            }
-
-            // Переводим полное описание (если есть)
-            if (product.description) {
-              try {
-                const descToTranslate = product.description;
-                const descPreview = descToTranslate.length > 50 ? descToTranslate.substring(0, 50) + '...' : descToTranslate;
-                console.log(`📤 [DESC-${lang}] Sending: "${descPreview}"`);
-                
-                const response = await fetch(getServerUrl('/api/translate'), {
-                  method: 'POST',
-                  headers: {
-                    'Authorization': `Bearer ${accessToken}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    text: descToTranslate,
-                    targetLanguage: lang,
-                    sourceLanguage: 'ru',
-                  }),
-                });
-
-                if (response.ok) {
-                  const data = await response.json();
-                  if (data.success && data.translatedText) {
-                    const translatedDesc = data.translatedText.trim();
-                    translations[`description_${lang}`] = translatedDesc;
-                    const descResultPreview = translatedDesc.length > 50 ? translatedDesc.substring(0, 50) + '...' : translatedDesc;
-                    console.log(`📥 [DESC-${lang}] Received: "${descResultPreview}"`);
-                    console.log(`✅ [DESC-${lang}] Saved to: description_${lang}`);
-                  } else {
-                    console.error(`❌ [DESC-${lang}] Invalid response:`, data);
-                  }
-                } else {
-                  console.error(`❌ [DESC-${lang}] HTTP error: ${response.status}`);
-                }
-                await new Promise(resolve => setTimeout(resolve, 300));
-              } catch (error) {
-                console.error(`❌ [DESC-${lang}] Exception:`, error);
-              }
-            }
-          }
-
-          console.log(`🎯 Product ${product.id} - Final translations:`, translations);
-          
-          // Обновляем товар в базе данных
-          const { error: updateError } = await supabase
-            .from('products')
-            .update(translations)
-            .eq('id', product.id);
-
-          if (updateError) {
-            console.error(`Error updating product ${product.id}:`, updateError);
-            errorCount++;
-          } else {
-            successCount++;
-            console.log(`✅ Product ${product.id} translated successfully`);
-          }
-
-        } catch (productError) {
-          console.error(`Error processing product ${product.id}:`, productError);
-          errorCount++;
-        }
-      }
-
-      // Обновляем список товаров
-      await loadProducts();
-
-      // Показываем результат
-      const message = t('autoTranslateSuccess').replace('{count}', successCount.toString());
-      toast.success(message + (errorCount > 0 ? ` (Ошибок: ${errorCount})` : ''));
-
-    } catch (error) {
-      console.error('Auto-translate error:', error);
-      toast.error(t('autoTranslateError'));
-    } finally {
-      setIsAutoTranslating(false);
-      setTranslateProgress({ current: 0, total: 0 });
-    }
-  };
-
-  // Функция автоперевода выбранных товаров
+  // Функция автоперевода выбранных товаров с задержками 1000ms
   const autoTranslateSelectedProducts = async () => {
     if (!accessToken) {
       toast.error(t('authRequired') || 'Необходима авторизация');
@@ -791,14 +567,12 @@ export const ProductManagement = () => {
             description_vi: '',
           };
 
+          // Переводим на каждый язык с задержками 1000ms между запросами
           for (const lang of ['en', 'zh', 'vi']) {
-            console.log(`\n🔵 Product ${product.id} - Starting translation to ${lang.toUpperCase()}`);
+            console.log(`🔵 Product ${product.id} - Translating to ${lang.toUpperCase()}`);
             
             // Переводим название
             try {
-              const nameToTranslate = product.name;
-              console.log(`📤 [NAME-${lang}] Sending: "${nameToTranslate}"`);
-              
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
                 headers: {
@@ -806,7 +580,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: nameToTranslate,
+                  text: product.name,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -815,27 +589,16 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  const translatedName = data.translatedText.trim();
-                  translations[`name_${lang}`] = translatedName;
-                  console.log(`📥 [NAME-${lang}] Received: "${translatedName}"`);
-                  console.log(`✅ [NAME-${lang}] Saved to: name_${lang}`);
-                } else {
-                  console.error(`❌ [NAME-${lang}] Invalid response:`, data);
+                  translations[`name_${lang}`] = data.translatedText.trim();
                 }
-              } else {
-                console.error(`❌ [NAME-${lang}] HTTP error: ${response.status}`);
               }
-              await new Promise(resolve => setTimeout(resolve, 300));
+              await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (error) {
-              console.error(`❌ [NAME-${lang}] Exception:`, error);
+              console.error(`❌ Error translating name to ${lang}:`, error);
             }
 
             // Переводим краткое описание
             try {
-              const shortDescToTranslate = product.shortDescription;
-              const shortPreview = shortDescToTranslate.length > 50 ? shortDescToTranslate.substring(0, 50) + '...' : shortDescToTranslate;
-              console.log(`📤 [SHORT-${lang}] Sending: "${shortPreview}"`);
-              
               const response = await fetch(getServerUrl('/api/translate'), {
                 method: 'POST',
                 headers: {
@@ -843,7 +606,7 @@ export const ProductManagement = () => {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                  text: shortDescToTranslate,
+                  text: product.shortDescription,
                   targetLanguage: lang,
                   sourceLanguage: 'ru',
                 }),
@@ -852,29 +615,17 @@ export const ProductManagement = () => {
               if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.translatedText) {
-                  const translatedShortDesc = data.translatedText.trim();
-                  translations[`short_description_${lang}`] = translatedShortDesc;
-                  const receivedPreview = translatedShortDesc.length > 50 ? translatedShortDesc.substring(0, 50) + '...' : translatedShortDesc;
-                  console.log(`📥 [SHORT-${lang}] Received: "${receivedPreview}"`);
-                  console.log(`✅ [SHORT-${lang}] Saved to: short_description_${lang}`);
-                } else {
-                  console.error(`❌ [SHORT-${lang}] Invalid response:`, data);
+                  translations[`short_description_${lang}`] = data.translatedText.trim();
                 }
-              } else {
-                console.error(`❌ [SHORT-${lang}] HTTP error: ${response.status}`);
               }
-              await new Promise(resolve => setTimeout(resolve, 300));
+              await new Promise(resolve => setTimeout(resolve, 1000));
             } catch (error) {
-              console.error(`❌ [SHORT-${lang}] Exception:`, error);
+              console.error(`❌ Error translating short description to ${lang}:`, error);
             }
 
             // Переводим полное описание (если есть)
             if (product.description) {
               try {
-                const descToTranslate = product.description;
-                const descPreview = descToTranslate.length > 50 ? descToTranslate.substring(0, 50) + '...' : descToTranslate;
-                console.log(`📤 [DESC-${lang}] Sending: "${descPreview}"`);
-                
                 const response = await fetch(getServerUrl('/api/translate'), {
                   method: 'POST',
                   headers: {
@@ -882,7 +633,7 @@ export const ProductManagement = () => {
                     'Content-Type': 'application/json',
                   },
                   body: JSON.stringify({
-                    text: descToTranslate,
+                    text: product.description,
                     targetLanguage: lang,
                     sourceLanguage: 'ru',
                   }),
@@ -891,26 +642,17 @@ export const ProductManagement = () => {
                 if (response.ok) {
                   const data = await response.json();
                   if (data.success && data.translatedText) {
-                    const translatedDesc = data.translatedText.trim();
-                    translations[`description_${lang}`] = translatedDesc;
-                    const descResultPreview = translatedDesc.length > 50 ? translatedDesc.substring(0, 50) + '...' : translatedDesc;
-                    console.log(`📥 [DESC-${lang}] Received: "${descResultPreview}"`);
-                    console.log(`✅ [DESC-${lang}] Saved to: description_${lang}`);
-                  } else {
-                    console.error(`❌ [DESC-${lang}] Invalid response:`, data);
+                    translations[`description_${lang}`] = data.translatedText.trim();
                   }
-                } else {
-                  console.error(`❌ [DESC-${lang}] HTTP error: ${response.status}`);
                 }
-                await new Promise(resolve => setTimeout(resolve, 300));
+                await new Promise(resolve => setTimeout(resolve, 1000));
               } catch (error) {
-                console.error(`❌ [DESC-${lang}] Exception:`, error);
+                console.error(`❌ Error translating description to ${lang}:`, error);
               }
             }
           }
-          
-          console.log(`🎯 Product ${product.id} - Final translations:`, translations);
 
+          // Обновляем товар в базе данных
           const { error: updateError } = await supabase
             .from('products')
             .update(translations)
@@ -955,59 +697,18 @@ export const ProductManagement = () => {
   };
 
   const handleSelectAll = () => {
-    setSelectedProducts(filteredProducts.map(p => p.id));
-  };
-
-  const handleDeselectAll = () => {
-    setSelectedProducts([]);
-  };
-
-  // Fallback categories if none are loaded from API
-  const fallbackTopMenuCategories = ['ointments', 'patches', 'sprays', 'teas', 'elixirs', 'pills', 'cosmetics', 'accessories'];
-  const fallbackSidebarCategories = ['popular', 'allProducts', 'cold', 'digestive', 'skin', 'joints', 'heart', 'liverKidneys', 'nervous', 'womensHealth', 'mensHealth', 'forChildren', 'vision', 'hemorrhoids', 'oncology', 'thyroid', 'lungs'];
-
-  // Use loaded categories or fallback
-  const topMenuCategoryIds = categories.topMenu.length > 0
-    ? categories.topMenu.map(cat => cat.id)
-    : fallbackTopMenuCategories;
-
-  const sidebarCategoryIds = categories.sidebar.length > 0
-    ? categories.sidebar.map(cat => cat.id)
-    : fallbackSidebarCategories;
-
-  // Helper to get category translation - memoized to update when language changes
-  const getCategoryTranslation = useCallback((categoryId: string, menuType: 'topMenu' | 'sidebar') => {
-    const categoryList = menuType === 'topMenu' ? categories.topMenu : categories.sidebar;
-    const category = categoryList.find(cat => cat.id === categoryId);
-    if (category && category.translations) {
-      return category.translations[currentLanguage] || category.translations.ru;
+    if (selectedProducts.length === filteredProducts.length) {
+      setSelectedProducts([]);
+    } else {
+      setSelectedProducts(filteredProducts.map(p => p.id));
     }
-    // Fallback to translation key
-    return t(categoryId);
-  }, [categories, currentLanguage, t]);
+  };
 
-  // Filter products based on search query
+  // Filter products by search query
   const filteredProducts = products.filter(product => {
-    if (!searchQuery.trim()) return true;
-    
-    const query = searchQuery.toLowerCase();
-    const name = (product.name || '').toLowerCase();
-    const name_en = (product.name_en || '').toLowerCase();
-    const name_zh = (product.name_zh || '').toLowerCase();
-    const name_vi = (product.name_vi || '').toLowerCase();
-    const category = t(product.category).toLowerCase();
-    const description = (product.description || '').toLowerCase();
-    const shortDescription = (product.shortDescription || '').toLowerCase();
-    
-    return (
-      name.includes(query) ||
-      name_en.includes(query) ||
-      name_zh.includes(query) ||
-      name_vi.includes(query) ||
-      category.includes(query) ||
-      description.includes(query) ||
-      shortDescription.includes(query)
-    );
+    const productName = getProductName(product).toLowerCase();
+    const searchLower = searchQuery.toLowerCase();
+    return productName.includes(searchLower);
   });
 
   return (
@@ -1022,676 +723,592 @@ export const ProductManagement = () => {
               <Plus size={20} />
               <span>{t('addProduct')}</span>
             </button>
-
-            <button
-              onClick={autoTranslateAllProducts}
-              disabled={isAutoTranslating || products.length === 0}
-              className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-              title={t('autoTranslateProductsDesc')}
-            >
-              {isAutoTranslating ? (
-                <>
-                  <Loader2 className="animate-spin" size={20} />
-                  <span>{t('autoTranslating')}</span>
-                  {translateProgress.total > 0 && (
-                    <span className="text-xs">
-                      ({translateProgress.current}/{translateProgress.total})
-                    </span>
-                  )}
-                </>
-              ) : (
-                <>
-                  🌐
-                  <span>{t('autoTranslateProducts')}</span>
-                </>
-              )}
-            </button>
           </div>
 
           {/* Selection controls */}
           <div className="mb-4 flex flex-wrap items-center gap-3 bg-gray-50 p-4 rounded-lg border border-gray-200">
             <button
               onClick={handleSelectAll}
-              disabled={filteredProducts.length === 0 || isAutoTranslating}
-              className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+              className="flex items-center gap-2 bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors text-sm"
             >
-              {t('selectAll')}
+              {selectedProducts.length === filteredProducts.length && filteredProducts.length > 0 ? '☑️ Снять все' : '☐ Выбрать все'}
             </button>
-            <span className="text-gray-300">|</span>
-            <button
-              onClick={handleDeselectAll}
-              disabled={selectedProducts.length === 0 || isAutoTranslating}
-              className="text-sm text-gray-600 hover:text-gray-800 disabled:text-gray-400"
-            >
-              {t('deselectAll')}
-            </button>
-            <div className="flex-1" />
+
             {selectedProducts.length > 0 && (
               <>
                 <span className="text-sm text-gray-700">
-                  {t('selectedCount').replace('{count}', selectedProducts.length.toString())}
+                  Выбрано: <strong>{selectedProducts.length}</strong>
                 </span>
+
                 <button
                   onClick={autoTranslateSelectedProducts}
                   disabled={isAutoTranslating}
-                  className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-400"
+                  className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-sm"
                 >
-                  🌐
-                  <span>{t('translateSelected')}</span>
+                  {isAutoTranslating ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      <span>Перевод...</span>
+                      {translateProgress.total > 0 && (
+                        <span className="text-xs">
+                          ({translateProgress.current}/{translateProgress.total})
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      🌐
+                      <span>Перевести выбранные</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  onClick={() => setSelectedProducts([])}
+                  className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm"
+                >
+                  <X size={16} />
+                  Очистить
                 </button>
               </>
             )}
           </div>
 
-          {/* Warning banner */}
-          {!isAutoTranslating && products.length > 0 && (
-            <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800">
-                {t('autoTranslateWarning')}
-              </p>
-            </div>
-          )}
-
-          {/* Progress banner */}
-          {isAutoTranslating && (
-            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm text-blue-800">
-                  {t('autoTranslateProgress')
-                    .replace('{current}', translateProgress.current.toString())
-                    .replace('{total}', translateProgress.total.toString())}
-                </p>
-                <span className="text-sm text-blue-600">
-                  {translateProgress.total > 0
-                    ? Math.round((translateProgress.current / translateProgress.total) * 100)
-                    : 0}%
-                </span>
-              </div>
-              <div className="w-full bg-blue-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${
-                      translateProgress.total > 0
-                        ? (translateProgress.current / translateProgress.total) * 100
-                        : 0
-                    }%`,
-                  }}
-                />
-              </div>
-            </div>
-          )}
+          {/* Search */}
+          <div className="mb-4 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <input
+              type="text"
+              placeholder={t('searchProducts') || 'Поиск товаров...'}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+            />
+          </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
+            <div className="flex justify-center items-center py-12">
               <Loader2 className="animate-spin text-red-600" size={48} />
             </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              {searchQuery ? t('noProductsFound') : t('noProducts')}
+            </div>
           ) : (
-            <div className="bg-white rounded-lg shadow-md overflow-hidden">
-              {/* Search Bar */}
-              <div className="p-4 border-b border-gray-200">
-                <div className="relative max-w-md">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={`${t('search')} (${t('productName')}, ${t('category')}, ${t('productDescription')}...)`}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
-                  />
-                  {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                      <X size={18} />
-                    </button>
-                  )}
+            <div className="grid gap-4">
+              {filteredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => handleSelectProduct(product.id)}
+                      className="mt-1 w-5 h-5 text-red-600"
+                    />
+                    
+                    {product.image && (
+                      <img
+                        src={product.image}
+                        alt={getProductName(product)}
+                        className="w-20 h-20 object-cover rounded"
+                      />
+                    )}
+                    
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-800">
+                        {getProductName(product)}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {t('price')}: ¥{product.price}
+                        {product.wholesalePrice && ` | ${t('wholesalePrice')}: ¥${product.wholesalePrice}`}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {t('category')}: {product.category} | {t('store')}: {product.store}
+                      </p>
+                      {product.saleEnabled && product.saleEndDate && (
+                        <div className="mt-2 inline-block bg-red-100 text-red-800 text-xs px-2 py-1 rounded">
+                          🔥 Акция -{product.saleDiscount}% до {new Date(product.saleEndDate).toLocaleString()}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleEdit(product)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title={t('edit')}
+                      >
+                        <Edit size={20} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                        title={t('delete')}
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-2 text-sm text-gray-500">
-                  {t('totalFound')}: {filteredProducts.length} {t('of')} {products.length}
-                </p>
-              </div>
-
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-2 sm:px-4 py-3 text-left">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.length > 0 && selectedProducts.length === filteredProducts.length}
-                          onChange={(e) => e.target.checked ? handleSelectAll() : handleDeselectAll()}
-                          className="w-4 h-4 text-blue-600 rounded"
-                          disabled={isAutoTranslating}
-                        />
-                      </th>
-                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('productName')}</th>
-                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('price')}</th>
-                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm hidden sm:table-cell">{t('category')}</th>
-                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('stockStatus')}</th>
-                      <th className="px-2 sm:px-6 py-3 text-left text-gray-700 text-xs sm:text-sm">{t('actions')}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredProducts.map((product) => (
-                      <tr key={product.id} className="border-b border-gray-200 hover:bg-gray-50">
-                        <td className="px-2 sm:px-4 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedProducts.includes(product.id)}
-                            onChange={() => handleSelectProduct(product.id)}
-                            className="w-4 h-4 text-blue-600 rounded"
-                            disabled={isAutoTranslating}
-                          />
-                        </td>
-                        <td className="px-2 sm:px-6 py-4">
-                          <div className="flex items-center gap-2 sm:gap-3">
-                            <img
-                              src={product.image}
-                              alt={getProductName(product)}
-                              className="w-8 h-8 sm:w-12 sm:h-12 object-cover rounded"
-                            />
-                            <span className="text-gray-800 text-xs sm:text-sm">{getProductName(product)}</span>
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4">
-                          <div className="flex flex-col gap-1">
-                            {(() => {
-                              const saleEnabled = (product as any).saleEnabled;
-                              const saleDiscount = (product as any).saleDiscount;
-                              const saleEndDate = (product as any).saleEndDate;
-                              const now = new Date();
-                              const isSaleActive = saleEnabled && saleEndDate && new Date(saleEndDate) > now;
-                              
-                              if (isSaleActive && saleDiscount) {
-                                const originalPrice = product.price || 0;
-                                const discountedPrice = originalPrice * (1 - saleDiscount / 100);
-                                return (
-                                  <>
-                                    <div className="flex items-center gap-1 sm:gap-2">
-                                      <span className="text-gray-400 line-through text-xs">{originalPrice.toLocaleString()} ₽</span>
-                                      <span className="bg-red-600 text-white px-1 sm:px-2 py-0.5 rounded text-xs">-{saleDiscount}%</span>
-                                    </div>
-                                    <span className="text-red-600 text-xs sm:text-sm">{discountedPrice.toLocaleString()} ₽</span>
-                                  </>
-                                );
-                              }
-                              return <span className="text-gray-700 text-xs sm:text-sm">{(product.price || 0).toLocaleString()} ₽</span>;
-                            })()}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4 hidden sm:table-cell">
-                          <div className="flex flex-col gap-1">
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded inline-block">
-                              {t(product.category)}
-                            </span>
-                            {product.diseaseCategories && product.diseaseCategories.length > 0 && (
-                              <div className="flex flex-wrap gap-1">
-                                {product.diseaseCategories.slice(0, 3).map((cat, idx) => (
-                                  <span key={idx} className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
-                                    {t(cat)}
-                                  </span>
-                                ))}
-                                {product.diseaseCategories.length > 3 && (
-                                  <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                                    +{product.diseaseCategories.length - 3}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4">
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs sm:text-sm ${
-                              product.inStock
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
-                          >
-                            {product.inStock ? t('inStock') : t('outOfStock')}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-6 py-4">
-                          <div className="flex gap-1 sm:gap-2">
-                            <button
-                              onClick={() => handleEdit(product)}
-                              className="p-1 sm:p-2 text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                            >
-                              <Edit size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(product.id)}
-                              className="p-1 sm:p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                            >
-                              <Trash2 size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              ))}
             </div>
           )}
         </>
       ) : (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-gray-800">
+        <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-sm">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-semibold text-gray-800">
               {editingProduct ? t('editProduct') : t('addProduct')}
-            </h3>
+            </h2>
             <button
               type="button"
-              onClick={autoTranslate}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+              onClick={resetForm}
+              className="text-gray-500 hover:text-gray-700"
             >
-              🌐 {t('autoTranslate') || 'Автоперевод'}
+              <X size={24} />
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productName')} (RU) *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productName')} (EN)
-                </label>
-                <input
-                  type="text"
-                  name="name_en"
-                  value={formData.name_en}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productName')} (ZH)
-                </label>
-                <input
-                  type="text"
-                  name="name_zh"
-                  value={formData.name_zh}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productName')} (VI)
-                </label>
-                <input
-                  type="text"
-                  name="name_vi"
-                  value={formData.name_vi}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('retailPrice')} (₽) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('wholesalePriceInYuan')}
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="wholesalePrice"
-                  value={formData.wholesalePrice}
-                  onChange={handleChange}
-                  placeholder="0.00"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('weight')} ({t('kg')}) *
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  name="weight"
-                  value={formData.weight}
-                  onChange={handleChange}
-                  required
-                  placeholder="0.1"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productCategory')} * <span className="text-sm text-gray-500">{t('productCategoryHint')}</span>
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                >
-                  {topMenuCategoryIds.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {getCategoryTranslation(cat, 'topMenu')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-gray-700 mb-2">
-                  {t('productDisease')} * <span className="text-sm text-gray-500">{t('productDiseaseHint')}</span>
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 p-4 border border-gray-300 rounded-lg bg-gray-50">
-                  {sidebarCategoryIds.map((dis) => (
-                    <label key={dis} className="flex items-center gap-2 cursor-pointer hover:bg-white p-2 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        checked={formData.diseaseCategories.includes(dis)}
-                        onChange={() => handleDiseaseCategoryToggle(dis)}
-                        className="w-4 h-4 text-red-600 rounded focus:ring-2 focus:ring-red-600"
-                      />
-                      <span className="text-sm text-gray-700">
-                        {getCategoryTranslation(dis, 'sidebar')}
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {formData.diseaseCategories.length === 0 && (
-                  <p className="text-sm text-red-600 mt-1">⚠️ {t('pleaseSelectCategory') || 'Выберите хотя бы одну категорию заболевания'}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('store')} *
-                </label>
-                <select
-                  name="store"
-                  value={formData.store}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                >
-                  <option value="china">{t('storeChina')}</option>
-                  <option value="thailand">{t('storeThailand')}</option>
-                  <option value="vietnam">{t('storeVietnam')}</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productImage')}
-                </label>
-                <input
-                  type="text"
-                  name="image"
-                  value={formData.image}
-                  onChange={handleChange}
-                  placeholder="https://..."
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="inStock"
-                  checked={formData.inStock}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-red-600"
-                />
-                <label className="text-gray-700">{t('inStock')}</label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  name="isSample"
-                  checked={formData.isSample}
-                  onChange={handleChange}
-                  className="w-5 h-5 text-red-600"
-                  disabled={formData.store !== 'china'}
-                />
-                <label className="text-gray-700">
-                  {t('isSample')}
-                  {formData.store !== 'china' && (
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({t('samples')} - {t('storeChina')})
-                    </span>
-                  )}
-                </label>
-              </div>
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productName')} (RU) *
+              </label>
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
             </div>
 
-            {/* Sale / Promotion Section */}
-            <div className="md:col-span-2 border-t pt-6">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">🔥 {t('salePromotion')}</h3>
-              
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    name="saleEnabled"
-                    checked={formData.saleEnabled}
-                    onChange={handleChange}
-                    className="w-5 h-5 text-red-600"
-                  />
-                  <label className="text-gray-700 font-medium">
-                    {t('enableSale')}
-                  </label>
-                </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productName')} (EN)
+              </label>
+              <input
+                type="text"
+                name="name_en"
+                value={formData.name_en}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-gray-700 mb-2">
-                    {t('saleDiscount')} {formData.saleEnabled && '*'}
-                  </label>
-                  <input
-                    type="number"
-                    step="1"
-                    min="1"
-                    max="99"
-                    name="saleDiscount"
-                    value={formData.saleDiscount}
-                    onChange={handleChange}
-                    disabled={!formData.saleEnabled}
-                    placeholder="10"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{t('saleDiscountRange')}</p>
-                </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productName')} (ZH)
+              </label>
+              <input
+                type="text"
+                name="name_zh"
+                value={formData.name_zh}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
 
-                <div>
-                  <label className="block text-gray-700 mb-2">
-                    {t('saleEndDate')} {formData.saleEnabled && '*'}
-                  </label>
-                  <input
-                    type="datetime-local"
-                    name="saleEndDate"
-                    value={formData.saleEndDate}
-                    onChange={handleChange}
-                    disabled={!formData.saleEnabled}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">{t('saleDateTimeEnd')}</p>
-                </div>
-              </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productName')} (VI)
+              </label>
+              <input
+                type="text"
+                name="name_vi"
+                value={formData.name_vi}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+          </div>
 
-              {formData.saleEnabled && (
-                <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                  <p className="text-sm text-orange-800">
-                    <strong>{t('salePreview')}:</strong> {currentLanguage === 'ru' && `На карточке товара будет показан бейдж "-${formData.saleDiscount || 0}%", зачеркнутая старая цена и новая цена со скидкой. Таймер обратного отсчета будет показывать время до ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('ru-RU') : 'окончания акции'}.`}
-                    {currentLanguage === 'en' && `The product card will show a "-${formData.saleDiscount || 0}%" badge, crossed out old price and new discounted price. Countdown timer will show time until ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('en-US') : 'sale end'}.`}
-                    {currentLanguage === 'zh' && `产品卡片将显示 "-${formData.saleDiscount || 0}%" 徽章、划掉的旧价格和新的折扣价格。倒计时器将显示距 ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('zh-CN') : '促销结束'} 的时间。`}
-                    {currentLanguage === 'vi' && `Thẻ sản phẩm sẽ hiển thị huy hiệu "-${formData.saleDiscount || 0}%", giá cũ gạch bỏ và giá mới được giảm giá. Bộ đếm ngược sẽ hiển thị thời gian đến ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('vi-VN') : 'kết thúc khuyến mãi'}.`}
-                  </p>
-                </div>
+          {/* Auto-translate button */}
+          <div className="mb-6">
+            <button
+              type="button"
+              onClick={autoTranslate}
+              disabled={loading || !formData.name || !formData.shortDescription}
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="animate-spin" size={20} />
+                  <span>Перевод...</span>
+                </>
+              ) : (
+                <>
+                  🌐
+                  <span>Автоперевод на EN, ZH, VI</span>
+                </>
               )}
+            </button>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              Сначала заполните русские поля (Название и Краткое описание)
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('price')} (¥) *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="price"
+                value={formData.price}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
             </div>
 
-            {/* Short Description fields */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productShortDescription')} (RU) *
-                </label>
-                <textarea
-                  name="shortDescription"
-                  value={formData.shortDescription}
-                  onChange={handleChange}
-                  rows={2}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productShortDescription')} (EN)
-                </label>
-                <textarea
-                  name="shortDescription_en"
-                  value={formData.shortDescription_en}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productShortDescription')} (ZH)
-                </label>
-                <textarea
-                  name="shortDescription_zh"
-                  value={formData.shortDescription_zh}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productShortDescription')} (VI)
-                </label>
-                <textarea
-                  name="shortDescription_vi"
-                  value={formData.shortDescription_vi}
-                  onChange={handleChange}
-                  rows={2}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('wholesalePrice')} (¥)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="wholesalePrice"
+                value={formData.wholesalePrice}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
             </div>
 
-            {/* Description fields */}
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productDescription')} (RU)
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productDescription')} (EN)
-                </label>
-                <textarea
-                  name="description_en"
-                  value={formData.description_en}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productDescription')} (ZH)
-                </label>
-                <textarea
-                  name="description_zh"
-                  value={formData.description_zh}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 mb-2">
-                  {t('productDescription')} (VI)
-                </label>
-                <textarea
-                  name="description_vi"
-                  value={formData.description_vi}
-                  onChange={handleChange}
-                  rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
-                />
-              </div>
-            </div>
-
-            <div className="flex gap-3 pt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400"
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('category')} *
+              </label>
+              <select
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
               >
-                {loading ? t('saving') : t('save')}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                {t('cancel')}
-              </button>
+                {categories.topMenu.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.translations[currentLanguage as keyof typeof cat.translations]}
+                  </option>
+                ))}
+              </select>
             </div>
-          </form>
-        </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('store')} *
+              </label>
+              <select
+                name="store"
+                value={formData.store}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              >
+                <option value="china">{t('storeChina')}</option>
+                <option value="thailand">{t('storeThailand')}</option>
+                <option value="vietnam">{t('storeVietnam')}</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('weight')} (kg) *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                name="weight"
+                value={formData.weight}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('imageUrl')}
+              </label>
+              <input
+                type="text"
+                name="image"
+                value={formData.image}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+          </div>
+
+          {/* Disease categories */}
+          <div className="mb-4">
+            <label className="block text-gray-700 mb-2">
+              {t('diseaseCategories')} *
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {categories.sidebar
+                .filter(cat => cat.id !== 'popular')
+                .map((cat) => (
+                  <label
+                    key={cat.id}
+                    className="flex items-center gap-2 p-2 border border-gray-300 rounded hover:bg-gray-50 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formData.diseaseCategories.includes(cat.id)}
+                      onChange={() => handleDiseaseCategoryToggle(cat.id)}
+                      className="w-4 h-4 text-red-600"
+                    />
+                    <span className="text-sm">
+                      {cat.translations[currentLanguage as keyof typeof cat.translations]}
+                    </span>
+                  </label>
+                ))}
+            </div>
+          </div>
+
+          {/* Checkboxes */}
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="inStock"
+                checked={formData.inStock}
+                onChange={handleChange}
+                className="w-5 h-5 text-red-600"
+              />
+              <label className="text-gray-700">
+                {t('inStock')}
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="isSample"
+                checked={formData.isSample}
+                onChange={handleChange}
+                className="w-5 h-5 text-red-600"
+                disabled={formData.store !== 'china'}
+              />
+              <label className="text-gray-700 flex items-center gap-2">
+                {t('isSample')}
+                {formData.store === 'china' && formData.isSample && (
+                  <span className="text-xs text-gray-500">
+                    ({t('samples')} - {t('storeChina')})
+                  </span>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Sale / Promotion Section */}
+          <div className="md:col-span-2 border-t pt-6 mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">🔥 {t('salePromotion')}</h3>
+            
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  name="saleEnabled"
+                  checked={formData.saleEnabled}
+                  onChange={handleChange}
+                  className="w-5 h-5 text-red-600"
+                />
+                <label className="text-gray-700 font-medium">
+                  {t('enableSale')}
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  {t('saleDiscount')} {formData.saleEnabled && '*'}
+                </label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  max="99"
+                  name="saleDiscount"
+                  value={formData.saleDiscount}
+                  onChange={handleChange}
+                  disabled={!formData.saleEnabled}
+                  placeholder="10"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">{t('saleDiscountRange')}</p>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-2">
+                  {t('saleEndDate')} {formData.saleEnabled && '*'}
+                </label>
+                <input
+                  type="datetime-local"
+                  name="saleEndDate"
+                  value={formData.saleEndDate}
+                  onChange={handleChange}
+                  disabled={!formData.saleEnabled}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 disabled:bg-gray-100"
+                />
+                <p className="text-xs text-gray-500 mt-1">{t('saleDateTimeEnd')}</p>
+              </div>
+            </div>
+
+            {formData.saleEnabled && (
+              <div className="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                <p className="text-sm text-orange-800">
+                  <strong>{t('salePreview')}:</strong> {currentLanguage === 'ru' && `На карточке товара будет показан бейдж "-${formData.saleDiscount || 0}%", зачеркнутая старая цена и новая цена со скидкой. Таймер обратного отсчета будет показывать время до ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('ru-RU') : 'окончания акции'}.`}
+                  {currentLanguage === 'en' && `The product card will show a "-${formData.saleDiscount || 0}%" badge, crossed out old price and new discounted price. Countdown timer will show time until ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('en-US') : 'sale end'}.`}
+                  {currentLanguage === 'zh' && `产品卡片将显示 "-${formData.saleDiscount || 0}%" 徽章、划掉的旧价格和新的折扣价格。倒计时器将显示距 ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('zh-CN') : '促销结束'} 的时间。`}
+                  {currentLanguage === 'vi' && `Thẻ sản phẩm sẽ hiển thị huy hiệu "-${formData.saleDiscount || 0}%", giá cũ gạch bỏ và giá mới được giảm giá. Bộ đếm ngược sẽ hiển thị thời gian đến ${formData.saleEndDate ? new Date(formData.saleEndDate).toLocaleString('vi-VN') : 'kết thúc khuyến mãi'}.`}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Short Description fields */}
+          <div className="grid md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productShortDescription')} (RU) *
+              </label>
+              <textarea
+                name="shortDescription"
+                value={formData.shortDescription}
+                onChange={handleChange}
+                rows={2}
+                required
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productShortDescription')} (EN)
+              </label>
+              <textarea
+                name="shortDescription_en"
+                value={formData.shortDescription_en}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productShortDescription')} (ZH)
+              </label>
+              <textarea
+                name="shortDescription_zh"
+                value={formData.shortDescription_zh}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productShortDescription')} (VI)
+              </label>
+              <textarea
+                name="shortDescription_vi"
+                value={formData.shortDescription_vi}
+                onChange={handleChange}
+                rows={2}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+          </div>
+
+          {/* Full Description fields */}
+          <div className="grid md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productDescription')} (RU)
+              </label>
+              <textarea
+                name="description"
+                value={formData.description}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productDescription')} (EN)
+              </label>
+              <textarea
+                name="description_en"
+                value={formData.description_en}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productDescription')} (ZH)
+              </label>
+              <textarea
+                name="description_zh"
+                value={formData.description_zh}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-gray-700 mb-2">
+                {t('productDescription')} (VI)
+              </label>
+              <textarea
+                name="description_vi"
+                value={formData.description_vi}
+                onChange={handleChange}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+              />
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="animate-spin" size={20} />
+                  <span>{t('saving')}</span>
+                </div>
+              ) : (
+                t('save')
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              {t('cancel')}
+            </button>
+          </div>
+        </form>
       )}
     </div>
   );
