@@ -25,23 +25,37 @@ let memoryCacheTimestamp = 0;
  */
 export function setCachedProducts(products: Product[]): void {
   try {
-    // Сохраняем в память
+    // Сохраняем в память (полные объекты)
     memoryCache = products;
     memoryCacheTimestamp = Date.now();
 
-    // Сохраняем в sessionStorage (только для текущей вкладки)
-    // ✅ ОПТИМИЗАЦИЯ: Сохраняем только нужные поля для уменьшения размера
+    // ✅ Для sessionStorage сохраняем ВСЕ данные - товары уже преобразованы из БД
+    // Оптимизация: не сохраняем полные описания на всех языках, только краткие
     const lightweightProducts = products.map(p => ({
       id: p.id,
       name: p.name,
-      store: p.store,
-      category_id: p.category_id,
+      name_en: p.name_en,
+      name_zh: p.name_zh,
+      name_vi: p.name_vi,
       price: p.price,
-      wholesale_price: p.wholesale_price,
-      currency: p.currency,
-      image_url: p.image_url,
-      short_description: p.short_description,
-      in_stock: p.in_stock,
+      category: p.category,
+      disease: p.disease,
+      diseaseCategories: p.diseaseCategories,
+      shortDescription: p.shortDescription,
+      shortDescription_en: p.shortDescription_en,
+      shortDescription_zh: p.shortDescription_zh,
+      shortDescription_vi: p.shortDescription_vi,
+      // НЕ сохраняем полные description для экономии места
+      image: p.image,
+      inStock: p.inStock,
+      store: p.store,
+      weight: p.weight,
+      isSample: p.isSample,
+      popularOrder: p.popularOrder,
+      wholesalePrice: (p as any).wholesalePrice,
+      saleEnabled: p.saleEnabled,
+      saleDiscount: p.saleDiscount,
+      saleEndDate: p.saleEndDate,
     }));
     
     const cacheData: CacheData = {
@@ -76,7 +90,7 @@ export function setCachedProducts(products: Product[]): void {
 }
 
 /**
- * Получить товары из кэ��а
+ * Получить товары из кэа
  */
 export function getCachedProducts(): Product[] | null {
   // Сначала проверяем memory cache (мгновенно)

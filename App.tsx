@@ -98,6 +98,24 @@ function AppContent() {
     // Clear old category format (without translations) from localStorage
     clearOldCategories();
     
+    // ✅ ВАЖНО: Очищаем старый кэш товаров при загрузке
+    // Это исправляет проблему с неправильной структурой данных
+    try {
+      const oldCache = sessionStorage.getItem('asia_pharm_products_cache');
+      if (oldCache) {
+        const parsed = JSON.parse(oldCache);
+        // Проверяем версию кэша - если старая, удаляем
+        if (parsed.version !== '1.0') {
+          sessionStorage.removeItem('asia_pharm_products_cache');
+          console.log('🗑️ Cleared old product cache');
+        }
+      }
+    } catch (e) {
+      // Если ошибка парсинга - точно старый формат
+      sessionStorage.removeItem('asia_pharm_products_cache');
+      console.log('🗑️ Cleared corrupted product cache');
+    }
+    
     // Load OneSignal settings from database and initialize
     const initOneSignal = async () => {
       console.log('🚀 [INIT] Starting OneSignal initialization...');
