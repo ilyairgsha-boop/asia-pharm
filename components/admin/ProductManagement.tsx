@@ -428,12 +428,12 @@ export const ProductManagement = () => {
     }
 
     if (!formData.name || !formData.shortDescription) {
-      toast.error('Заполните русские поля (Название и Краткое описание) перед переводом');
+      toast.error(t('fillRussianFieldsBeforeTranslate'));
       return;
     }
 
     setLoading(true);
-    toast.info('Перевод текстов...');
+    toast.info(t('translatingTexts'));
 
     try {
       const fieldsToTranslate = [
@@ -731,13 +731,13 @@ export const ProductManagement = () => {
               onClick={handleSelectAll}
               className="flex items-center gap-2 bg-gray-600 text-white px-3 py-1.5 rounded hover:bg-gray-700 transition-colors text-sm"
             >
-              {selectedProducts.length === filteredProducts.length && filteredProducts.length > 0 ? '☑️ Снять все' : '☐ Выбрать все'}
+              {selectedProducts.length === filteredProducts.length && filteredProducts.length > 0 ? `☑️ ${t('deselectAll')}` : `☐ ${t('selectAll')}`}
             </button>
 
             {selectedProducts.length > 0 && (
               <>
                 <span className="text-sm text-gray-700">
-                  Выбрано: <strong>{selectedProducts.length}</strong>
+                  {t('selected')}: <strong>{selectedProducts.length}</strong>
                 </span>
 
                 <button
@@ -748,7 +748,7 @@ export const ProductManagement = () => {
                   {isAutoTranslating ? (
                     <>
                       <Loader2 className="animate-spin" size={16} />
-                      <span>Перевод...</span>
+                      <span>{t('translating')}</span>
                       {translateProgress.total > 0 && (
                         <span className="text-xs">
                           ({translateProgress.current}/{translateProgress.total})
@@ -758,7 +758,7 @@ export const ProductManagement = () => {
                   ) : (
                     <>
                       🌐
-                      <span>Перевести выбранные</span>
+                      <span>{t('translateSelected')}</span>
                     </>
                   )}
                 </button>
@@ -768,7 +768,7 @@ export const ProductManagement = () => {
                   className="flex items-center gap-1 text-red-600 hover:text-red-700 text-sm"
                 >
                   <X size={16} />
-                  Очистить
+                  {t('clear')}
                 </button>
               </>
             )}
@@ -938,17 +938,17 @@ export const ProductManagement = () => {
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Перевод...</span>
+                  <span>{t('translating')}</span>
                 </>
               ) : (
                 <>
                   🌐
-                  <span>Автоперевод на EN, ZH, VI</span>
+                  <span>{t('autoTranslateButton')}</span>
                 </>
               )}
             </button>
             <p className="text-xs text-gray-500 mt-2 text-center">
-              Сначала заполните русские поля (Название и Краткое описание)
+              {t('fillRussianFieldsFirst')}
             </p>
           </div>
 
