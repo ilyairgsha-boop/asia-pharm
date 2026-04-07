@@ -79,6 +79,52 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
     }
   }, [user, accessToken]);
 
+  // Listen for loyalty points updates
+  useEffect(() => {
+    const handleLoyaltyPointsUpdate = (event: CustomEvent) => {
+      if (event.detail?.newPoints !== undefined) {
+        console.log('📊 Loyalty points updated via event:', event.detail.newPoints);
+        setLoyaltyPoints(event.detail.newPoints);
+        // Also reload bonus history to show the latest transaction
+        loadBonusHistory();
+      }
+    };
+
+    window.addEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+    };
+  }, []);
+
+  // Reload loyalty info when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && accessToken) {
+        console.log('📊 Tab became visible, reloading loyalty info...');
+        loadLoyaltyInfo();
+        loadBonusHistory();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, accessToken]);
+
+  // Reload loyalty info when switching to bonusHistory or orders tab
+  useEffect(() => {
+    if ((settingsTab === 'bonusHistory' || settingsTab === 'orders') && user && accessToken) {
+      console.log('📊 Switched to tab:', settingsTab, '- reloading loyalty info...');
+      loadLoyaltyInfo();
+      if (settingsTab === 'bonusHistory') {
+        loadBonusHistory();
+      }
+    }
+  }, [settingsTab, user, accessToken]);
+
   const loadUserSettings = async () => {
     if (!user?.id) return;
     

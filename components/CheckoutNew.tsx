@@ -110,6 +110,38 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
     }
   }, [user, accessToken]);
 
+  // Reload loyalty info when component becomes visible or when navigated to
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user && accessToken) {
+        console.log('📊 Checkout page became visible, reloading loyalty info...');
+        loadLoyaltyInfo();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user, accessToken]);
+
+  // Listen for loyalty points updates from other components
+  useEffect(() => {
+    const handleLoyaltyPointsUpdate = (event: CustomEvent) => {
+      if (event.detail?.newPoints !== undefined) {
+        console.log('📊 Checkout received loyalty points update:', event.detail.newPoints);
+        setAvailableLoyaltyPoints(event.detail.newPoints);
+      }
+    };
+
+    window.addEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+
+    return () => {
+      window.removeEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+    };
+  }, []);
+
   const loadLoyaltyInfo = async () => {
     try {
       const supabase = createClient();
@@ -402,6 +434,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
           })
           .eq('id', user.id);
         
+        // Update local state immediately
+        setAvailableLoyaltyPoints(newLoyaltyPoints);
+        
         // Add loyalty history record for points spent
         await supabase
           .from('loyalty_history')
@@ -415,6 +450,11 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         
         console.log(`✅ Loyalty points subtracted: ${availableLoyaltyPoints} - ${loyaltyDiscount} = ${newLoyaltyPoints}`);
         console.log(`ℹ️ Cashback points will be earned when order is delivered`);
+        
+        // Dispatch custom event to notify other components about loyalty points change
+        window.dispatchEvent(new CustomEvent('loyaltyPointsUpdated', { 
+          detail: { newPoints: newLoyaltyPoints } 
+        }));
       }
       
       // Send order confirmation email
