@@ -442,89 +442,54 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
     try {
       const supabase = createClient();
       
-      // Load all orders for this user, sorted by date ascending to calculate cumulative totals
-      const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
+      console.log('📊 ProfileNew: Loading loyalty history from loyalty_history table...');
+      
+      // Load loyalty history from the dedicated loyalty_history table
+      const { data: historyData, error: historyError } = await supabase
+        .from('loyalty_history')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
+        .order('created_at', { ascending: false });
       
-      if (ordersError) {
-        console.warn('⚠️ Error loading bonus history:', ordersError);
+      if (historyError) {
+        console.warn('⚠️ Error loading loyalty history:', historyError);
         setLoyaltyHistory([]);
         return;
       }
       
-      if (!ordersData || ordersData.length === 0) {
+      if (!historyData || historyData.length === 0) {
+        console.log('ℹ️ ProfileNew: No loyalty history found');
         setLoyaltyHistory([]);
         return;
       }
       
-      // Build history from orders and calculate tier at each point
-      const history: LoyaltyHistory[] = [];
-      let cumulativeTotal = 0;
+      console.log(`✅ ProfileNew: Loaded ${historyData.length} loyalty history entries`);
       
-      ordersData.forEach(order => {
-        // Add points spent (if any) - happens at order time
-        if (order.loyalty_points_used && order.loyalty_points_used > 0) {
-          history.push({
-            id: `spent-${order.id}`,
-            points: order.loyalty_points_used,
-            type: 'spent',
-            description: `${t('forOrder')} #${order.order_number || order.id.slice(0, 8)}`,
-            createdAt: order.created_at,
-            orderId: order.id,
-            orderNumber: order.order_number || order.id.slice(0, 8),
-            orderDate: order.created_at,
-          });
-        }
+      // Load orders to get order numbers and dates
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('id, order_number, created_at')
+        .eq('user_id', user.id);
+      
+      const ordersMap = new Map(ordersData?.map(o => [o.id, o]) || []);
+      
+      // Map loyalty history to the format expected by UI
+      const history: LoyaltyHistory[] = historyData.map(entry => {
+        const order = entry.order_id ? ordersMap.get(entry.order_id) : null;
         
-        // Add points earned (only for delivered orders) - happens when status changed to delivered
-        if (order.status === 'delivered') {
-          // Calculate cumulative total up to this order (for delivered orders only)
-          const orderTotal = order.subtotal || order.total || 0;
-          cumulativeTotal += orderTotal;
-          
-          // Determine tier at the time of earning based on cumulative total
-          let tierAtTime: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
-          if (cumulativeTotal >= 200000) {
-            tierAtTime = 'platinum';
-          } else if (cumulativeTotal >= 100000) {
-            tierAtTime = 'gold';
-          } else if (cumulativeTotal >= 50000) {
-            tierAtTime = 'silver';
-          }
-          
-          // Calculate points earned - loyalty_points_earned is stored as boolean or number
-          let pointsEarned = 0;
-          if (typeof order.loyalty_points_earned === 'number') {
-            pointsEarned = order.loyalty_points_earned;
-          } else if (order.loyalty_points_earned === true) {
-            // Calculate points based on tier and order total
-            const orderSubtotal = order.subtotal || order.total || 0;
-            const cashback = orderSubtotal * (tierAtTime === 'platinum' ? 0.10 : tierAtTime === 'gold' ? 0.07 : tierAtTime === 'silver' ? 0.05 : 0.03);
-            pointsEarned = Math.floor(cashback);
-          }
-          
-          if (pointsEarned > 0) {
-            history.push({
-              id: `earned-${order.id}`,
-              points: pointsEarned,
-              type: 'earned',
-              description: `${t('forOrder')} #${order.order_number || order.id.slice(0, 8)}`,
-              createdAt: order.updated_at || order.created_at,
-              orderId: order.id,
-              orderNumber: order.order_number || order.id.slice(0, 8),
-              orderDate: order.created_at,
-              tierAtCredit: tierAtTime,
-            });
-          }
-        }
+        return {
+          id: entry.id,
+          points: entry.points,
+          type: entry.type,
+          description: entry.description,
+          createdAt: entry.created_at,
+          orderId: entry.order_id,
+          orderNumber: order?.order_number || (entry.order_id ? entry.order_id.slice(0, 8) : ''),
+          orderDate: order?.created_at,
+        };
       });
       
-      // Sort by date descending
-      history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      
+      console.log('📊 ProfileNew: Mapped history:', history);
       setLoyaltyHistory(history);
     } catch (error) {
       console.warn('⚠️ Error loading bonus history:', error);
@@ -1219,6 +1184,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                           ? entry.description.replace('Earned for order', t('loyaltyEarnedForOrder'))
                           : entry.description.startsWith('Refunded for cancelled order')
                           ? entry.description.replace('Refunded for cancelled order', t('loyaltyRefundedForCancelled'))
+                          : entry.description.startsWith('Spent for order')
+                          ? entry.description.replace('Spent for order', t('loyaltySpentForOrder'))
                           : entry.description.includes('Order') 
                           ? entry.description.replace('Order', t('order')).replace('delivered', t('delivered'))
                           : entry.description}

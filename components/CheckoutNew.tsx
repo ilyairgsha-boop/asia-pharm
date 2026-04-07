@@ -486,9 +486,9 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
             .from('loyalty_history')
             .insert([{
               user_id: user.id,
-              points: -loyaltyDiscount, // Negative value for spent points
+              points: loyaltyDiscount,
               type: 'spent',
-              description: `Списано за заказ #${orderNumber}`,
+              description: `Spent for order #${orderNumber}`,
               order_id: order.id
             }]);
           
@@ -701,7 +701,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               )}
             </div>
 
-            {/* Способ оплаты */}
+            {/* Спос��б оплаты */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-gray-800 mb-4">{t('paymentMethod')}</h3>
 
