@@ -395,49 +395,68 @@ app.post('/make-server-a75b5353/api/email/order-status', requireAuth, async (c) 
       
       currentLoyaltyBalance = profile?.loyalty_points || 0;
       
-      // Calculate subtotal without samples
-      const subtotalWithoutSamples = (order.items || [])
-        .filter((item: any) => !item.isSample)
-        .reduce((sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0), 0);
-      
-      // Calculate amount eligible for cashback (subtract used loyalty points)
-      const loyaltyPointsUsed = order.loyalty_points_used || 0;
-      const amountForCashback = Math.max(0, subtotalWithoutSamples - loyaltyPointsUsed);
-      
-      if (amountForCashback > 0) {
-        // Calculate user's loyalty tier based on lifetime spending
-        const { data: ordersData } = await supabase
-          .from('orders')
-          .select('subtotal, total')
-          .eq('user_id', order.user_id)
-          .in('status', ['delivered', 'shipped', 'processing']);
+      // If order is delivered and points already earned, get actual amount from loyalty_history
+      if (status === 'delivered' && order.loyalty_points_earned) {
+        console.log('📊 Order is delivered and points earned - checking loyalty_history...');
+        const { data: historyRecord } = await supabase
+          .from('loyalty_history')
+          .select('points')
+          .eq('order_id', orderId)
+          .eq('type', 'earned')
+          .single();
         
-        let lifetimeSpending = 0;
-        if (ordersData && ordersData.length > 0) {
-          lifetimeSpending = ordersData.reduce((sum: number, o: any) => {
-            return sum + ((o.subtotal || o.total) || 0);
-          }, 0);
+        if (historyRecord) {
+          loyaltyPointsEarned = historyRecord.points;
+          console.log(`💎 Actual loyalty points earned from history: ${loyaltyPointsEarned}`);
+        } else {
+          console.warn('⚠️ No loyalty history found for delivered order');
         }
+      } else {
+        // Calculate expected points for pending/processing/shipped orders
+        // Calculate subtotal without samples
+        const subtotalWithoutSamples = (order.items || [])
+          .filter((item: any) => !item.isSample)
+          .reduce((sum: number, item: any) => sum + (item.price || 0) * (item.quantity || 0), 0);
         
-        // Determine tier
-        let tier: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
-        if (lifetimeSpending >= 200000) {
-          tier = 'platinum';
-        } else if (lifetimeSpending >= 100000) {
-          tier = 'gold';
-        } else if (lifetimeSpending >= 50000) {
-          tier = 'silver';
+        // Calculate amount eligible for cashback (subtract used loyalty points)
+        const loyaltyPointsUsed = order.loyalty_points_used || 0;
+        const amountForCashback = Math.max(0, subtotalWithoutSamples - loyaltyPointsUsed);
+        
+        if (amountForCashback > 0) {
+          // Calculate user's loyalty tier based on lifetime spending
+          const { data: ordersData } = await supabase
+            .from('orders')
+            .select('subtotal, total')
+            .eq('user_id', order.user_id)
+            .in('status', ['delivered', 'shipped', 'processing']);
+          
+          let lifetimeSpending = 0;
+          if (ordersData && ordersData.length > 0) {
+            lifetimeSpending = ordersData.reduce((sum: number, o: any) => {
+              return sum + ((o.subtotal || o.total) || 0);
+            }, 0);
+          }
+          
+          // Determine tier
+          let tier: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
+          if (lifetimeSpending >= 200000) {
+            tier = 'platinum';
+          } else if (lifetimeSpending >= 100000) {
+            tier = 'gold';
+          } else if (lifetimeSpending >= 50000) {
+            tier = 'silver';
+          }
+          
+          // Calculate cashback percentage based on tier
+          const cashbackPercentage = 
+            tier === 'platinum' ? 0.10 :
+            tier === 'gold' ? 0.07 :
+            tier === 'silver' ? 0.05 :
+            0.03; // basic
+          
+          loyaltyPointsEarned = Math.floor(amountForCashback * cashbackPercentage);
+          console.log(`💎 Calculated loyalty points to earn: ${loyaltyPointsEarned} (tier: ${tier}, cashback: ${cashbackPercentage * 100}%)`);
         }
-        
-        // Calculate cashback percentage based on tier
-        const cashbackPercentage = 
-          tier === 'platinum' ? 0.10 :
-          tier === 'gold' ? 0.07 :
-          tier === 'silver' ? 0.05 :
-          0.03; // basic
-        
-        loyaltyPointsEarned = Math.floor(amountForCashback * cashbackPercentage);
-        console.log(`💎 Loyalty points to earn: ${loyaltyPointsEarned} (tier: ${tier}, cashback: ${cashbackPercentage * 100}%)`);
       }
     }
     
