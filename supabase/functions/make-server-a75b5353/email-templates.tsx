@@ -126,7 +126,7 @@ const translations = {
     },
     messages: {
       pending: '您的订单已收到，正在等待处理。请使用以下方式之一付款。',
-      processing: '我们已收到您的付款！您的订��在处理中，即将发货。',
+      processing: '我们已收到您的付款！您的订在处理中，即将发货。',
       shipped: '您的订单已发货！点击下面的钮跟踪您的包裹。',
       delivered: '感谢您使用亚洲药房服务！您的订单已成功送达。',
       cancelled: '很遗憾，您的订单已被取消。'
@@ -503,13 +503,14 @@ export function generateOrderEmailHTML(data: OrderEmailData, language: 'ru' | 'e
 
   // Tracking link for shipped orders
   if (data.status === 'shipped' && data.trackingNumber) {
+    // Use trackingUrl if provided, otherwise use trackingNumber as the link
+    const trackingLink = data.trackingUrl || data.trackingNumber;
+    
     additionalContent += `
       <div style="margin: 30px 0; padding: 20px; background: #d1ecf1; border-left: 4px solid #0c5460; border-radius: 4px; text-align: center;">
-        ${data.trackingUrl ? `
-          <a href="${data.trackingUrl}" style="display: inline-block; padding: 15px 40px; background: #ef1010; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 18px;">
-            ${t.trackOrder}
-          </a>
-        ` : ''}
+        <a href="${trackingLink}" style="display: inline-block; padding: 15px 40px; background: #ef1010; color: white; text-decoration: none; border-radius: 4px; font-weight: 600; font-size: 18px; transition: background 0.3s;">
+          ${t.trackOrder}
+        </a>
       </div>
     `;
   }
