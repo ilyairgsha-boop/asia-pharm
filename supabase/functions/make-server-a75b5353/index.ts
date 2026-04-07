@@ -1668,7 +1668,7 @@ const PUSH_TEMPLATES: any = {
 
 // Generate deep link URL
 function generatePushUrl(type: string, data: any): string {
-  const baseUrl = 'https://asia-farm.vercel.app'; // Production URL
+  const baseUrl = 'https://asia-pharm.ru'; // Production URL - FIXED: Changed from vercel.app to asia-pharm.ru
   
   // Since the app uses SPA navigation without real URL routes,
   // we'll just link to the home page and let users navigate from there
@@ -1789,10 +1789,23 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
       points
     };
     
-    // Log warning if orderNumber is missing for order notifications
-    if (type.startsWith('order_') && !orderNumber) {
-      console.warn('⚠️ orderNumber is missing for order notification! This may cause incorrect notification content.');
-      console.warn('⚠️ Data:', { type, orderId, orderNumber });
+    // Log detailed information about order notification
+    if (type.startsWith('order_')) {
+      console.log('📋 Order notification details:', {
+        type,
+        orderId,
+        orderNumber,
+        hasOrderNumber: !!orderNumber,
+        orderNumberType: typeof orderNumber,
+        orderNumberValue: orderNumber
+      });
+      
+      if (!orderNumber) {
+        console.error('❌ CRITICAL: orderNumber is MISSING for order notification!');
+        console.error('❌ This will show "N/A" to the user instead of the actual order number.');
+        console.error('❌ Please ensure orderNumber is passed in the request body.');
+        console.error('❌ Received data:', { type, orderId, orderNumber, trackingNumber, trackingUrl, points });
+      }
     }
     
     const message = typeof template.message === 'function' 
