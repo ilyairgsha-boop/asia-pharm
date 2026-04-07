@@ -79,14 +79,43 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
     }
   }, [user, accessToken]);
 
+  // Check localStorage for loyalty updates (polling every 2 seconds)
+  useEffect(() => {
+    if (!user || !accessToken) return;
+
+    const checkLoyaltyUpdate = () => {
+      const lastUpdate = localStorage.getItem('loyaltyPointsLastUpdate');
+      const lastCheck = localStorage.getItem('loyaltyPointsLastCheck');
+      
+      if (lastUpdate && lastUpdate !== lastCheck) {
+        console.log('📊 ProfileNew: Detected loyalty update in localStorage, reloading...');
+        loadLoyaltyInfo();
+        loadBonusHistory();
+        localStorage.setItem('loyaltyPointsLastCheck', lastUpdate);
+      }
+    };
+
+    // Check immediately
+    checkLoyaltyUpdate();
+
+    // Poll every 2 seconds
+    const interval = setInterval(checkLoyaltyUpdate, 2000);
+
+    return () => clearInterval(interval);
+  }, [user, accessToken]);
+
   // Listen for loyalty points updates
   useEffect(() => {
     const handleLoyaltyPointsUpdate = (event: CustomEvent) => {
       if (event.detail?.newPoints !== undefined) {
-        console.log('📊 Loyalty points updated via event:', event.detail.newPoints);
+        console.log('📊 ProfileNew: Received loyalty points update event:', event.detail.newPoints);
         setLoyaltyPoints(event.detail.newPoints);
-        // Also reload bonus history to show the latest transaction
-        loadBonusHistory();
+        // Reload from database after a short delay to ensure consistency
+        setTimeout(() => {
+          console.log('📊 ProfileNew: Reloading from DB after event...');
+          loadLoyaltyInfo();
+          loadBonusHistory();
+        }, 500);
       }
     };
 
@@ -101,7 +130,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && user && accessToken) {
-        console.log('📊 Tab became visible, reloading loyalty info...');
+        console.log('📊 ProfileNew: Tab became visible, reloading loyalty info...');
         loadLoyaltyInfo();
         loadBonusHistory();
       }
@@ -117,7 +146,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
   // Reload loyalty info when switching to bonusHistory or orders tab
   useEffect(() => {
     if ((settingsTab === 'bonusHistory' || settingsTab === 'orders') && user && accessToken) {
-      console.log('📊 Switched to tab:', settingsTab, '- reloading loyalty info...');
+      console.log('📊 ProfileNew: Switched to tab:', settingsTab, '- reloading loyalty info...');
       loadLoyaltyInfo();
       if (settingsTab === 'bonusHistory') {
         loadBonusHistory();
@@ -347,8 +376,10 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
         .single();
 
       if (!profileError && profileData) {
+        console.log('📊 ProfileNew: Loaded loyalty points from DB:', profileData.loyalty_points);
         setLoyaltyPoints(profileData.loyalty_points || 0);
       } else {
+        console.warn('⚠️ ProfileNew: Error loading loyalty points:', profileError);
         setLoyaltyPoints(0);
       }
       

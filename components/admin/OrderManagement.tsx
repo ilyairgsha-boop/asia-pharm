@@ -244,6 +244,10 @@ export const OrderManagement = () => {
 
   const awardLoyaltyPoints = async (order: any) => {
     try {
+      console.log(`📊 OrderManagement: Starting loyalty points award for order ${order.id}...`);
+      console.log(`📊 OrderManagement: User ID: ${order.user_id}`);
+      console.log(`📊 OrderManagement: Order items:`, order.items);
+      
       const supabase = createClient();
       
       // Calculate subtotal without samples (пробники не участвуют в программе лояльности)
@@ -256,8 +260,10 @@ export const OrderManagement = () => {
           return sum + itemPrice * (item.quantity || 0);
         }, 0);
       
+      console.log(`📊 OrderManagement: Subtotal without samples: ${subtotalWithoutSamples}`);
+      
       if (subtotalWithoutSamples <= 0) {
-        console.log('ℹ️ No eligible items for loyalty points (only samples or zero amount)');
+        console.log('ℹ️ OrderManagement: No eligible items for loyalty points (only samples or zero amount)');
         return;
       }
       
@@ -266,21 +272,30 @@ export const OrderManagement = () => {
       const loyaltyPointsUsed = order.loyalty_points_used || 0;
       const amountForCashback = Math.max(0, subtotalWithoutSamples - loyaltyPointsUsed);
       
+      console.log(`📊 OrderManagement: Loyalty points used: ${loyaltyPointsUsed}`);
+      console.log(`📊 OrderManagement: Amount for cashback: ${amountForCashback}`);
+      
       if (amountForCashback <= 0) {
-        console.log('ℹ️ No eligible amount for loyalty points (used loyalty points cover entire order)');
+        console.log('ℹ️ OrderManagement: No eligible amount for loyalty points (used loyalty points cover entire order)');
         return;
       }
       
       // Calculate user's loyalty tier based on lifetime spending
-      const { data: ordersData } = await supabase
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('subtotal, total')
         .eq('user_id', order.user_id)
         .in('status', ['delivered', 'shipped', 'processing']);
       
+      if (ordersError) {
+        console.error('❌ OrderManagement: Error loading user orders for tier calculation:', ordersError);
+        return;
+      }
+      
       let currentTier: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
       if (ordersData) {
         const lifetime = ordersData.reduce((sum, o) => sum + (o.subtotal || o.total || 0), 0);
+        console.log(`📊 OrderManagement: User lifetime total: ${lifetime}`);
         
         if (lifetime >= 200000) {
           currentTier = 'platinum';
@@ -291,6 +306,8 @@ export const OrderManagement = () => {
         }
       }
       
+      console.log(`📊 OrderManagement: Current tier: ${currentTier}`);
+      
       // Calculate cashback percentage based on tier
       const cashbackPercentage = 
         currentTier === 'platinum' ? 0.10 :
@@ -300,24 +317,44 @@ export const OrderManagement = () => {
       
       const pointsEarned = Math.floor(amountForCashback * cashbackPercentage);
       
+      console.log(`📊 OrderManagement: Cashback percentage: ${cashbackPercentage * 100}%`);
+      console.log(`📊 OrderManagement: Points to award: ${pointsEarned}`);
+      
       // Get current loyalty points
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('loyalty_points')
         .eq('id', order.user_id)
         .single();
       
+      if (profileError) {
+        console.error('❌ OrderManagement: Error loading user profile:', profileError);
+        toast.error(`Ошибка загрузки профиля: ${profileError.message}`);
+        return;
+      }
+      
       const currentPoints = profileData?.loyalty_points || 0;
       const newPoints = currentPoints + pointsEarned;
       
+      console.log(`📊 OrderManagement: Current points: ${currentPoints}`);
+      console.log(`📊 OrderManagement: New points will be: ${newPoints}`);
+      
       // Update profile with new loyalty points
-      await supabase
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ loyalty_points: newPoints })
         .eq('id', order.user_id);
       
+      if (updateError) {
+        console.error('❌ OrderManagement: Error updating loyalty points:', updateError);
+        toast.error(`Ошибка начисления баллов: ${updateError.message}`);
+        return;
+      }
+      
+      console.log('✅ OrderManagement: Loyalty points updated in DB successfully');
+      
       // Add loyalty history record
-      await supabase
+      const { error: historyError } = await supabase
         .from('loyalty_history')
         .insert([{
           user_id: order.user_id,
@@ -327,16 +364,41 @@ export const OrderManagement = () => {
           order_id: order.id
         }]);
       
+      if (historyError) {
+        console.error('❌ OrderManagement: Error creating loyalty history:', historyError);
+      } else {
+        console.log('✅ OrderManagement: Loyalty history record created');
+      }
+      
       // Mark order as loyalty points earned
-      await supabase
+      const { error: orderUpdateError } = await supabase
         .from('orders')
         .update({ loyalty_points_earned: true })
         .eq('id', order.id);
       
-      console.log(`✅ Loyalty points awarded: ${pointsEarned} points (${currentTier} tier - ${cashbackPercentage * 100}%) to user ${order.user_id}`);
+      if (orderUpdateError) {
+        console.error('❌ OrderManagement: Error updating order loyalty flag:', orderUpdateError);
+      } else {
+        console.log('✅ OrderManagement: Order marked as loyalty points earned');
+      }
+      
+      // Save to localStorage with timestamp for polling
+      const timestamp = Date.now().toString();
+      localStorage.setItem('loyaltyPointsLastUpdate', timestamp);
+      console.log('📊 OrderManagement: Saved update timestamp to localStorage:', timestamp);
+      
+      // Dispatch custom event
+      console.log('📊 OrderManagement: Dispatching loyaltyPointsUpdated event...');
+      window.dispatchEvent(new CustomEvent('loyaltyPointsUpdated', { 
+        detail: { newPoints } 
+      }));
+      console.log('✅ OrderManagement: Event dispatched');
+      
+      console.log(`✅ OrderManagement: Loyalty points awarded: ${pointsEarned} points (${currentTier} tier - ${cashbackPercentage * 100}%) to user ${order.user_id}`);
       toast.success(`${t('loyaltyPointsAwarded')}: ${pointsEarned} ${t('points')}`);
     } catch (error) {
-      console.error('❌ Error awarding loyalty points:', error);
+      console.error('❌ OrderManagement: Exception awarding loyalty points:', error);
+      toast.error(`Ошибка начисления баллов: ${error}`);
       // Don't show error to admin, just log it
     }
   };

@@ -106,15 +106,40 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   // Load loyalty info on mount
   useEffect(() => {
     if (user && accessToken) {
+      console.log('📊 CheckoutNew: Component mounted, loading loyalty info...');
       loadLoyaltyInfo();
     }
+  }, [user, accessToken]);
+
+  // Check localStorage for loyalty updates (polling every 2 seconds)
+  useEffect(() => {
+    if (!user || !accessToken) return;
+
+    const checkLoyaltyUpdate = () => {
+      const lastUpdate = localStorage.getItem('loyaltyPointsLastUpdate');
+      const lastCheck = localStorage.getItem('checkoutLoyaltyLastCheck');
+      
+      if (lastUpdate && lastUpdate !== lastCheck) {
+        console.log('📊 CheckoutNew: Detected loyalty update in localStorage, reloading...');
+        loadLoyaltyInfo();
+        localStorage.setItem('checkoutLoyaltyLastCheck', lastUpdate);
+      }
+    };
+
+    // Check immediately
+    checkLoyaltyUpdate();
+
+    // Poll every 2 seconds
+    const interval = setInterval(checkLoyaltyUpdate, 2000);
+
+    return () => clearInterval(interval);
   }, [user, accessToken]);
 
   // Reload loyalty info when component becomes visible or when navigated to
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && user && accessToken) {
-        console.log('📊 Checkout page became visible, reloading loyalty info...');
+        console.log('📊 CheckoutNew: Tab became visible, reloading loyalty info...');
         loadLoyaltyInfo();
       }
     };
@@ -130,7 +155,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
   useEffect(() => {
     const handleLoyaltyPointsUpdate = (event: CustomEvent) => {
       if (event.detail?.newPoints !== undefined) {
-        console.log('📊 Checkout received loyalty points update:', event.detail.newPoints);
+        console.log('📊 CheckoutNew: Received loyalty points update event:', event.detail.newPoints);
         setAvailableLoyaltyPoints(event.detail.newPoints);
       }
     };
@@ -152,10 +177,11 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
         .single();
 
       if (error) {
-        console.warn('⚠️ Error loading loyalty points:', error);
+        console.warn('⚠️ CheckoutNew: Error loading loyalty points:', error);
         setAvailableLoyaltyPoints(0);
         setCurrentTier('basic');
       } else {
+        console.log('📊 CheckoutNew: Loaded loyalty points from DB:', data?.loyalty_points || 0);
         setAvailableLoyaltyPoints(data?.loyalty_points || 0);
       }
       
@@ -425,36 +451,71 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
       // Only subtract used loyalty points now
       // Points will be earned when order status changes to "delivered"
       if (user?.id && loyaltyDiscount > 0) {
+        console.log(`📊 CheckoutNew: Starting loyalty points deduction...`);
+        console.log(`📊 CheckoutNew: User ID: ${user.id}`);
+        console.log(`📊 CheckoutNew: Available points: ${availableLoyaltyPoints}`);
+        console.log(`📊 CheckoutNew: Points to deduct: ${loyaltyDiscount}`);
+        
         const newLoyaltyPoints = Math.max(0, availableLoyaltyPoints - loyaltyDiscount);
         
-        await supabase
+        console.log(`📊 CheckoutNew: New points will be: ${newLoyaltyPoints}`);
+        
+        const { error: updateError } = await supabase
           .from('profiles')
           .update({ 
             loyalty_points: newLoyaltyPoints
           })
           .eq('id', user.id);
         
-        // Update local state immediately
-        setAvailableLoyaltyPoints(newLoyaltyPoints);
-        
-        // Add loyalty history record for points spent
-        await supabase
-          .from('loyalty_history')
-          .insert([{
-            user_id: user.id,
-            points: -loyaltyDiscount, // Negative value for spent points
-            type: 'spent',
-            description: `Списано за заказ #${orderNumber}`,
-            order_id: order.id
-          }]);
-        
-        console.log(`✅ Loyalty points subtracted: ${availableLoyaltyPoints} - ${loyaltyDiscount} = ${newLoyaltyPoints}`);
-        console.log(`ℹ️ Cashback points will be earned when order is delivered`);
-        
-        // Dispatch custom event to notify other components about loyalty points change
-        window.dispatchEvent(new CustomEvent('loyaltyPointsUpdated', { 
-          detail: { newPoints: newLoyaltyPoints } 
-        }));
+        if (updateError) {
+          console.error('❌ CheckoutNew: Error updating loyalty points:', updateError);
+          toast.error(`Ошибка списания баллов: ${updateError.message}`);
+        } else {
+          console.log('✅ CheckoutNew: Loyalty points updated in DB successfully');
+          
+          // Update local state immediately
+          setAvailableLoyaltyPoints(newLoyaltyPoints);
+          
+          // Save to localStorage with timestamp for polling
+          const timestamp = Date.now().toString();
+          localStorage.setItem('loyaltyPointsLastUpdate', timestamp);
+          console.log('📊 CheckoutNew: Saved update timestamp to localStorage:', timestamp);
+          
+          // Add loyalty history record for points spent
+          const { error: historyError } = await supabase
+            .from('loyalty_history')
+            .insert([{
+              user_id: user.id,
+              points: -loyaltyDiscount, // Negative value for spent points
+              type: 'spent',
+              description: `Списано за заказ #${orderNumber}`,
+              order_id: order.id
+            }]);
+          
+          if (historyError) {
+            console.error('❌ CheckoutNew: Error creating loyalty history:', historyError);
+          } else {
+            console.log('✅ CheckoutNew: Loyalty history record created');
+          }
+          
+          console.log(`✅ CheckoutNew: Loyalty points subtracted: ${availableLoyaltyPoints} - ${loyaltyDiscount} = ${newLoyaltyPoints}`);
+          console.log(`ℹ️ Cashback points will be earned when order is delivered`);
+          
+          // Dispatch custom event to notify other components about loyalty points change
+          console.log('📊 CheckoutNew: Dispatching loyaltyPointsUpdated event...');
+          window.dispatchEvent(new CustomEvent('loyaltyPointsUpdated', { 
+            detail: { newPoints: newLoyaltyPoints } 
+          }));
+          console.log('✅ CheckoutNew: Event dispatched');
+          
+          // Reset loyalty points usage UI
+          setUseLoyaltyPoints(false);
+          setLoyaltyPointsToUse(0);
+          
+          toast.success(`Списано ${loyaltyDiscount} ${pluralizePoints(loyaltyDiscount, language)}`);
+        }
+      } else {
+        console.log(`ℹ️ CheckoutNew: No loyalty points to deduct (discount: ${loyaltyDiscount})`);
       }
       
       // Send order confirmation email
