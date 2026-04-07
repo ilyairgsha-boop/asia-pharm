@@ -125,6 +125,11 @@ export const OrderManagement = () => {
           await awardLoyaltyPoints(orderData);
         }
         
+        // If status changed to "cancelled", refund loyalty points (if any were used)
+        if (status === 'cancelled' && orderData && orderData.user_id && orderData.loyalty_points_used > 0) {
+          await refundLoyaltyPoints(orderData);
+        }
+        
         // Send email notification about status change
         if (orderData && orderData.email && accessToken) {
           try {
@@ -360,7 +365,7 @@ export const OrderManagement = () => {
           user_id: order.user_id,
           points: pointsEarned,
           type: 'earned',
-          description: `Начислено за заказ #${order.order_number || order.id.slice(0, 8)}`,
+          description: `Earned for order #${order.order_number || order.id.slice(0, 8)}`,
           order_id: order.id
         }]);
       
@@ -398,8 +403,95 @@ export const OrderManagement = () => {
       toast.success(`${t('loyaltyPointsAwarded')}: ${pointsEarned} ${t('points')}`);
     } catch (error) {
       console.error('❌ OrderManagement: Exception awarding loyalty points:', error);
-      toast.error(`Ошибка начисления баллов: ${error}`);
+      toast.error(`Ошибка начисления балл��в: ${error}`);
       // Don't show error to admin, just log it
+    }
+  };
+
+  const refundLoyaltyPoints = async (order: any) => {
+    try {
+      console.log(`♻️ OrderManagement: Refunding loyalty points for cancelled order ${order.id}...`);
+      console.log(`♻️ OrderManagement: User ID: ${order.user_id}`);
+      
+      const supabase = createClient();
+      
+      // Check if order had loyalty points used
+      const loyaltyPointsUsed = order.loyalty_points_used || 0;
+      
+      if (loyaltyPointsUsed <= 0) {
+        console.log('ℹ️ OrderManagement: No loyalty points to refund');
+        return;
+      }
+      
+      console.log(`♻️ OrderManagement: Points to refund: ${loyaltyPointsUsed}`);
+      
+      // Get current loyalty points
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('loyalty_points')
+        .eq('id', order.user_id)
+        .single();
+      
+      if (profileError) {
+        console.error('❌ OrderManagement: Error loading user profile:', profileError);
+        toast.error(`Ошибка загрузки профиля: ${profileError.message}`);
+        return;
+      }
+      
+      const currentPoints = profileData?.loyalty_points || 0;
+      const newPoints = currentPoints + loyaltyPointsUsed;
+      
+      console.log(`♻️ OrderManagement: Current points: ${currentPoints}`);
+      console.log(`♻️ OrderManagement: New points will be: ${newPoints}`);
+      
+      // Update profile with refunded loyalty points
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({ loyalty_points: newPoints })
+        .eq('id', order.user_id);
+      
+      if (updateError) {
+        console.error('❌ OrderManagement: Error refunding loyalty points:', updateError);
+        toast.error(`Ошибка возврата баллов: ${updateError.message}`);
+        return;
+      }
+      
+      console.log('✅ OrderManagement: Loyalty points refunded in DB successfully');
+      
+      // Add loyalty history record
+      const { error: historyError } = await supabase
+        .from('loyalty_history')
+        .insert([{
+          user_id: order.user_id,
+          points: loyaltyPointsUsed,
+          type: 'earned',
+          description: `Refunded for cancelled order #${order.order_number || order.id.slice(0, 8)}`,
+          order_id: order.id
+        }]);
+      
+      if (historyError) {
+        console.error('❌ OrderManagement: Error creating loyalty history:', historyError);
+      } else {
+        console.log('✅ OrderManagement: Loyalty history record created');
+      }
+      
+      // Save to localStorage with timestamp for polling
+      const timestamp = Date.now().toString();
+      localStorage.setItem('loyaltyPointsLastUpdate', timestamp);
+      console.log('♻️ OrderManagement: Saved update timestamp to localStorage:', timestamp);
+      
+      // Dispatch custom event
+      console.log('♻️ OrderManagement: Dispatching loyaltyPointsUpdated event...');
+      window.dispatchEvent(new CustomEvent('loyaltyPointsUpdated', { 
+        detail: { newPoints } 
+      }));
+      console.log('✅ OrderManagement: Event dispatched');
+      
+      console.log(`✅ OrderManagement: Loyalty points refunded: ${loyaltyPointsUsed} points to user ${order.user_id}`);
+      toast.success(`${t('loyaltyPointsRefunded')}: ${loyaltyPointsUsed} ${t('points')}`);
+    } catch (error) {
+      console.error('❌ OrderManagement: Exception refunding loyalty points:', error);
+      toast.error(`Ошибка возврата баллов: ${error}`);
     }
   };
 

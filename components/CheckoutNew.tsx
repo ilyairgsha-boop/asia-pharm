@@ -512,7 +512,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
           setUseLoyaltyPoints(false);
           setLoyaltyPointsToUse(0);
           
-          toast.success(`Списано ${loyaltyDiscount} ${pluralizePoints(loyaltyDiscount, language)}`);
+          toast.success(`${t('loyaltyPointsDeducted')} ${pluralizePoints(loyaltyDiscount, language)}`);
         }
       } else {
         console.log(`ℹ️ CheckoutNew: No loyalty points to deduct (discount: ${loyaltyDiscount})`);

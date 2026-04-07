@@ -1215,7 +1215,11 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-800">
-                        {entry.description.includes('Order') 
+                        {entry.description.startsWith('Earned for order') 
+                          ? entry.description.replace('Earned for order', t('loyaltyEarnedForOrder'))
+                          : entry.description.startsWith('Refunded for cancelled order')
+                          ? entry.description.replace('Refunded for cancelled order', t('loyaltyRefundedForCancelled'))
+                          : entry.description.includes('Order') 
                           ? entry.description.replace('Order', t('order')).replace('delivered', t('delivered'))
                           : entry.description}
                       </p>
