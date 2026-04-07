@@ -152,7 +152,7 @@ export const OrderManagement = () => {
             if (emailResponse.ok) {
               const emailResult = await emailResponse.json();
               console.log('✅ Order status email sent successfully:', emailResult);
-              toast.success('📧 Email уведомление отправлено');
+              toast.success(t('emailNotificationSent'));
             } else {
               const errorData = await emailResponse.json();
               console.error('❌ Failed to send order status email:', {
@@ -211,7 +211,7 @@ export const OrderManagement = () => {
             if (pushResponse.ok) {
               const pushResult = await pushResponse.json();
               console.log('✅ Push notification sent successfully:', pushResult);
-              toast.success('📱 Push уведомление отправлено');
+              toast.success(t('pushNotificationSent'));
             } else {
               const errorData = await pushResponse.json().catch(() => ({}));
               console.error('❌ Failed to send push notification:', {

@@ -359,6 +359,7 @@ export const translations = {
     errorPlacingOrder: 'Ошибка при оформлении заказа',
     promoCodeApplied: 'Промокод применен',
     invalidPromoCode: 'Неверный промокод',
+    promoCodeExpired: 'Срок действия промокода истек',
     promoCodeWrongStore: 'Этот промокод не действует для выбранного магазина',
     all: 'Все',
     china: 'Китай',
@@ -618,7 +619,7 @@ export const translations = {
     wpParserInstruction1: 'Убедитесь, что на WordPress сайте установлен WooCommerce',
     wpParserInstruction2: 'API должен быть доступен по адресу: /wp-json/wc/v3/products',
     wpParserInstruction3: 'Необходимы ключи доступа к WooCommerce API',
-    wpParserInstruction4: 'Товары будут импортированы со всеми характеристиками и изображениями',
+    wpParserInstruction4: 'Тов��ры будут импортированы со всеми характеристиками и изображениями',
     wpParserInstruction5: 'Дублирующиеся товары (по названию) будут пропущены',
     wpParserApiKeysNote: 'Для автоматического импорта необходимо настроить API ключи в настройках интеграции. Обратитесь к администратору для получения ключей доступа к WooCommerce API.',
     
@@ -1065,6 +1066,11 @@ export const translations = {
     themePreviewDescription: 'Текущая активная тема и её настройки',
     currentTheme: 'Текущая тема',
     decorationsEnabled: 'Декоративные элементы включены',
+    
+    // Admin Toast Notifications
+    pushNotificationSent: '📱 Push уведомление отправлено',
+    emailNotificationSent: '📧 Email уведомление отправлено',
+    processingAuth: 'Обработка...',
 
   },
   
@@ -1430,6 +1436,7 @@ export const translations = {
     errorPlacingOrder: 'Error placing order',
     promoCodeApplied: 'Promo code applied',
     invalidPromoCode: 'Invalid promo code',
+    promoCodeExpired: 'Promo code has expired',
     promoCodeWrongStore: 'This promo code does not apply to the selected store',
     all: 'All',
     china: 'China',
@@ -2129,6 +2136,11 @@ export const translations = {
     themePreviewDescription: 'Current active theme and its settings',
     currentTheme: 'Current Theme',
     decorationsEnabled: 'Decorative elements enabled',
+    
+    // Admin Toast Notifications
+    pushNotificationSent: '📱 Push notification sent',
+    emailNotificationSent: '📧 Email notification sent',
+    processingAuth: 'Processing...',
 
   },
   
@@ -2493,6 +2505,7 @@ export const translations = {
     errorPlacingOrder: '下单错误',
     promoCodeApplied: '促销代码已应用',
     invalidPromoCode: '无效的促销代码',
+    promoCodeExpired: '促销代码已过期',
     promoCodeWrongStore: '此促销代码不适用于所选商店',
     all: '全部',
     china: '中国',
@@ -3197,6 +3210,11 @@ export const translations = {
     themePreviewDescription: '当前活动主题及其设置',
     currentTheme: '当前主题',
     decorationsEnabled: '装饰元素已启用',
+    
+    // Admin Toast Notifications
+    pushNotificationSent: '📱 Push通知已发送',
+    emailNotificationSent: '📧 Email通知已发送',
+    processingAuth: '处理中...',
 
   },
   
@@ -3540,6 +3558,7 @@ export const translations = {
     errorPlacingOrder: 'Lỗi đặt hàng',
     promoCodeApplied: 'Đã áp dụng mã khuyến mãi',
     invalidPromoCode: 'Mã khuyến mãi không hợp lệ',
+    promoCodeExpired: 'Mã khuyến mãi đã hết hạn',
     promoCodeWrongStore: 'Mã khuyến mãi này không áp dụng cho cửa hàng đã chọn',
     all: 'Tất cả',
     china: 'Trung Quốc',
@@ -4291,6 +4310,11 @@ export const translations = {
     themePreviewDescription: 'Chủ đề đang hoạt động hiện tại và cài đặt của nó',
     currentTheme: 'Chủ đề hiện tại',
     decorationsEnabled: 'Các yếu tố trang trí đã được bật',
+    
+    // Admin Toast Notifications
+    pushNotificationSent: '📱 Thông báo Push đã gửi',
+    emailNotificationSent: '📧 Thông báo Email đã gửi',
+    processingAuth: 'Đang xử lý...',
 
   },
 };

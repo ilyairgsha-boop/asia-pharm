@@ -202,7 +202,7 @@ export const Auth = ({ mode, onNavigate }: AuthProps) => {
               {loading ? (
                 <>
                   <Loader2 className="animate-spin" size={20} />
-                  <span>Processing...</span>
+                  <span>{t('processingAuth')}</span>
                 </>
               ) : (
                 <span>{isLogin ? t('signIn') : t('signUp')}</span>
