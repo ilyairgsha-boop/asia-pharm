@@ -34,7 +34,7 @@ interface Order {
 interface LoyaltyHistory {
   id: string;
   points: number;
-  type: 'earned' | 'spent';
+  type: 'earned' | 'spent' | 'refunded';
   description: string;
   createdAt: string;
   orderId?: string;
@@ -119,10 +119,20 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
       }
     };
 
+    const handleReloadLoyaltyHistory = () => {
+      console.log('📊 ProfileNew: Received reload loyalty history event');
+      setTimeout(() => {
+        console.log('📊 ProfileNew: Reloading loyalty history...');
+        loadBonusHistory();
+      }, 500);
+    };
+
     window.addEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+    window.addEventListener('reloadLoyaltyHistory', handleReloadLoyaltyHistory);
 
     return () => {
       window.removeEventListener('loyaltyPointsUpdated', handleLoyaltyPointsUpdate as EventListener);
+      window.removeEventListener('reloadLoyaltyHistory', handleReloadLoyaltyHistory);
     };
   }, []);
 
@@ -442,7 +452,7 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
     try {
       const supabase = createClient();
       
-      console.log('📊 ProfileNew: Loading loyalty history from loyalty_history table...');
+      console.log('📊 ProfileNew: Loading loyalty history from both sources...');
       
       // Load loyalty history from the dedicated loyalty_history table
       const { data: historyData, error: historyError } = await supabase
@@ -452,44 +462,126 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
         .order('created_at', { ascending: false });
       
       if (historyError) {
-        console.warn('⚠️ Error loading loyalty history:', historyError);
-        setLoyaltyHistory([]);
-        return;
+        console.warn('⚠️ Error loading loyalty history table:', historyError);
       }
       
-      if (!historyData || historyData.length === 0) {
-        console.log('ℹ️ ProfileNew: No loyalty history found');
-        setLoyaltyHistory([]);
-        return;
-      }
+      console.log(`📊 ProfileNew: Loaded ${historyData?.length || 0} entries from loyalty_history table`);
+      console.log('📊 ProfileNew: Loyalty history data:', historyData);
       
-      console.log(`✅ ProfileNew: Loaded ${historyData.length} loyalty history entries`);
-      
-      // Load orders to get order numbers and dates
-      const { data: ordersData } = await supabase
+      // Load all orders for this user to build history from orders (for backward compatibility)
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('id, order_number, created_at')
-        .eq('user_id', user.id);
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
       
-      const ordersMap = new Map(ordersData?.map(o => [o.id, o]) || []);
+      if (ordersError) {
+        console.warn('⚠️ Error loading orders:', ordersError);
+      }
       
-      // Map loyalty history to the format expected by UI
-      const history: LoyaltyHistory[] = historyData.map(entry => {
-        const order = entry.order_id ? ordersMap.get(entry.order_id) : null;
+      console.log(`📊 ProfileNew: Loaded ${ordersData?.length || 0} orders`);
+      
+      const history: LoyaltyHistory[] = [];
+      
+      // First, add entries from loyalty_history table
+      if (historyData && historyData.length > 0) {
+        const ordersMap = new Map(ordersData?.map(o => [o.id, o]) || []);
         
-        return {
-          id: entry.id,
-          points: entry.points,
-          type: entry.type,
-          description: entry.description,
-          createdAt: entry.created_at,
-          orderId: entry.order_id,
-          orderNumber: order?.order_number || (entry.order_id ? entry.order_id.slice(0, 8) : ''),
-          orderDate: order?.created_at,
-        };
-      });
+        console.log('📊 ProfileNew: Processing loyalty_history entries...');
+        historyData.forEach(entry => {
+          console.log('📊 ProfileNew: Processing entry:', {
+            id: entry.id,
+            type: entry.type,
+            points: entry.points,
+            description: entry.description,
+            order_id: entry.order_id
+          });
+          
+          const order = entry.order_id ? ordersMap.get(entry.order_id) : null;
+          
+          history.push({
+            id: entry.id,
+            points: entry.points,
+            type: entry.type,
+            description: entry.description,
+            createdAt: entry.created_at,
+            orderId: entry.order_id,
+            orderNumber: order?.order_number || (entry.order_id ? entry.order_id.slice(0, 8) : ''),
+            orderDate: order?.created_at,
+          });
+        });
+        console.log(`📊 ProfileNew: Added ${historyData.length} entries from loyalty_history`);
+      }
       
-      console.log('📊 ProfileNew: Mapped history:', history);
+      // Then, build history from orders for backward compatibility
+      // (only add entries that are not already in loyalty_history)
+      if (ordersData && ordersData.length > 0) {
+        let cumulativeTotal = 0;
+        const historyOrderIds = new Set(historyData?.map(h => h.order_id).filter(Boolean) || []);
+        
+        ordersData.forEach(order => {
+          const orderInHistory = historyOrderIds.has(order.id);
+          
+          // Add points spent (if any) - only if not already in loyalty_history
+          if (order.loyalty_points_used && order.loyalty_points_used > 0 && !orderInHistory) {
+            history.push({
+              id: `spent-${order.id}`,
+              points: order.loyalty_points_used,
+              type: 'spent',
+              description: `${t('forOrder')} #${order.order_number || order.id.slice(0, 8)}`,
+              createdAt: order.created_at,
+              orderId: order.id,
+              orderNumber: order.order_number || order.id.slice(0, 8),
+              orderDate: order.created_at,
+            });
+          }
+          
+          // Add points earned (only for delivered orders) - only if not already in loyalty_history
+          if (order.status === 'delivered' && !orderInHistory) {
+            const orderTotal = order.subtotal || order.total || 0;
+            cumulativeTotal += orderTotal;
+            
+            // Determine tier at the time of earning based on cumulative total
+            let tierAtTime: 'basic' | 'silver' | 'gold' | 'platinum' = 'basic';
+            if (cumulativeTotal >= 200000) {
+              tierAtTime = 'platinum';
+            } else if (cumulativeTotal >= 100000) {
+              tierAtTime = 'gold';
+            } else if (cumulativeTotal >= 50000) {
+              tierAtTime = 'silver';
+            }
+            
+            // Calculate points earned
+            let pointsEarned = 0;
+            if (typeof order.loyalty_points_earned === 'number') {
+              pointsEarned = order.loyalty_points_earned;
+            } else if (order.loyalty_points_earned === true) {
+              const orderSubtotal = order.subtotal || order.total || 0;
+              const cashback = orderSubtotal * (tierAtTime === 'platinum' ? 0.10 : tierAtTime === 'gold' ? 0.07 : tierAtTime === 'silver' ? 0.05 : 0.03);
+              pointsEarned = Math.floor(cashback);
+            }
+            
+            if (pointsEarned > 0) {
+              history.push({
+                id: `earned-${order.id}`,
+                points: pointsEarned,
+                type: 'earned',
+                description: `${t('forOrder')} #${order.order_number || order.id.slice(0, 8)}`,
+                createdAt: order.updated_at || order.created_at,
+                orderId: order.id,
+                orderNumber: order.order_number || order.id.slice(0, 8),
+                orderDate: order.created_at,
+                tierAtCredit: tierAtTime,
+              });
+            }
+          }
+        });
+      }
+      
+      // Sort by date descending
+      history.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      console.log(`📊 ProfileNew: Total history entries: ${history.length}`);
       setLoyaltyHistory(history);
     } catch (error) {
       console.warn('⚠️ Error loading bonus history:', error);
@@ -931,6 +1023,12 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                                 <span className="hidden sm:inline">{t('crediting')}</span>
                                 <span className="sm:hidden">+</span>
                               </span>
+                            ) : item.type === 'refunded' ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-purple-100 text-purple-800 rounded text-xs sm:text-sm">
+                                <TrendingUp size={12} className="sm:w-3.5 sm:h-3.5" />
+                                <span className="hidden sm:inline">{t('refund')}</span>
+                                <span className="sm:hidden">↩</span>
+                              </span>
                             ) : (
                               <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 text-blue-800 rounded text-xs sm:text-sm">
                                 <Gift size={12} className="sm:w-3.5 sm:h-3.5" />
@@ -969,8 +1067,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
                             )}
                           </td>
                           <td className="py-2 sm:py-3 px-1 sm:px-4 text-right text-gray-800">
-                            {item.type === 'earned' ? (
-                              <span className="bonus-history-earned text-green-600 text-xs sm:text-sm">+{item.points.toLocaleString()}</span>
+                            {item.type === 'earned' || item.type === 'refunded' ? (
+                              <span className={`text-xs sm:text-sm ${item.type === 'earned' ? 'bonus-history-earned text-green-600' : 'text-purple-600'}`}>+{item.points.toLocaleString()}</span>
                             ) : (
                               <span className="text-gray-400 text-xs sm:text-sm">-</span>
                             )}

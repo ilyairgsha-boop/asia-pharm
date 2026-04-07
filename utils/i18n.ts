@@ -375,6 +375,7 @@ export const translations = {
     loyaltyDiscount: 'Скидка баллами',
     loyaltyPointsDeducted: 'Списано',
     loyaltyPointsRefunded: 'Возвращено',
+    refund: 'Возврат',
     loyaltyEarnedForOrder: 'Начислено за заказ',
     loyaltyRefundedForCancelled: 'Возвращено за отмену заказа',
     loyaltySpentForOrder: 'Списано за заказ',
@@ -785,9 +786,6 @@ export const translations = {
     // Select products for translation
     selectProducts: 'Выбрать товары',
     selectedCount: 'Выбрано: {count}',
-    selectAll: 'Выбрать все',
-    deselectAll: 'Снять выделение',
-    translateSelected: 'Перевести выбранные',
     noProductsSelected: 'Не выбрано ни одного товара',
     selectProductsHint: 'Выберите товары для перевода, отметив их галочками',
     
@@ -1457,6 +1455,7 @@ export const translations = {
     loyaltyDiscount: 'Loyalty Discount',
     loyaltyPointsDeducted: 'Deducted',
     loyaltyPointsRefunded: 'Refunded',
+    refund: 'Refund',
     loyaltyEarnedForOrder: 'Earned for order',
     loyaltyRefundedForCancelled: 'Refunded for cancelled order',
     loyaltySpentForOrder: 'Spent for order',
@@ -1798,9 +1797,6 @@ export const translations = {
     // Select products for translation
     selectProducts: 'Select products',
     selectedCount: 'Selected: {count}',
-    selectAll: 'Select all',
-    deselectAll: 'Deselect all',
-    translateSelected: 'Translate selected',
     noProductsSelected: 'No products selected',
     selectProductsHint: 'Select products for translation by checking them',
     
@@ -2514,7 +2510,7 @@ export const translations = {
     pleaseLogin: '请登录',
     errorPlacingOrder: '下单错误',
     promoCodeApplied: '促销代码已应用',
-    invalidPromoCode: '无效的促销代码',
+    invalidPromoCode: '无效的���销代码',
     promoCodeExpired: '促销代码已过期',
     promoCodeWrongStore: '此促销代码不适用于所选商店',
     all: '全部',
@@ -2531,6 +2527,7 @@ export const translations = {
     loyaltyDiscount: '忠诚度折扣',
     loyaltyPointsDeducted: '已扣除',
     loyaltyPointsRefunded: '已退还',
+    refund: '退款',
     loyaltyEarnedForOrder: '订单奖励',
     loyaltyRefundedForCancelled: '取消订单退款',
     loyaltySpentForOrder: '订单扣除',
@@ -2878,9 +2875,6 @@ export const translations = {
     // Select products for translation
     selectProducts: '选择产品',
     selectedCount: '已选择：{count}',
-    selectAll: '全选',
-    deselectAll: '取消全选',
-    translateSelected: '翻译选中',
     noProductsSelected: '未选择产品',
     selectProductsHint: '通过勾选来选择要翻译的产品',
     
@@ -3079,7 +3073,7 @@ export const translations = {
     translateSuccess: '翻译成功完成',
     translateError: '翻译错误',
     translateResult: '翻译结果',
-    translateTest: '翻译测试',
+    translateTest: '��译测试',
     translateTestDescription: '当前语言',
     checking: '检查中...',
     
@@ -3589,6 +3583,7 @@ export const translations = {
     loyaltyDiscount: 'Giảm giá khách hàng thân thiết',
     loyaltyPointsDeducted: 'Đã khấu trừ',
     loyaltyPointsRefunded: 'Đã hoàn lại',
+    refund: 'Hoàn tiền',
     loyaltyEarnedForOrder: 'Tích lũy cho đơn hàng',
     loyaltyRefundedForCancelled: 'Hoàn lại cho đơn hàng đã hủy',
     loyaltySpentForOrder: 'Khấu trừ cho đơn hàng',
@@ -3834,7 +3829,7 @@ export const translations = {
     userRoleUpdated: 'Vai trò người dùng đã được cập nhật',
     userRoleUpdateError: 'Lỗi cập nhật vai trò',
     noUsersFound: 'Không tìm thấy người dùng. Đăng ký người dùng đầu tiên trên trang web.',
-    basicSettings: 'Cài đặt cơ bản',
+    basicSettings: 'C��i đặt cơ bản',
     // siteName already defined at line 2279
     siteNameHint: 'Được sử dụng trong tiêu đề trang và thẻ meta',
     siteDescription: 'Mô tả trang web',
@@ -3957,9 +3952,6 @@ export const translations = {
     // Select products for translation
     selectProducts: 'Chọn sản phẩm',
     selectedCount: 'Đã chọn: {count}',
-    selectAll: 'Chọn tất cả',
-    deselectAll: 'Bỏ chọn tất cả',
-    translateSelected: 'Dịch đã chọn',
     noProductsSelected: 'Chưa chọn sản phẩm',
     selectProductsHint: 'Chọn sản phẩm để dịch bằng cách đánh dấu chúng',
     
@@ -4171,7 +4163,7 @@ export const translations = {
     translateApiKeySet: 'Khóa API đã được đặt',
     translateDeleteKey: 'Xóa khóa',
     translateApiKeyHelp: 'Lấy khóa API trong Google Cloud Console → APIs & Services → Credentials. Bật Cloud Translation API cho dự án của bạn.',
-    translateTool: 'Công cụ dịch',
+    translateTool: 'Công cụ d��ch',
     translateToolDescription: 'Dịch văn bản từ ngôn ngữ này sang ngôn ngữ khác',
     translateSourceLanguage: 'Ngôn ngữ nguồn',
     translateTargetLanguage: 'Ngôn ngữ đích',
