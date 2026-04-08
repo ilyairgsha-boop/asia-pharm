@@ -9,9 +9,10 @@ interface PaymentInfoProps {
   orderNumber?: string;
   paymentMethod?: string;
   totalAmount?: number;
+  orderId?: string;
 }
 
-export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentMethod: propPaymentMethod, totalAmount: propTotalAmount }: PaymentInfoProps) => {
+export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentMethod: propPaymentMethod, totalAmount: propTotalAmount, orderId }: PaymentInfoProps) => {
   const { t } = useLanguage();
   const { accessToken } = useAuth();
   const [orderNumber, setOrderNumber] = useState(propOrderNumber || '');
@@ -25,8 +26,13 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
     // Load payment settings
     loadPaymentSettings();
     
+    // If orderId is provided, fetch order details
+    if (orderId) {
+      console.log('🔗 Loading order from orderId:', orderId);
+      loadOrderDetails(orderId);
+    }
     // If we don't have order info from props, try to get it from localStorage
-    if (!propOrderNumber) {
+    else if (!propOrderNumber) {
       const savedOrder = localStorage.getItem('lastOrderPayment');
       if (savedOrder) {
         try {
@@ -40,7 +46,32 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
       }
     }
     setLoading(false);
-  }, [propOrderNumber]);
+  }, [propOrderNumber, orderId]);
+
+  const loadOrderDetails = async (id: string) => {
+    try {
+      const supabase = createClient();
+      const { data: order, error } = await supabase
+        .from('orders')
+        .select('order_number, payment_method, total_amount')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error loading order:', error);
+        return;
+      }
+
+      if (order) {
+        console.log('✅ Order loaded:', order);
+        setOrderNumber(order.order_number || '');
+        setPaymentMethod(order.payment_method || 'card');
+        setTotalAmount(order.total_amount || 0);
+      }
+    } catch (error) {
+      console.error('Error loading order details:', error);
+    }
+  };
 
   const loadPaymentSettings = async () => {
     try {

@@ -46,9 +46,11 @@ interface LoyaltyHistory {
 interface ProfileNewProps {
   onNavigate: (page: string) => void;
   onProductClick?: (product: Product) => void;
+  initialOrderId?: string;
+  initialTab?: string;
 }
 
-export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
+export const ProfileNew = ({ onNavigate, onProductClick, initialOrderId, initialTab }: ProfileNewProps) => {
   const { language, t } = useLanguage();
   const { user, accessToken } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
@@ -68,6 +70,28 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [settingsTab, setSettingsTab] = useState<'orders' | 'favorites' | 'bonusHistory' | 'settings'>('orders');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+
+  // Handle initial navigation from push notification
+  useEffect(() => {
+    if (initialTab === 'loyalty') {
+      console.log('🔗 Opening loyalty tab from push notification');
+      setSettingsTab('bonusHistory');
+    }
+  }, [initialTab]);
+
+  // Handle initial order selection from push notification
+  useEffect(() => {
+    if (initialOrderId && orders.length > 0) {
+      console.log('🔗 Opening order from push notification:', initialOrderId);
+      const order = orders.find(o => o.id === initialOrderId);
+      if (order) {
+        setSelectedOrder(order);
+        setSettingsTab('orders');
+      } else {
+        console.warn('⚠️ Order not found:', initialOrderId);
+      }
+    }
+  }, [initialOrderId, orders]);
 
   useEffect(() => {
     if (user && accessToken) {

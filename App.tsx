@@ -44,6 +44,7 @@ function AppContent() {
   const [currentStore, setCurrentStore] = useState<StoreType>('china');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [showPushPrompt, setShowPushPrompt] = useState(false);
+  const [pushNavigationParams, setPushNavigationParams] = useState<{ orderId?: string; tab?: string } | null>(null);
   const { user, loading } = useAuth();
   const { t, currentLanguage } = useLanguage();
   const { totalItemsCount } = useCart();
@@ -60,6 +61,53 @@ function AppContent() {
       return match ? match[1] : null;
     }
   });
+
+  // Handle hash navigation with query parameters (for push notifications)
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.slice(1); // Remove '#'
+      
+      if (!hash) {
+        setCurrentPage('home');
+        setPushNavigationParams(null);
+        return;
+      }
+      
+      // Check if hash contains query parameters
+      // Format: #profile?order=xxx or #profile?tab=loyalty
+      const [page, queryString] = hash.split('?');
+      
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        const orderId = params.get('order');
+        const tab = params.get('tab');
+        
+        console.log('🔗 Push navigation detected:', { page, orderId, tab });
+        
+        setPushNavigationParams({ orderId: orderId || undefined, tab: tab || undefined });
+        setCurrentPage(page || 'home');
+      } else if (page.startsWith('payment-')) {
+        // Handle payment page navigation: #payment-{orderId}
+        const orderId = page.replace('payment-', '');
+        console.log('🔗 Payment navigation detected:', { orderId });
+        setPushNavigationParams({ orderId });
+        setCurrentPage('payment-info');
+      } else {
+        setCurrentPage(page || 'home');
+        setPushNavigationParams(null);
+      }
+    };
+
+    // Handle initial hash on mount
+    handleHashChange();
+
+    // Listen for hash changes
+    window.addEventListener('hashchange', handleHashChange);
+    
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+    };
+  }, []);
 
   // Handlers for exclusive category selection
   const handleCategorySelect = (category: string | null) => {
@@ -701,9 +749,16 @@ function AppContent() {
 
       {currentPage === 'checkout' && <CheckoutNew onNavigate={handleNavigate} store={currentStore} />}
 
-      {currentPage === 'payment-info' && <PaymentInfo onNavigate={handleNavigate} />}
+      {currentPage === 'payment-info' && <PaymentInfo onNavigate={handleNavigate} orderId={pushNavigationParams?.orderId} />}
 
-      {currentPage === 'profile' && user && <ProfileNew onNavigate={handleNavigate} onProductClick={setSelectedProduct} />}
+      {currentPage === 'profile' && user && (
+        <ProfileNew 
+          onNavigate={handleNavigate} 
+          onProductClick={setSelectedProduct}
+          initialOrderId={pushNavigationParams?.orderId}
+          initialTab={pushNavigationParams?.tab}
+        />
+      )}
 
       {currentPage === 'admin' && user?.isAdmin && <AdminPanelNew />}
 
