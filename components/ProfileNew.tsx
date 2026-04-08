@@ -7,7 +7,7 @@ import { OrderDetails } from './OrderDetails';
 import { ProductCard } from './ProductCard';
 import { Product } from '../contexts/CartContext';
 import { getMockProducts, getMockOrders } from '../utils/mockData';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 import { pluralizePoints } from '../utils/pluralize';
 
 interface Order {

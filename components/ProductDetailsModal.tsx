@@ -1,11 +1,5 @@
-import { X, ShoppingCart, Zap, Share2 } from 'lucide-react';
-import { useLanguage } from '../contexts/LanguageContext';
-import { useCart, Product } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { ImageWithFallback } from './figma/ImageWithFallback';
-import { useState, useEffect, useRef } from 'react';
 import { FlyingNumber } from './FlyingNumber';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 
 interface ProductDetailsModalProps {
   product: Product | null;

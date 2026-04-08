@@ -8,7 +8,7 @@ import {
   Leaf, Shield, Zap, User, Baby, Eye, CircleDot, Package,
   Sparkles, Coffee, Wind, Apple
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 
 interface Category {
   id: string;

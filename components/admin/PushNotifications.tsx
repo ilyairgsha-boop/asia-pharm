@@ -1,16 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Badge } from '../ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/tabs';
-import { Alert, AlertDescription } from '../ui/alert';
 import { Send, Users, Filter, History, Bell, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 import { getServerUrl, getAnonKey, supabase } from '../../utils/supabase/client';
 
 interface NotificationTemplate {

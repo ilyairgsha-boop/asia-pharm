@@ -1,9 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { createClient } from '../../utils/supabase/client';
 import { Download, Upload, FileText, Loader2, AlertCircle, CheckCircle, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 
 interface Category {
   id: string;

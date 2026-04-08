@@ -32,10 +32,11 @@ export const FlyingNumber = ({ startX, startY, onComplete }: FlyingNumberProps) 
 
   return (
     <div
-      className="flying-number fixed pointer-events-none z-[100] bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all duration-[800ms] ease-out"
+      className="flying-number fixed pointer-events-none z-[100] bg-red-600 text-white rounded-full w-8 h-8 flex items-center justify-center transition-all ease-out"
       style={{
         left: 0,
         top: 0,
+        transitionDuration: '800ms',
         transform: isAnimating 
           ? `translate(${cartPosition.x}px, ${cartPosition.y}px) scale(0.5)`
           : `translate(${startX}px, ${startY}px) scale(1)`,

@@ -24,7 +24,7 @@ import { PopUpModal } from './components/PopUpModal';
 import { ThemeDecorations } from './components/ThemeDecorations';
 import { Footer } from './components/Footer';
 import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 import { ShoppingCart } from 'lucide-react';
 import { DatabaseStatus } from './components/DatabaseStatus';
 import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
@@ -146,7 +146,7 @@ function AppContent() {
     // Clear old category format (without translations) from localStorage
     clearOldCategories();
     
-    // ✅ ВАЖНО: Очищаем старый кэш товаров при загрузке
+    // ✅ ВАЖНО: Очищаем старый кэш товаров при ��агрузке
     // Это исправляет проблему с неправильной структурой данных
     try {
       const oldCache = sessionStorage.getItem('asia_pharm_products_cache');

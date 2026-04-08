@@ -1,13 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Label } from '../ui/label';
-import { Switch } from '../ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Alert, AlertDescription } from '../ui/alert';
 import { Bell, Info, CheckCircle2, XCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from "sonner@2.0.3";
 import { getServerUrl, supabase, getAnonKey } from '../../utils/supabase/client';
 
 interface OneSignalSettingsData {
