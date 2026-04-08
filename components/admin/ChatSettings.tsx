@@ -3,7 +3,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { createClient } from '../../utils/supabase/client';
 import { Save, MessageCircle, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from 'sonner@2.0.3';
 
 export const ChatSettings = () => {
   const { t } = useLanguage();
@@ -14,6 +14,7 @@ export const ChatSettings = () => {
     enabled: true,
     telegram: '@asiapharm',
     whatsapp: '+79001234567',
+    maxmessenger: 'https://max.ru/chat/asiapharm',
   });
 
   useEffect(() => {
@@ -33,7 +34,14 @@ export const ChatSettings = () => {
         .maybeSingle();
 
       if (data && !error) {
-        setSettings(data.value);
+        // Merge with defaults to ensure all fields exist
+        setSettings({
+          enabled: true,
+          telegram: '@asiapharm',
+          whatsapp: '+79001234567',
+          maxmessenger: 'https://max.ru/chat/asiapharm',
+          ...data.value
+        });
         console.log('✅ Chat settings loaded from Supabase');
       } else if (error) {
         console.warn('⚠️ Error loading chat settings:', error);
@@ -47,7 +55,15 @@ export const ChatSettings = () => {
             .maybeSingle();
           
           if (kvData?.value) {
-            setSettings(kvData.value);
+            // Merge with defaults
+            const mergedSettings = {
+              enabled: true,
+              telegram: '@asiapharm',
+              whatsapp: '+79001234567',
+              maxmessenger: 'https://max.ru/chat/asiapharm',
+              ...kvData.value
+            };
+            setSettings(mergedSettings);
             console.log('📦 Chat settings loaded from KV store (fallback)');
             
             // Migrate to settings table
@@ -55,7 +71,7 @@ export const ChatSettings = () => {
               .from('settings')
               .upsert({
                 key: 'chat',
-                value: kvData.value,
+                value: mergedSettings,
                 updated_at: new Date().toISOString()
               });
             console.log('✅ Migrated chat settings to settings table');
@@ -178,6 +194,20 @@ export const ChatSettings = () => {
             onChange={(e) => setSettings({ ...settings, whatsapp: e.target.value })}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
             placeholder="+7..."
+          />
+        </div>
+
+        {/* Max Messenger */}
+        <div>
+          <label className="block text-gray-700 mb-2">
+            {t('maxMessengerUrl')}
+          </label>
+          <input
+            type="text"
+            value={settings.maxmessenger}
+            onChange={(e) => setSettings({ ...settings, maxmessenger: e.target.value })}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600"
+            placeholder="https://max.ru/chat/..."
           />
         </div>
 

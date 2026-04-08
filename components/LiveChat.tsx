@@ -18,6 +18,7 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
     enabled: true,
     telegram: '@asiapharm',
     whatsapp: '+79001234567',
+    maxmessenger: 'https://max.ru/chat/asiapharm',
   });
 
   useEffect(() => {
@@ -43,7 +44,14 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
       if (error) {
         console.log('⚠️ Error loading chat settings:', error);
       } else if (data?.value) {
-        setChatSettings(data.value);
+        // Merge with defaults to ensure all fields exist
+        setChatSettings({
+          enabled: true,
+          telegram: '@asiapharm',
+          whatsapp: '+79001234567',
+          maxmessenger: 'https://max.ru/chat/asiapharm',
+          ...data.value
+        });
         console.log('✅ Chat settings loaded:', data.value);
       } else {
         console.log('ℹ️ No chat settings found, using defaults');
@@ -159,6 +167,22 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
               <div className="text-left">
                 <div className="text-base md:text-sm">WhatsApp</div>
                 <div className="text-sm md:text-xs opacity-90">{chatSettings.whatsapp}</div>
+              </div>
+            </a>
+
+            {/* MaxMessenger Button */}
+            <a
+              href={chatSettings.maxmessenger}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="chat-platform-button flex items-center gap-3 p-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+            >
+              <svg className="w-7 h-7 md:w-6 md:h-6" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.161c-.18.717-1.116 4.675-1.577 6.207-.196.65-.582.867-.954.89-.811.037-1.427-.538-2.213-1.054-1.23-.808-1.926-1.311-3.119-2.098-.977-.645-.344-1.001.213-1.582.146-.152 2.677-2.453 2.725-2.66.006-.026.012-.12-.045-.17-.057-.05-.141-.033-.202-.019-.086.019-1.455.924-4.11 2.715-.389.267-.742.397-1.058.39-.348-.008-1.016-.197-1.513-.359-.61-.199-1.096-.305-1.054-.643.022-.177.266-.357.733-.54 2.874-1.255 4.79-2.081 5.748-2.479 2.737-1.137 3.307-1.336 3.68-1.342.082-.001.265.019.384.115.1.081.128.19.141.267.013.076.03.249.017.384z"/>
+              </svg>
+              <div className="text-left">
+                <div className="text-base md:text-sm">MaxMessenger</div>
+                <div className="text-sm md:text-xs opacity-90">{chatSettings.maxmessenger}</div>
               </div>
             </a>
 
