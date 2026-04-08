@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
 import { supabase, getServerUrl } from '../../utils/supabase/client';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';

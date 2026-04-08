@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
+import { useLanguage, type Language } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { createClient } from '../../utils/supabase/client';
 import { Save, Loader2 } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 type PageType = 'privacy-policy' | 'terms-of-service';
 

@@ -1,6 +1,8 @@
-import { createClient } from '../utils/supabase/client';
+import { useState } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext';
 import { Loader2, Home, RefreshCw } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface AuthProps {
   mode: 'login' | 'register';

@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { createClient } from '../../utils/supabase/client';
 import { Plus, Edit, Trash2, Loader2 } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface PromoCode {
   id: string;

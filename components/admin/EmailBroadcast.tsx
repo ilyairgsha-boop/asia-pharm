@@ -1,5 +1,8 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { createClient, getServerUrl, getAnonKey } from '../../utils/supabase/client';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 import { Send, Mail, Users, Loader2, Eye } from 'lucide-react';
 
 export const EmailBroadcast = () => {

@@ -1,5 +1,10 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { createClient, getServerUrl, getAnonKey } from '../../utils/supabase/client';
+import { Loader2, Send, Eye, X, Trash2, Search } from 'lucide-react';
 import { getMockOrders } from '../../utils/mockData';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface Order {
   id: string;
@@ -250,7 +255,7 @@ export const OrderManagement = () => {
       
       const supabase = createClient();
       
-      // Calculate subtotal without samples (пробники не участвуют в пограмме лоялности)
+      // Calculate subtotal without samples (пробники не участвуют в п��ограмме лоялности)
       const items = order.items || [];
       const subtotalWithoutSamples = items
         .filter((item: any) => !item.isSample)
@@ -336,7 +341,7 @@ export const OrderManagement = () => {
       const currentPoints = profileData?.loyalty_points || 0;
       const newPoints = currentPoints + pointsEarned;
       
-      console.log(` OrderManagement: Current points: ${currentPoints}`);
+      console.log(`�� OrderManagement: Current points: ${currentPoints}`);
       console.log(`📊 OrderManagement: New points will be: ${newPoints}`);
       
       // Update profile with new loyalty points

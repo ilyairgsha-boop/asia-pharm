@@ -1,5 +1,9 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { createClient } from '../../utils/supabase/client';
 import { Users, Check, X, Loader2, Award, Crown, ShoppingBag } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface User {
   id: string;

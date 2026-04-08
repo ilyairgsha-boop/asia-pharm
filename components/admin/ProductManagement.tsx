@@ -1,5 +1,11 @@
+import { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { Product } from '../../contexts/CartContext';
+import { createClient, getServerUrl } from '../../utils/supabase/client';
+import { Plus, Edit, Trash2, Loader2, Search, X } from 'lucide-react';
 import { getMockProducts } from '../../utils/mockData';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface Category {
   id: string;

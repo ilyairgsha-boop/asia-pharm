@@ -1,6 +1,14 @@
+import { useState, useEffect } from 'react';
+import { useLanguage } from '../contexts/LanguageContext';
+import { useCart, type StoreType, getCurrentPrice } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { createClient } from '../utils/supabase/client';
 import { ChevronDown, Package, Plane, MapPin, CreditCard, Tag, Gift, Info, X, QrCode, Building2, Loader2 } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 import { PrivacyPolicy } from './PrivacyPolicy';
+import { TermsOfService } from './TermsOfService';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { pluralizePoints } from '../utils/pluralize';
 
 interface CheckoutProps {
   onNavigate: (page: string) => void;
@@ -693,7 +701,7 @@ export const CheckoutNew = ({ onNavigate, store }: CheckoutProps) => {
               )}
             </div>
 
-            {/* Спосб оплаты */}
+            {/* Спос��б оплаты */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <h3 className="text-gray-800 mb-4">{t('paymentMethod')}</h3>
 

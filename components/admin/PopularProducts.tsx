@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '../../contexts/LanguageContext';
 import { createClient } from '../../utils/supabase/client';
 import { Star, GripVertical, ChevronUp, ChevronDown, X, Plus, Loader2, Eye, Save, RefreshCw } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 interface Product {
   id: string;

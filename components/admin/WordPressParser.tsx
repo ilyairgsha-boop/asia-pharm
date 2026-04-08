@@ -1,5 +1,9 @@
+import { useState } from 'react';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { createClient } from '../../utils/supabase/client';
 import { Upload, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { toast } from "sonner@2.0.3";
+import { toast } from 'sonner';
 
 export const WordPressParser = () => {
   const { t } = useLanguage();
