@@ -1745,47 +1745,34 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
 
     const supabase = getSupabaseAdmin();
 
-    // Get user's push subscriptions
-    console.log('🔍 Looking for push subscriptions for user:', userId);
-    const { data: subscriptions, error: subError } = await supabase
-      .from('user_push_subscriptions')
-      .select('player_id, id')
-      .eq('user_id', userId)
-      .eq('is_active', true);
+    // ✅ Check if user has push notifications enabled (via External User ID)
+    // We don't need to check player_ids - OneSignal will find all devices by External User ID
+    console.log('🔍 Checking if user has push notifications enabled:', userId);
+    
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('push_notifications_enabled, language')
+      .eq('id', userId)
+      .single();
 
-    if (subError) {
-      console.error('❌ Error fetching subscriptions:', subError);
-      return c.json({ error: 'Failed to fetch subscriptions', details: subError.message }, 500);
+    if (profileError) {
+      console.error('❌ Error fetching user profile:', profileError);
+      return c.json({ error: 'Failed to fetch user profile', details: profileError.message }, 500);
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
-      console.log('ℹ️ No active push subscriptions for user:', userId);
+    if (!profile || !profile.push_notifications_enabled) {
+      console.log('ℹ️ User has push notifications disabled:', userId);
       return c.json({ 
         success: false, 
-        message: 'No active push subscriptions',
+        message: 'User has push notifications disabled',
         userId,
         type
       }, 200);
     }
-
-    const playerIds = subscriptions.map(s => s.player_id).filter(Boolean);
-    console.log('📱 Found player IDs:', playerIds);
-
-    if (playerIds.length === 0) {
-      console.log('ℹ️ No valid player IDs found');
-      return c.json({ 
-        success: false, 
-        message: 'No valid player IDs'
-      }, 200);
-    }
+    
+    console.log('✅ User has push notifications enabled');
 
     // Get user's language
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('language')
-      .eq('id', userId)
-      .single();
-
     const userLanguage = profile?.language || 'ru';
     console.log('🌐 User language:', userLanguage);
 
@@ -1890,7 +1877,7 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     console.log('📤 Sending to OneSignal API...');
     console.log('🔧 Notification payload:', {
       appId: settings.appId,
-      playerIds: playerIds,
+      externalUserId: userId, // ✅ Changed from playerIds to externalUserId
       title: notificationData.headings.en,
       message: notificationData.contents.en,
       url: notificationData.url,
@@ -1920,9 +1907,9 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     const result = await response.json();
     console.log('✅ Push sent successfully:', {
       notificationId: result.id,
-      recipients: result.recipients || playerIds.length,
+      recipients: result.recipients || 'N/A', // ✅ Changed - no longer using playerIds.length
+      externalUserId: userId, // ✅ Added External User ID
       type,
-      userId,
       orderNumber,
       title,
       message
