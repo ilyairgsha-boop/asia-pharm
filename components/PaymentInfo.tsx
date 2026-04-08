@@ -50,6 +50,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
 
   const loadOrderDetails = async (id: string) => {
     try {
+      console.log('🔍 Loading order details for ID:', id);
       const supabase = createClient();
       const { data: order, error } = await supabase
         .from('orders')
@@ -58,7 +59,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         .single();
 
       if (error) {
-        console.error('Error loading order:', error);
+        console.error('❌ Error loading order:', error);
         return;
       }
 
@@ -67,9 +68,11 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         setOrderNumber(order.order_number || '');
         setPaymentMethod(order.payment_method || 'card');
         setTotalAmount(order.total_amount || 0);
+      } else {
+        console.warn('⚠️ No order found for ID:', id);
       }
     } catch (error) {
-      console.error('Error loading order details:', error);
+      console.error('❌ Exception loading order details:', error);
     }
   };
 

@@ -1824,9 +1824,12 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
       ? template.message(templateData) 
       : template.message;
     
-    const url = generatePushUrl(type, { orderId, orderNumber, trackingUrl });
+    // Use trackingNumber as trackingUrl if it's a URL
+    const actualTrackingUrl = trackingUrl || (trackingNumber && trackingNumber.startsWith('http') ? trackingNumber : null);
+    
+    const url = generatePushUrl(type, { orderId, orderNumber, trackingUrl: actualTrackingUrl });
 
-    console.log('📝 Push content:', { title, message, url, templateData });
+    console.log('📝 Push content:', { title, message, url, templateData, trackingNumber, actualTrackingUrl });
 
     // Get OneSignal settings
     const { settings, source } = await getOneSignalSettings();
