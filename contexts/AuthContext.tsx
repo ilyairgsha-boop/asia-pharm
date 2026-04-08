@@ -66,12 +66,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           isWholesaler: profile?.is_wholesaler || false,
         });
 
-        // Update OneSignal last active timestamp
+        // 🔔 Link OneSignal subscription to user (syncs all devices)
         try {
           const { oneSignalService } = await import('../utils/oneSignal');
+          console.log('🔔 Linking OneSignal subscription to user on session restore:', userData.id);
+          await oneSignalService.linkUserAfterLogin(userData.id);
+          
+          // Update last active timestamp
           await oneSignalService.updateLastActive();
         } catch (error) {
-          console.warn('⚠️ Could not update OneSignal last active:', error);
+          console.warn('⚠️ Could not link OneSignal subscription:', error);
         }
       }
     } catch (error) {
@@ -136,12 +140,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isWholesaler: profile?.is_wholesaler || false,
       });
 
-      // Update OneSignal last active timestamp
+      // 🔔 Link OneSignal subscription to user (syncs all devices)
       try {
+        console.log('🔔 Linking OneSignal subscription to user:', data.user.id);
         const { oneSignalService } = await import('../utils/oneSignal');
+        await oneSignalService.linkUserAfterLogin(data.user.id);
+        console.log('✅ OneSignal subscription linked to user');
+        
+        // Update last active timestamp
         await oneSignalService.updateLastActive();
       } catch (error) {
-        console.warn('⚠️ Could not update OneSignal last active:', error);
+        console.warn('⚠️ Could not link OneSignal subscription:', error);
       }
     }
   };
@@ -193,7 +202,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         }
         
         if (errorMessage.includes('User already registered')) {
-          throw new Error('Пользователь с таким email уже существует. Попробуйте войти.');
+          throw new Error('Пользователь с таким email уже существует. Попробу��те войти.');
         }
         
         // НОВАЯ ЛОГИКА: Если EDGE_RUNTIME ошибка - проверяем создался ли пользователь
