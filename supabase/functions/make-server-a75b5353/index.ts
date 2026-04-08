@@ -1617,46 +1617,46 @@ app.post('/make-server-a75b5353/api/translate/batch', requireAdmin, async (c) =>
 // Notification templates (multi-language)
 const PUSH_TEMPLATES: any = {
   order_pending: {
-    ru: { title: '✅ Заказ оформлен', message: (data: any) => `Заказ №${data.orderNumber} успешно оформлен` },
-    zh: { title: '✅ 订单已创建', message: (data: any) => `订单 №${data.orderNumber} 已成功创建` },
-    en: { title: '✅ Order Created', message: (data: any) => `Order №${data.orderNumber} successfully placed` },
-    vi: { title: '✅ Đơn hàng đã tạo', message: (data: any) => `Đơn hàng №${data.orderNumber} đã đặt thành công` },
+    ru: { title: '✅ Заказ успешно оформлен', message: (data: any) => `Заказ №${data.orderNumber} успешно оформлен. Ожидает оплаты.` },
+    zh: { title: '✅ 订单已成功下单', message: (data: any) => `订单 №${data.orderNumber} 已成功下单。等待付款。` },
+    en: { title: '✅ Order Successfully Placed', message: (data: any) => `Order №${data.orderNumber} successfully placed. Awaiting payment.` },
+    vi: { title: '✅ Đơn hàng đã đặt thành công', message: (data: any) => `Đơn hàng №${data.orderNumber} đã đặt thành công. Đang chờ thanh toán.` },
   },
   order_processing: {
-    ru: { title: '💳 Оплата получена', message: (data: any) => `Оплата заказа №${data.orderNumber} получена` },
-    zh: { title: '💳 已收到付款', message: (data: any) => `已收到订单 №${data.orderNumber} 的付款` },
-    en: { title: '💳 Payment Received', message: (data: any) => `Payment for order №${data.orderNumber} received` },
-    vi: { title: '💳 Đã nhận thanh toán', message: (data: any) => `Đã nhận thanh toán cho đơn hàng №${data.orderNumber}` },
+    ru: { title: '💳 Оплата заказа получена', message: (data: any) => `Оплата заказа №${data.orderNumber} получена. Заказ обрабатывается.` },
+    zh: { title: '💳 已收到订单付款', message: (data: any) => `已收到订单 №${data.orderNumber} 的付款。订单正在处理中。` },
+    en: { title: '💳 Order Payment Received', message: (data: any) => `Payment for order №${data.orderNumber} received. Processing order.` },
+    vi: { title: '💳 Đã nhận thanh toán đơn hàng', message: (data: any) => `Đã nhận thanh toán cho đơn hàng №${data.orderNumber}. Đang xử lý đơn hàng.` },
   },
   order_shipped: {
-    ru: { title: '📦 Заказ отправлен', message: (data: any) => `Заказ №${data.orderNumber} отправлен` },
-    zh: { title: '📦 订单已发货', message: (data: any) => `订单 №${data.orderNumber} 已发货` },
-    en: { title: '📦 Order Shipped', message: (data: any) => `Order №${data.orderNumber} has been shipped` },
-    vi: { title: '📦 Đơn hàng đã gửi', message: (data: any) => `Đơn hàng №${data.orderNumber} đã được gửi` },
+    ru: { title: '🚚 Заказ отправлен', message: (data: any) => `Заказ №${data.orderNumber} отправлен. Нажмите для отслеживания.` },
+    zh: { title: '🚚 订单已发货', message: (data: any) => `订单 №${data.orderNumber} 已发货。点击跟踪。` },
+    en: { title: '🚚 Order Shipped', message: (data: any) => `Order №${data.orderNumber} has been shipped. Click to track.` },
+    vi: { title: '🚚 Đơn hàng đã gửi', message: (data: any) => `Đơn hàng №${data.orderNumber} đã được gửi. Nhấp để theo dõi.` },
   },
   order_delivered: {
-    ru: { title: '🎉 Заказ доставлен', message: (data: any) => `Заказ №${data.orderNumber} доставлен! Спасибо за покупку` },
-    zh: { title: '🎉 订单已送达', message: (data: any) => `订单 №${data.orderNumber} 已送达！感谢您的购买` },
-    en: { title: '🎉 Order Delivered', message: (data: any) => `Order №${data.orderNumber} delivered! Thank you for your purchase` },
-    vi: { title: '🎉 Đơn hàng đã giao', message: (data: any) => `Đơn hàng №${data.orderNumber} đã giao! Cảm ơn bạn đã mua hàng` },
+    ru: { title: '📦 Заказ доставлен', message: (data: any) => `Заказ №${data.orderNumber} доставлен. Спасибо за покупку!` },
+    zh: { title: '📦 订单已送达', message: (data: any) => `订单 №${data.orderNumber} 已送达。感谢您的购买！` },
+    en: { title: '📦 Order Delivered', message: (data: any) => `Order №${data.orderNumber} has been delivered. Thank you for your purchase!` },
+    vi: { title: '📦 Đơn hàng đã giao', message: (data: any) => `Đơn hàng №${data.orderNumber} đã được giao. Cảm ơn bạn đã mua hàng!` },
   },
   order_cancelled: {
-    ru: { title: '❌ Заказ отменен', message: (data: any) => `Заказ №${data.orderNumber} отменен` },
-    zh: { title: '❌ 订单已取消', message: (data: any) => `订单 №${data.orderNumber} 已取消` },
-    en: { title: '❌ Order Cancelled', message: (data: any) => `Order №${data.orderNumber} has been cancelled` },
-    vi: { title: '❌ Đơn hàng đã hủy', message: (data: any) => `Đơn hàng №${data.orderNumber} đã bị hủy` },
+    ru: { title: '❌ Заказ отменен', message: (data: any) => `Заказ №${data.orderNumber} отменен.` },
+    zh: { title: '❌ 订单已取消', message: (data: any) => `订单 №${data.orderNumber} 已被取消。` },
+    en: { title: '❌ Order Cancelled', message: (data: any) => `Order №${data.orderNumber} has been cancelled.` },
+    vi: { title: '❌ Đơn hàng đã hủy', message: (data: any) => `Đơn hàng №${data.orderNumber} đã bị hủy.` },
   },
   welcome: {
-    ru: { title: '🎉 Добро пожаловать!', message: () => 'Благодарим Вас за подписку!' },
-    zh: { title: '🎉 欢迎！', message: () => '感谢您的订阅！' },
-    en: { title: '🎉 Welcome!', message: () => 'Thank you for subscribing!' },
-    vi: { title: '🎉 Chào mừng!', message: () => 'Cảm ơn bạn đã đăng ký!' },
+    ru: { title: '🎉 Добро пожаловать!', message: 'Добро пожаловать в Asia Pharm! Вы будете получать уведомления о статусе заказов.' },
+    zh: { title: '🎉 欢迎！', message: '欢迎来到Asia Pharm！您将收到有关订单状态的通知。' },
+    en: { title: '🎉 Welcome!', message: 'Welcome to Asia Pharm! You will receive notifications about your order status.' },
+    vi: { title: '🎉 Chào mừng!', message: 'Chào mừng đến với Asia Pharm! Bạn sẽ nhận được thông báo về trạng thái đơn hàng.' },
   },
   loyalty_earned: {
-    ru: { title: '⭐ Баллы начислены', message: (data: any) => `Начислено баллов лояльности: ${data.points}` },
-    zh: { title: '⭐ 积分已添加', message: (data: any) => `已添加忠诚度积分: ${data.points}` },
-    en: { title: '⭐ Points Earned', message: (data: any) => `Loyalty points earned: ${data.points}` },
-    vi: { title: '⭐ Điểm đã thêm', message: (data: any) => `Điểm thưởng đã nhận: ${data.points}` },
+    ru: { title: '🎁 Баллы начислены', message: (data: any) => `Начислено баллов лояльности: ${data.points}` },
+    zh: { title: '🎁 积分已获得', message: (data: any) => `已获得忠诚度积分: ${data.points}` },
+    en: { title: '🎁 Points Earned', message: (data: any) => `Loyalty points earned: ${data.points}` },
+    vi: { title: '🎁 Điểm đã nhận', message: (data: any) => `Điểm thưởng đã nhận: ${data.points}` },
   },
   loyalty_spent: {
     ru: { title: '💎 Баллы списаны', message: (data: any) => `Списано баллов лояльности: ${data.points}` },
@@ -1666,27 +1666,39 @@ const PUSH_TEMPLATES: any = {
   },
 };
 
-// Generate deep link URL
+// Generate deep link URL with hash navigation
 function generatePushUrl(type: string, data: any): string {
-  const baseUrl = 'https://asia-pharm.ru'; // Production URL - FIXED: Changed from vercel.app to asia-pharm.ru
+  const baseUrl = 'https://asia-pharm.ru'; // Production URL
   
-  // Since the app uses SPA navigation without real URL routes,
-  // we'll just link to the home page and let users navigate from there
-  // In the future, we can add URL parameters that the app can parse
+  // Use hash navigation for SPA routing
   switch (type) {
     case 'order_pending':
+      // Navigate to payment info page for this specific order
+      return data.orderId ? `${baseUrl}/#payment-${data.orderId}` : `${baseUrl}/#profile`;
+    
     case 'order_processing':
     case 'order_delivered':
     case 'order_cancelled':
+      // Navigate to profile with specific order selected
+      return data.orderId ? `${baseUrl}/#profile?order=${data.orderId}` : `${baseUrl}/#profile`;
+    
     case 'order_shipped':
-      // Link to home page - users can access orders from profile menu
-      return baseUrl;
+      // If trackingUrl exists (full link to tracking service), use it directly
+      // Otherwise, navigate to profile with order selected
+      if (data.trackingUrl && data.trackingUrl.startsWith('http')) {
+        return data.trackingUrl;
+      }
+      return data.orderId ? `${baseUrl}/#profile?order=${data.orderId}` : `${baseUrl}/#profile`;
+    
     case 'welcome':
+      // Welcome notification - navigate to home page
       return baseUrl;
+    
     case 'loyalty_earned':
     case 'loyalty_spent':
-      // Link to home page - users can access loyalty info from profile
-      return baseUrl;
+      // Loyalty notifications - navigate to profile loyalty tab
+      return `${baseUrl}/#profile?tab=loyalty`;
+    
     default:
       return baseUrl;
   }
