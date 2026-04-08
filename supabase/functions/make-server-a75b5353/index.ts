@@ -1856,10 +1856,15 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
 
     console.log('✅ OneSignal configured, sending push...');
 
+    // ✅ IMPORTANT: Use External User ID (Supabase User ID) instead of Player IDs
+    // After OneSignal.login(userId) implementation, all devices are linked via External ID
+    // This ensures notifications reach ALL user's devices (browser, PWA, mobile)
+    console.log('🎯 Using External User ID for targeting:', userId);
+
     // Prepare notification payload
     const notificationData: any = {
       app_id: settings.appId,
-      include_player_ids: playerIds,
+      include_external_user_ids: [userId], // ✅ Changed from include_player_ids to include_external_user_ids
       headings: { en: title },
       contents: { en: message },
       url: url,
