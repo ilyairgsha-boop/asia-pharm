@@ -218,6 +218,8 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
       const supabase = createClient();
       const newValue = !isSubscribed;
       
+      console.log('🔔 Toggle push subscription:', { currentValue: isSubscribed, newValue });
+      
       const { error } = await supabase
         .from('profiles')
         .update({ push_notifications_enabled: newValue })
@@ -228,12 +230,28 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
         
         // Если отключаем - деактивируем все устройства пользователя
         if (!newValue) {
+          console.log('🔕 Disabling push notifications...');
           await supabase
             .from('user_push_subscriptions')
             .update({ is_active: false })
             .eq('user_id', user.id);
           console.log('🔕 All push subscriptions deactivated');
+          
+          // Отписываемся от OneSignal
+          try {
+            const { oneSignalService } = await import('../utils/oneSignal');
+            const OneSignal = await oneSignalService.getOneSignalPublic();
+            if (OneSignal?.User?.PushSubscription) {
+              await OneSignal.User.PushSubscription.optOut();
+              console.log('✅ Opted out from OneSignal');
+            }
+          } catch (pushError) {
+            console.error('❌ Could not opt out from OneSignal:', pushError);
+          }
+          
+          toast.success(t('pushDisabled') || 'Push notifications disabled');
         } else {
+          console.log('✅ Enabling push notifications...');
           // Если включаем - активируем все устройства и подписываемся на текущем
           await supabase
             .from('user_push_subscriptions')
@@ -244,24 +262,41 @@ export const ProfileNew = ({ onNavigate, onProductClick }: ProfileNewProps) => {
           // Пытаемся подписаться на текущем устройстве
           try {
             const { oneSignalService } = await import('../utils/oneSignal');
+            console.log('🔍 OneSignal service loaded');
+            console.log('🔍 OneSignal enabled:', oneSignalService.isEnabled());
+            console.log('🔍 OneSignal configured:', oneSignalService.isConfigured());
+            
+            if (!oneSignalService.isConfigured()) {
+              console.error('❌ OneSignal not configured! Check settings in Admin panel.');
+              toast.error('OneSignal не настроен. Обратитесь к администратору.');
+              return;
+            }
+            
             if (oneSignalService.isEnabled()) {
+              console.log('🔔 Initializing OneSignal SDK...');
+              await oneSignalService.initializeSDK();
+              
               console.log('🔔 Calling subscribe() from profile...');
               const playerId = await oneSignalService.subscribe();
+              
               if (playerId) {
                 console.log('✅ Subscribed to push notifications with Player ID:', playerId);
+                toast.success(t('pushEnabled') || 'Push notifications enabled');
               } else {
                 console.warn('⚠️ Subscribe returned no Player ID');
+                toast.warning('Не удалось подписаться на уведомления. Проверьте разрешения браузера.');
               }
             } else {
-              console.warn('⚠️ OneSignal not enabled');
+              console.warn('⚠️ OneSignal not enabled in settings');
+              toast.error('Push-уведомления отключены. Включите в настройках админ-панели.');
             }
           } catch (pushError) {
             console.error('❌ Could not subscribe to push:', pushError);
+            toast.error('Ошибка подписки: ' + (pushError instanceof Error ? pushError.message : String(pushError)));
           }
         }
-        
-        toast.success(newValue ? (t('pushEnabled') || 'Push notifications enabled') : (t('pushDisabled') || 'Push notifications disabled'));
       } else {
+        console.error('❌ Error updating profile:', error);
         toast.error(t('subscriptionError') || 'Failed to update subscription');
       }
     } catch (error) {

@@ -134,6 +134,13 @@ export class OneSignalService {
     
     return window.OneSignal;
   }
+  
+  /**
+   * Public method to get OneSignal SDK instance (for external use)
+   */
+  async getOneSignalPublic(): Promise<any> {
+    return this.getOneSignal();
+  }
 
   /**
    * Initialize OneSignal SDK v16+ in browser
@@ -399,6 +406,24 @@ export class OneSignalService {
    */
   async subscribe(): Promise<string | null> {
     try {
+      console.log('🔔 Starting push notification subscription...');
+      console.log('🌐 Current hostname:', window.location.hostname);
+      console.log('🔍 Current URL:', window.location.href);
+      
+      // Check if on production domain
+      const isProduction = window.location.hostname === 'asia-pharm.ru' || 
+                          window.location.hostname === 'asia-pharm.com' ||
+                          window.location.hostname === 'www.asia-pharm.ru' ||
+                          window.location.hostname === 'www.asia-pharm.com';
+      
+      if (!isProduction) {
+        console.warn('⚠️ Not on production domain! OneSignal will NOT work.');
+        console.warn('💡 OneSignal only works on: https://asia-pharm.ru');
+        console.warn('🌐 Current domain:', window.location.hostname);
+        throw new Error('OneSignal доступен только на production домене asia-pharm.ru');
+      }
+      
+      console.log('✅ Production domain check passed');
       console.log('🔔 Requesting push notification permission...');
       
       const OneSignal = await this.getOneSignal();
@@ -1406,6 +1431,15 @@ export class OneSignalService {
 
 // Singleton instance
 export const oneSignalService = new OneSignalService();
+
+// DEBUG: Expose to window for console debugging
+if (typeof window !== 'undefined') {
+  (window as any).oneSignalService = oneSignalService;
+  console.log('🔧 oneSignalService exposed to window for debugging');
+  console.log('💡 Try: window.oneSignalService.isConfigured()');
+  console.log('💡 Try: window.oneSignalService.isEnabled()');
+  console.log('💡 Try: await window.oneSignalService.getUserId()');
+}
 
 // Type definitions for window.OneSignal (v16+)
 declare global {
