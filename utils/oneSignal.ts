@@ -371,9 +371,10 @@ export class OneSignalService {
         
         if (permission) {
           // Get Subscription ID (used for sending notifications in OneSignal API)
-          const subscriptionId = await OneSignal.User?.PushSubscription?.id;
-          const onesignalUserId = await OneSignal.User?.onesignalId;
-          const externalId = await OneSignal.User?.externalId;
+          // IMPORTANT: In v16, these are properties, not promises - remove await
+          const subscriptionId = OneSignal.User?.PushSubscription?.id;
+          const onesignalUserId = OneSignal.User?.onesignalId;
+          const externalId = OneSignal.User?.externalId;
           
           console.log('🔍 OneSignal IDs:');
           console.log('Subscription ID (for notifications):', subscriptionId);
@@ -424,6 +425,30 @@ export class OneSignalService {
       }
       
       console.log('✅ Production domain check passed');
+      
+      // Check Service Worker registration
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        console.log('🔍 Service Workers registered:', registrations.length);
+        registrations.forEach(reg => {
+          console.log('  - Scope:', reg.scope);
+          console.log('  - Active:', !!reg.active);
+        });
+        
+        // Check if OneSignal SW is registered
+        const oneSignalSW = registrations.find(reg => 
+          reg.active?.scriptURL.includes('OneSignalSDKWorker')
+        );
+        
+        if (!oneSignalSW) {
+          console.warn('⚠️ OneSignal Service Worker NOT found!');
+          console.warn('💡 Expected: /OneSignalSDKWorker.js');
+          console.warn('💡 Check that file exists at: ' + window.location.origin + '/OneSignalSDKWorker.js');
+        } else {
+          console.log('✅ OneSignal Service Worker found:', oneSignalSW.active?.scriptURL);
+        }
+      }
+      
       console.log('🔔 Requesting push notification permission...');
       
       const OneSignal = await this.getOneSignal();
@@ -437,8 +462,9 @@ export class OneSignalService {
       console.log('📋 Current permission:', currentPermission);
       
       // Check if already subscribed
-      const existingId = await OneSignal.User?.PushSubscription?.id;
-      const existingOptedIn = await OneSignal.User?.PushSubscription?.optedIn;
+      // IMPORTANT: In v16, these are properties, not promises
+      const existingId = OneSignal.User?.PushSubscription?.id;
+      const existingOptedIn = OneSignal.User?.PushSubscription?.optedIn;
       console.log('📊 Current subscription state:', { 
         id: existingId, 
         optedIn: existingOptedIn,
@@ -472,14 +498,14 @@ export class OneSignalService {
         await new Promise(resolve => setTimeout(resolve, 2000));
         
         // Verify optIn status
-        const optedIn = await OneSignal.User.PushSubscription.optedIn;
+        const optedIn = OneSignal.User.PushSubscription.optedIn;
         console.log('📊 OptedIn status after optIn():', optedIn);
         
         if (!optedIn) {
           console.warn('⚠️ optIn() called but status is still false, retrying...');
           await OneSignal.User.PushSubscription.optIn();
           await new Promise(resolve => setTimeout(resolve, 2000));
-          const retryOptedIn = await OneSignal.User.PushSubscription.optedIn;
+          const retryOptedIn = OneSignal.User.PushSubscription.optedIn;
           console.log('📊 OptedIn status after retry:', retryOptedIn);
           
           if (!retryOptedIn) {
@@ -497,9 +523,10 @@ export class OneSignalService {
       await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличено с 2s до 3s
       
       // Get Subscription ID (used for notifications API)
-      const subscriptionId = await OneSignal.User?.PushSubscription?.id;
-      const onesignalUserId = await OneSignal.User?.onesignalId;
-      const externalId = await OneSignal.User?.externalId;
+      // IMPORTANT: In v16, these are properties, not promises
+      const subscriptionId = OneSignal.User?.PushSubscription?.id;
+      const onesignalUserId = OneSignal.User?.onesignalId;
+      const externalId = OneSignal.User?.externalId;
       
       console.log('🔍 Got IDs from OneSignal:');
       console.log('Subscription ID (for notifications):', subscriptionId);
@@ -531,7 +558,7 @@ export class OneSignalService {
         await this.syncSubscriptionToDatabase(subscriptionId);
         
         // Double-check that user is opted in
-        const finalOptedIn = await OneSignal.User.PushSubscription.optedIn;
+        const finalOptedIn = OneSignal.User.PushSubscription.optedIn;
         console.log('📊 Final optedIn status:', finalOptedIn);
         
         if (!finalOptedIn) {
@@ -542,7 +569,7 @@ export class OneSignalService {
             
             // Wait and check again
             await new Promise(resolve => setTimeout(resolve, 1500));
-            const afterForceOptIn = await OneSignal.User.PushSubscription.optedIn;
+            const afterForceOptIn = OneSignal.User.PushSubscription.optedIn;
             console.log('📊 OptedIn after forced opt-in:', afterForceOptIn);
             
             if (!afterForceOptIn) {
@@ -594,7 +621,7 @@ export class OneSignalService {
         await new Promise(resolve => setTimeout(resolve, 3000));
         
         // Get Subscription ID on retry
-        const retrySubId = await OneSignal.User?.PushSubscription?.id;
+        const retrySubId = OneSignal.User?.PushSubscription?.id;
         console.log('🔍 Retry Subscription ID:', retrySubId);
         
         if (retrySubId) {
@@ -852,7 +879,7 @@ export class OneSignalService {
         console.log('✅ Subscription linked to user after login');
         
         // Get subscription ID and sync to database
-        const subscriptionId = await OneSignal.User?.PushSubscription?.id;
+        const subscriptionId = OneSignal.User?.PushSubscription?.id;
         if (subscriptionId) {
           await this.syncSubscriptionToDatabase(subscriptionId);
         }
@@ -1409,8 +1436,8 @@ export class OneSignalService {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Get subscription ID
-      const subscriptionId = await OneSignal.User?.PushSubscription?.id;
-      const optedIn = await OneSignal.User?.PushSubscription?.optedIn;
+      const subscriptionId = OneSignal.User?.PushSubscription?.id;
+      const optedIn = OneSignal.User?.PushSubscription?.optedIn;
       
       console.log('📊 Subscription result:', { subscriptionId, optedIn });
       
