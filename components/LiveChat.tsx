@@ -150,7 +150,6 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
               </svg>
               <div className="text-left">
                 <div className="text-base md:text-sm">Telegram</div>
-                <div className="text-sm md:text-xs opacity-90">{chatSettings.telegram}</div>
               </div>
             </a>
 
@@ -166,7 +165,6 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
               </svg>
               <div className="text-left">
                 <div className="text-base md:text-sm">WhatsApp</div>
-                <div className="text-sm md:text-xs opacity-90">{chatSettings.whatsapp}</div>
               </div>
             </a>
 
@@ -182,7 +180,6 @@ export const LiveChat = ({ onNavigate }: LiveChatProps) => {
               </svg>
               <div className="text-left">
                 <div className="text-base md:text-sm">MaxMessenger</div>
-                <div className="text-sm md:text-xs opacity-90">{chatSettings.maxmessenger}</div>
               </div>
             </a>
 
