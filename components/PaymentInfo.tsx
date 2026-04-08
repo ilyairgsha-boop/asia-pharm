@@ -54,7 +54,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
       const supabase = createClient();
       const { data: order, error } = await supabase
         .from('orders')
-        .select('order_number, payment_method, total_amount')
+        .select('order_number, payment_method, total')
         .eq('id', id)
         .single();
 
@@ -67,7 +67,7 @@ export const PaymentInfo = ({ onNavigate, orderNumber: propOrderNumber, paymentM
         console.log('✅ Order loaded:', order);
         setOrderNumber(order.order_number || '');
         setPaymentMethod(order.payment_method || 'card');
-        setTotalAmount(order.total_amount || 0);
+        setTotalAmount(order.total || 0);
       } else {
         console.warn('⚠️ No order found for ID:', id);
       }
