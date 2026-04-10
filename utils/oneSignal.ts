@@ -551,10 +551,7 @@ export class OneSignalService {
         console.log('🔍 Verifying in OneSignal dashboard...');
         console.log('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/audiences');
         
-        // Link External User ID first (must be done after subscription is created)
-        await this.linkExternalUserIdIfNeeded(OneSignal);
-        
-        // Then sync Subscription ID to database
+        // Sync Subscription ID to database (External User ID already set by caller)
         await this.syncSubscriptionToDatabase(subscriptionId);
         
         // Double-check that user is opted in
