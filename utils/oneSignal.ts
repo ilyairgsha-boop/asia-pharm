@@ -146,6 +146,8 @@ export class OneSignalService {
    * Initialize OneSignal SDK v16+ in browser
    */
   async initializeSDK(): Promise<void> {
+    console.log('🚀🚀🚀 NEW CODE LOADED - VERSION 2024-04-10-FINAL 🚀🚀🚀');
+    
     // Reload settings to get latest values
     this.reloadSettings();
     
@@ -612,7 +614,7 @@ export class OneSignalService {
       if (error) {
         console.error('❌ Error syncing subscription:', error);
         console.error('❌ Error code:', error.code);
-        console.error('��� Error message:', error.message);
+        console.error(' Error message:', error.message);
         console.error('❌ Error details:', error.details);
       } else {
         console.log('✅ Subscription synced to database successfully');
