@@ -14,6 +14,8 @@
  * - Update last active: await oneSignalService.updateLastActive()
  */
 
+console.log('🔥🔥🔥 ONESIGNAL.TS LOADED - NEW VERSION 2024-04-10-FINAL 🔥🔥🔥');
+
 import { getServerUrl } from './supabase/client';
 
 export interface PushNotificationData {
