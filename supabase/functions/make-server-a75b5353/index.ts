@@ -1918,9 +1918,9 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     return c.json({ 
       success: true, 
       id: result.id,
-      recipients: result.recipients || playerIds.length,
+      recipients: result.recipients || 'N/A', // ✅ OneSignal will return actual recipient count
+      externalUserId: userId, // ✅ Using External User ID for targeting
       type,
-      userId,
       orderNumber,
       message
     });
