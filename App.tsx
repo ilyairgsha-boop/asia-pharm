@@ -8,34 +8,8 @@ import { CategoryMenu } from './components/CategoryMenu';
 import { DiseaseSidebar } from './components/DiseaseSidebar';
 import { HomePage } from './components/HomePage';
 import { CartMultiStore } from './components/CartMultiStore';
-import { CheckoutNew } from './components/CheckoutNew';
-import { PaymentInfo } from './components/PaymentInfo';
-import { Auth } from './components/Auth';
-import { ProfileNew } from './components/ProfileNew';
-import { AdminPanelNew } from './components/admin/AdminPanelNew';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { TermsOfService } from './components/TermsOfService';
-import { LoyaltyProgram } from './components/LoyaltyProgram';
-import { LiveChat } from './components/LiveChat';
-import { CookieConsent } from './components/CookieConsent';
-import { ProductDetailsModal } from './components/ProductDetailsModal';
-import { CreateAdminPage } from './components/CreateAdminPage';
-import { PopUpModal } from './components/PopUpModal';
-import { ThemeDecorations } from './components/ThemeDecorations';
-import { Footer } from './components/Footer';
-import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner';
-import { ShoppingCart } from 'lucide-react';
-import { DatabaseStatus } from './components/DatabaseStatus';
-import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
-import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
-import { clearOldCategories } from './utils/clearOldCategories';
-import { MOCK_MODE } from './utils/mockMode';
-import { oneSignalService } from './utils/oneSignal'; // RESTORED: Static import needed for multiple uses
-import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
-import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
-import './utils/clearOldCategories'; // Import to make functions available in console
-import './utils/oneSignalDebug'; // Import debug tools
+
+console.log('🚀 APP.TSX LOADED - VERSION 2024-04-10-FINAL 🚀');
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
