@@ -149,41 +149,33 @@ export class OneSignalService {
     // Reload settings to get latest values
     this.reloadSettings();
     
-    if (!this.isEnabled()) {
-      console.log('ℹ️ OneSignal not enabled or not configured, skipping initialization');
+    if (!this.isConfigured()) {
+      console.log('ℹ️ OneSignal not configured (missing App ID or API Key), skipping initialization');
       return;
     }
 
-    // ✅ ПРОВЕРКА ДОМЕНА - OneSignal работает только на production
-    const isProduction = window.location.hostname === 'asia-pharm.ru' || 
-                        window.location.hostname === 'asia-pharm.com' ||
-                        window.location.hostname === 'www.asia-pharm.ru' ||
-                        window.location.hostname === 'www.asia-pharm.com';
-    
-    if (!isProduction) {
-      console.log('ℹ️ OneSignal initialization skipped: Not on production domain');
-      console.log('💡 OneSignal will work on: https://asia-pharm.ru');
-      console.log('🌐 Current domain:', window.location.hostname);
+    if (!this.isEnabled()) {
+      console.log('ℹ️ OneSignal not enabled in settings, skipping initialization');
       return;
     }
 
     // If already initialized, skip
     if (this.isInitialized) {
-      console.log('✅ OneSignal already initialized in service, skipping');
+      console.log('✅ OneSignal already initialized, skipping');
       return;
     }
 
-    // ⚠️ IMPORTANT: OneSignal is now initialized in index.html <head>
-    // We just need to wait for it to be ready and set up our listeners
-    console.log('⏳ Waiting for OneSignal SDK to be ready (initialized in index.html)...');
+    console.log('🔧 Initializing OneSignal SDK v16...');
+    console.log('📋 App ID:', this.appId);
     
     try {
+      // Wait for OneSignal SDK to load
       const OneSignal = await this.getOneSignal();
       
-      // Check if OneSignal is already initialized globally (should be true from index.html)
-      // @ts-ignore - accessing internal state
+      // Check if already initialized
+      // @ts-ignore
       if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
-        console.log('✅ OneSignal already initialized globally (from index.html)');
+        console.log('✅ OneSignal already initialized globally');
         this.isInitialized = true;
         
         // Set up our event listeners if not already done
@@ -192,100 +184,23 @@ export class OneSignalService {
           (window as any).__oneSignalEventListenerSetup = true;
         }
         
-        // Check current subscription status
         await this.checkInitialSubscription(OneSignal);
         return;
       }
       
-      // If not initialized yet, wait a bit more for index.html init to complete
-      console.log('⏳ OneSignal not yet initialized, waiting 2 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Check again
-      // @ts-ignore
-      if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
-        console.log('✅ OneSignal now initialized (from index.html after wait)');
-        this.isInitialized = true;
-        
-        if (!((window as any).__oneSignalEventListenerSetup)) {
-          this.setupEventListeners(OneSignal);
-          (window as any).__oneSignalEventListenerSetup = true;
-        }
-        
-        await this.checkInitialSubscription(OneSignal);
-        return;
-      }
-      
-      console.warn('⚠️ OneSignal not initialized from index.html, this is unexpected');
-      console.warn('⚠️ Check that OneSignal script is in <head> of index.html');
-    } catch (error) {
-      console.error('❌ Error waiting for OneSignal initialization:', error);
-      throw error;
-    }
-  }
-
-  /**
-   * Initialize OneSignal v16+ with current settings
-   * ⚠️ DEPRECATED: Now handled by index.html <head> script
-   * This method is kept for backwards compatibility but should not be called
-   */
-  private async initializeOneSignal(): Promise<void> {
-    if (this.isInitialized) {
-      console.log('⚠️ OneSignal already initialized in this instance, skipping init call');
-      return;
-    }
-    
-    console.log('🔧 Initializing OneSignal v16+ with App ID:', this.appId);
-    console.log('🔑 App ID length:', this.appId.length);
-    console.log('🔑 App ID format check:', /^[a-f0-9-]{36}$/i.test(this.appId) ? 'Valid UUID' : 'Invalid UUID');
-    
-    try {
-      // Get OneSignal SDK instance
-      const OneSignal = await this.getOneSignal();
-      
-      console.log('🔧 OneSignal SDK loaded, type:', typeof OneSignal);
-      console.log('🔧 OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
-      
-      // Check if OneSignal is already initialized globally
-      // @ts-ignore - accessing internal state
-      if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
-        console.log('✅ OneSignal already initialized globally, reusing existing instance');
-        this.isInitialized = true;
-        
-        // Still set up our event listener if not already done
-        if (!((window as any).__oneSignalEventListenerSetup)) {
-          this.setupEventListeners(OneSignal);
-          (window as any).__oneSignalEventListenerSetup = true;
-        }
-        
-        // Check current subscription status
-        await this.checkInitialSubscription(OneSignal);
-        return;
-      }
-      
+      // Initialize OneSignal with settings from localStorage
       console.log('🔧 Calling OneSignal.init()...');
-      
-      // Initialize using v16 API
       await OneSignal.init({
         appId: this.appId,
-        allowLocalhostAsSecureOrigin: true,
-        
-        // Service Worker configuration
+        allowLocalhostAsSecureOrigin: true, // Allow testing on localhost
         serviceWorkerParam: { scope: '/' },
         serviceWorkerPath: 'OneSignalSDKWorker.js',
-        
-        // Notifications
-        notifyButton: {
-          enable: false,
-        },
-        
-        // Don't auto-subscribe - user must click button
-        autoRegister: false,
-        autoResubscribe: true,
+        notifyButton: { enable: false }, // Disable default button
+        autoRegister: false, // Don't auto-subscribe
+        autoResubscribe: true, // Re-subscribe if user clears data
       });
       
-      console.log('✅ OneSignal.init() completed successfully');
-      
+      console.log('✅ OneSignal.init() completed');
       this.isInitialized = true;
       
       // Mark as initialized globally
@@ -299,16 +214,16 @@ export class OneSignalService {
         (window as any).__oneSignalEventListenerSetup = true;
       }
       
-      console.log('✅ OneSignal v16+ initialized successfully');
+      console.log('✅ OneSignal SDK initialized successfully');
       
       // Check initial subscription status
       await this.checkInitialSubscription(OneSignal);
     } catch (error) {
-      console.error('❌ Error initializing OneSignal v16:', error);
+      console.error('❌ Error initializing OneSignal:', error);
       
       // Don't throw if already initialized
       if (error instanceof Error && error.message.includes('already initialized')) {
-        console.log('✅ Recovering from "already initialized" error - SDK is ready');
+        console.log('✅ Recovering from "already initialized" error');
         this.isInitialized = true;
         if (typeof window !== 'undefined') {
           (window as any).__oneSignalInitialized = true;
@@ -319,7 +234,7 @@ export class OneSignalService {
       throw error;
     }
   }
-  
+
   /**
    * Set up OneSignal event listeners
    */
