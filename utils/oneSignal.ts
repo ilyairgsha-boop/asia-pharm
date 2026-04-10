@@ -323,48 +323,6 @@ export class OneSignalService {
   async subscribe(): Promise<string | null> {
     try {
       console.log('🔔 Starting push notification subscription...');
-      console.log('🌐 Current hostname:', window.location.hostname);
-      console.log('🔍 Current URL:', window.location.href);
-      
-      // Check if on production domain
-      const isProduction = window.location.hostname === 'asia-pharm.ru' || 
-                          window.location.hostname === 'asia-pharm.com' ||
-                          window.location.hostname === 'www.asia-pharm.ru' ||
-                          window.location.hostname === 'www.asia-pharm.com';
-      
-      if (!isProduction) {
-        console.warn('⚠️ Not on production domain! OneSignal will NOT work.');
-        console.warn('💡 OneSignal only works on: https://asia-pharm.ru');
-        console.warn('🌐 Current domain:', window.location.hostname);
-        throw new Error('OneSignal доступен только на production домене asia-pharm.ru');
-      }
-      
-      console.log('✅ Production domain check passed');
-      
-      // Check Service Worker registration
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        console.log('🔍 Service Workers registered:', registrations.length);
-        registrations.forEach(reg => {
-          console.log('  - Scope:', reg.scope);
-          console.log('  - Active:', !!reg.active);
-        });
-        
-        // Check if OneSignal SW is registered
-        const oneSignalSW = registrations.find(reg => 
-          reg.active?.scriptURL.includes('OneSignalSDKWorker')
-        );
-        
-        if (!oneSignalSW) {
-          console.warn('⚠️ OneSignal Service Worker NOT found!');
-          console.warn('💡 Expected: /OneSignalSDKWorker.js');
-          console.warn('💡 Check that file exists at: ' + window.location.origin + '/OneSignalSDKWorker.js');
-        } else {
-          console.log('✅ OneSignal Service Worker found:', oneSignalSW.active?.scriptURL);
-        }
-      }
-      
-      console.log('🔔 Requesting push notification permission...');
       
       const OneSignal = await this.getOneSignal();
       
@@ -377,7 +335,6 @@ export class OneSignalService {
       console.log('📋 Current permission:', currentPermission);
       
       // Check if already subscribed
-      // IMPORTANT: In v16, these are properties, not promises
       const existingId = OneSignal.User?.PushSubscription?.id;
       const existingOptedIn = OneSignal.User?.PushSubscription?.optedIn;
       console.log('📊 Current subscription state:', { 
@@ -402,7 +359,6 @@ export class OneSignalService {
       }
       
       // CRITICAL: ALWAYS call optIn() to ensure user is subscribed on OneSignal servers
-      // Even if we already have a subscription ID, the user might not be opted-in on server
       console.log('🔔 Calling optIn() to subscribe on OneSignal servers...');
       try {
         await OneSignal.User.PushSubscription.optIn();
@@ -435,10 +391,9 @@ export class OneSignalService {
       
       // Wait for subscription ID to appear
       console.log('⏳ Waiting for Subscription ID...');
-      await new Promise(resolve => setTimeout(resolve, 3000)); // Увеличено с 2s до 3s
+      await new Promise(resolve => setTimeout(resolve, 3000));
       
       // Get Subscription ID (used for notifications API)
-      // IMPORTANT: In v16, these are properties, not promises
       const subscriptionId = OneSignal.User?.PushSubscription?.id;
       const onesignalUserId = OneSignal.User?.onesignalId;
       const externalId = OneSignal.User?.externalId;
@@ -469,50 +424,6 @@ export class OneSignalService {
         // Sync Subscription ID to database (External User ID already set by caller)
         await this.syncSubscriptionToDatabase(subscriptionId);
         
-        // Double-check that user is opted in
-        const finalOptedIn = OneSignal.User.PushSubscription.optedIn;
-        console.log('📊 Final optedIn status:', finalOptedIn);
-        
-        if (!finalOptedIn) {
-          console.warn('⚠️ User has Player ID but not opted in! Fixing...');
-          try {
-            await OneSignal.User.PushSubscription.optIn();
-            console.log('✅ Forced opt-in call completed');
-            
-            // Wait and check again
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            const afterForceOptIn = OneSignal.User.PushSubscription.optedIn;
-            console.log('📊 OptedIn after forced opt-in:', afterForceOptIn);
-            
-            if (!afterForceOptIn) {
-              console.error('❌ Still not opted in after force! Check OneSignal config.');
-              console.error('💡 Make sure your App ID and site origin are correct.');
-              console.error('💡 Check: https://dashboard.onesignal.com/apps/' + this.appId + '/settings');
-            } else {
-              console.log('✅ Successfully opted in after retry!');
-            }
-          } catch (e) {
-            console.error('❌ Failed to force opt-in:', e);
-          }
-        } else {
-          console.log('✅ User is properly opted in!');
-        }
-        
-        // Validate Subscription ID format before syncing
-        console.log('🔍 Validating Subscription ID format');
-        console.log('Subscription ID:', subscriptionId);
-        console.log('Type:', typeof subscriptionId);
-        console.log('Length:', subscriptionId?.length);
-        const isValidUUID = subscriptionId && /^[a-f0-9-]{36}$/i.test(subscriptionId);
-        console.log('Is valid UUID:', isValidUUID);
-        
-        if (!isValidUUID) {
-          console.error('❌ Invalid Subscription ID format! Cannot sync to database.');
-          console.error('Expected: UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)');
-          console.error('Got:', subscriptionId);
-          return null;
-        }
-        
         // Update last active timestamp
         await this.updateLastActive().catch(err => {
           console.warn('⚠️ Failed to update last active:', err);
@@ -522,7 +433,7 @@ export class OneSignalService {
       } else {
         console.warn('⚠️ Subscription initiated but no ID yet.');
         console.warn('📋 Debug info:', {
-          permission: newPermission,
+          permission: currentPermission,
           isPushSupported: OneSignal.Notifications.isPushSupported(),
           hasUser: !!OneSignal.User,
           hasPushSubscription: !!OneSignal.User?.PushSubscription
@@ -538,7 +449,6 @@ export class OneSignalService {
         
         if (retrySubId) {
           console.log('✅ Got Subscription ID on retry:', retrySubId);
-          console.log('🔍 Format check:', /^[a-f0-9-]{36}$/i.test(retrySubId) ? 'Valid UUID' : 'Invalid');
           await this.syncSubscriptionToDatabase(retrySubId);
           return retrySubId;
         }
