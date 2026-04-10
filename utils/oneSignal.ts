@@ -346,13 +346,32 @@ export class OneSignalService {
       // If permission is NOT granted yet, request it
       if (!currentPermission) {
         console.log('📤 Requesting permission...');
-        const permissionGranted = await OneSignal.Notifications.requestPermission();
         
-        console.log('✅ Permission request completed:', permissionGranted);
-        
-        if (!permissionGranted) {
-          console.warn('⚠️ Permission NOT granted, cannot subscribe');
-          return null;
+        try {
+          // Request permission with timeout
+          const permissionPromise = OneSignal.Notifications.requestPermission();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Permission request timeout after 10 seconds')), 10000)
+          );
+          
+          const permissionGranted = await Promise.race([permissionPromise, timeoutPromise]) as boolean;
+          
+          console.log('✅ Permission request completed:', permissionGranted);
+          
+          if (!permissionGranted) {
+            console.warn('⚠️ Permission NOT granted by user');
+            return null;
+          }
+        } catch (permError) {
+          console.error('❌ Error requesting permission:', permError);
+          
+          // Check if it's a timeout
+          if (permError instanceof Error && permError.message.includes('timeout')) {
+            console.error('❌ Permission request timed out - this may indicate a browser issue');
+            console.error('💡 Try: Clear browser data and reload the page');
+          }
+          
+          throw permError;
         }
       } else {
         console.log('✅ Permission already granted');
@@ -593,7 +612,7 @@ export class OneSignalService {
       if (error) {
         console.error('❌ Error syncing subscription:', error);
         console.error('❌ Error code:', error.code);
-        console.error('❌ Error message:', error.message);
+        console.error('��� Error message:', error.message);
         console.error('❌ Error details:', error.details);
       } else {
         console.log('✅ Subscription synced to database successfully');

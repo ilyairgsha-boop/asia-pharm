@@ -299,26 +299,49 @@ export const ProfileNew = ({ onNavigate, onProductClick, initialOrderId, initial
             return;
           }
           
-          console.log('🔔 Initializing OneSignal SDK...');
+          // STEP 1: Initialize OneSignal SDK
+          console.log('🔔 Step 1: Initializing OneSignal SDK...');
           await oneSignalService.initializeSDK();
+          console.log('✅ OneSignal SDK initialized');
           
-          // КРИТИЧЕСКИ ВАЖНО: Сначала установить External User ID
-          console.log('🔗 Setting External User ID:', user.id);
+          // Wait a bit for SDK to be fully ready
+          await new Promise(r => setTimeout(r, 500));
+          
+          // STEP 2: Get OneSignal instance and verify it's ready
+          console.log('🔔 Step 2: Getting OneSignal instance...');
           const OneSignal = await oneSignalService.getOneSignalPublic();
-          await OneSignal.login(user.id);
-          console.log('✅ External User ID set');
           
-          // Подождать немного чтобы OneSignal обработал login
+          // Verify OneSignal is ready
+          if (!OneSignal || !OneSignal.Notifications) {
+            console.error('❌ OneSignal not ready - Notifications API missing');
+            toast.error('OneSignal не готов. Попробуйте перезагрузить страницу.');
+            return;
+          }
+          
+          console.log('✅ OneSignal instance ready');
+          
+          // STEP 3: Set External User ID (link subscription to user account)
+          console.log('🔔 Step 3: Setting External User ID:', user.id);
+          try {
+            await OneSignal.login(user.id);
+            console.log('✅ External User ID set successfully');
+          } catch (loginError) {
+            console.error('❌ Failed to set External User ID:', loginError);
+            toast.error('Не удалось привязать подписку к аккаунту');
+            return;
+          }
+          
+          // Wait for OneSignal to process login
           await new Promise(r => setTimeout(r, 1000));
           
-          // Теперь подписаться
-          console.log('🔔 Calling subscribe() from profile...');
+          // STEP 4: Subscribe to push notifications
+          console.log('🔔 Step 4: Calling subscribe()...');
           const playerId = await oneSignalService.subscribe();
           
           if (playerId) {
-            console.log('✅ Subscribed to push notifications with Player ID:', playerId);
+            console.log('✅ Subscribed successfully with Player ID:', playerId);
             
-            // Обновляем профиль
+            // Update profile in database
             const { error } = await supabase
               .from('profiles')
               .update({ push_notifications_enabled: true })
@@ -327,10 +350,13 @@ export const ProfileNew = ({ onNavigate, onProductClick, initialOrderId, initial
             if (!error) {
               setIsSubscribed(true);
               toast.success(t('pushEnabled') || 'Push notifications enabled');
+            } else {
+              console.error('❌ Failed to update profile:', error);
+              toast.warning('Подписка создана, но не удалось обновить профиль');
             }
           } else {
             console.warn('⚠️ Subscribe returned no Player ID');
-            toast.warning('Не удалось подписаться на уведомления. Проверьте разрешения браузера.');
+            toast.warning('Не удалось подписаться. Проверьте разрешения браузера.');
           }
         } catch (pushError) {
           console.error('❌ Could not subscribe to push:', pushError);
