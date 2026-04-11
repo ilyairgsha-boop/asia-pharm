@@ -27,15 +27,9 @@ import { Toaster } from './components/ui/sonner';
 import { toast } from 'sonner';
 import { ShoppingCart } from 'lucide-react';
 import { DatabaseStatus } from './components/DatabaseStatus';
-import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
-import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
-import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
-import { oneSignalService } from './utils/oneSignal'; // RESTORED: Static import needed for multiple uses
-import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
-import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
-import './utils/clearOldCategories'; // Import to make functions available in console
-import './utils/oneSignalDebug'; // Import debug tools
+import { oneSignalService } from './utils/oneSignal';
+import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -143,16 +137,13 @@ function AppContent() {
     console.log('🔗 Edge Function: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353/');
     console.log('💡 Test Edge Function directly: https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353/test/db');
     
-    // Clear old category format (without translations) from localStorage
-    clearOldCategories();
-    
     // ✅ ВАЖНО: Очищаем старый кэш товаров при загрузке
     // Это исправляет проблему с неправильной структурой данных
     try {
       const oldCache = sessionStorage.getItem('asia_pharm_products_cache');
       if (oldCache) {
         const parsed = JSON.parse(oldCache);
-        // Проверяем версию кэша - если старая, удаляем
+        // Проверяем версию кэша - если стара��, удаляем
         if (parsed.version !== '1.0') {
           sessionStorage.removeItem('asia_pharm_products_cache');
           console.log('🗑️ Cleared old product cache');
@@ -164,265 +155,46 @@ function AppContent() {
       console.log('🗑️ Cleared corrupted product cache');
     }
     
-    // Load OneSignal settings from database and initialize
+    // Initialize OneSignal from localStorage
     const initOneSignal = async () => {
-      console.log('🚀 [INIT] Starting OneSignal initialization...');
-      
       try {
-        // Step 1: Check if settings table exists
-        console.log('📥 [INIT] Step 1: Checking settings table...');
-        const tableExists = await checkAndCreateSettingsTable();
-        
-        if (!tableExists) {
-          console.error('❌ [INIT] Settings table not accessible');
-          console.error('💡 [INIT] Run /CHECK_SETTINGS_TABLE.sql in Supabase SQL Editor');
-          return;
-        }
-        
-        // Step 2: Load OneSignal settings
-        console.log('📥 [INIT] Step 2: Loading OneSignal settings...');
-        const settings = await checkOneSignalSettings();
-        
-        if (settings) {
-          console.log('✅ [INIT] Settings loaded from database');
-          
-          // Migrate old apiKey to restApiKey
-          if (settings.apiKey && !settings.restApiKey) {
-            console.log('🔄 [INIT] Migrating apiKey to restApiKey...');
-            settings.restApiKey = settings.apiKey;
-            delete settings.apiKey;
-          }
-          
-          // Store in localStorage
-          console.log('💾 [INIT] Saving to localStorage...');
-          localStorage.setItem('oneSignalSettings', JSON.stringify(settings));
-          console.log('✅ [INIT] Saved to localStorage');
-          
-          // Reload in service
-          console.log('🔄 [INIT] Reloading in OneSignal service...');
-          oneSignalService.reloadSettings();
-        } else {
-          console.warn('⚠️ [INIT] No OneSignal settings in database');
-          console.warn('💡 [INIT] SOLUTION OPTIONS:');
-          console.warn('   1. Configure in Admin Panel -> OneSignal Settings');
-          console.warn('   2. Or run SQL: /FIX_ONESIGNAL_SETTINGS.sql');
-          console.warn('   3. Or insert manually:');
-          console.warn(`      INSERT INTO settings (key, value) VALUES ('oneSignal', '{"enabled":false}'::jsonb);`);
-          
-          // Check localStorage fallback
-          const localSettings = localStorage.getItem('oneSignalSettings');
-          if (localSettings) {
-            console.log('📦 [INIT] Using localStorage fallback');
-            try {
-              const parsed = JSON.parse(localSettings);
-              console.log('📋 [INIT] Fallback settings:', {
-                enabled: parsed?.enabled,
-                hasAppId: !!parsed?.appId,
-                hasRestApiKey: !!parsed?.restApiKey
-              });
-              
-              // If localStorage has valid settings, reload service
-              if (parsed?.enabled && parsed?.appId && parsed?.restApiKey) {
-                console.log('✅ [INIT] Valid settings in localStorage, using them');
-                oneSignalService.reloadSettings();
-              }
-            } catch (parseError) {
-              console.error('❌ [INIT] Failed to parse localStorage settings:', parseError);
-            }
-          } else {
-            console.warn('⚠️ [INIT] No settings in localStorage either');
-            console.warn('⚠️ [INIT] OneSignal will NOT work until configured');
-          }
-        }
-        
-        // Step 3: Initialize SDK if enabled
-        console.log('📥 [INIT] Step 3: Checking if enabled...');
-        const isEnabled = oneSignalService.isEnabled();
-        console.log('📊 [INIT] isEnabled:', isEnabled);
-        
-        if (isEnabled) {
-          console.log('🔔 [INIT] Initializing OneSignal SDK...');
+        if (oneSignalService.isEnabled()) {
+          console.log('🔔 Initializing OneSignal SDK...');
           await oneSignalService.initializeSDK();
-          console.log('✅ [INIT] OneSignal SDK initialized');
+          console.log('✅ OneSignal SDK initialized');
         } else {
-          console.log('ℹ️ [INIT] OneSignal not enabled, skipping SDK init');
+          console.log('ℹ️ OneSignal not enabled');
         }
-      } catch (error: any) {
-        console.error('❌ [INIT] Initialization failed:', error?.message);
+      } catch (error) {
+        console.error('❌ OneSignal init failed:', error);
       }
-      
-      console.log('🏁 [INIT] Completed');
     };
     
-    // Call async function
-    initOneSignal().catch(err => {
-      console.error('❌ [INIT] Unhandled error in initOneSignal:', err);
-    });
+    initOneSignal();
     
-    // Listen for OneSignal settings changes (from admin panel)
+    // Listen for OneSignal settings changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'oneSignalSettings') {
-        console.log('🔄 OneSignal settings changed in localStorage, reloading settings...');
+        console.log('🔄 OneSignal settings changed, please refresh page');
         oneSignalService.reloadSettings();
-        
-        // Note: Don't re-initialize SDK here to avoid "SDK already initialized" error
-        // The SDK will pick up new settings on next page load
-        console.log('💡 OneSignal settings updated. Please refresh the page to apply changes.');
       }
     };
     
     window.addEventListener('storage', handleStorageChange);
     
-    // Also listen for custom event (for same-tab changes)
     const handleSettingsUpdate = () => {
-      console.log('🔄 OneSignal settings updated, reloading...');
+      console.log('🔄 OneSignal settings updated');
       oneSignalService.reloadSettings();
     };
     
     window.addEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     
-    // Make oneSignalService available in console for debugging
+    // Debug tools
     if (typeof window !== 'undefined') {
       (window as any).oneSignalService = oneSignalService;
-      (window as any).testPushPrompt = () => {
-        console.log('🧪 Testing push prompt...');
-        setShowPushPrompt(true);
-      };
-      (window as any).checkOneSignalSetup = async () => {
-        console.log('🔍 === OneSignal Setup Check ===');
-        
-        // 1. Check table
-        console.log('\n1️⃣ Checking settings table...');
-        const tableExists = await checkAndCreateSettingsTable();
-        console.log('   Table exists:', tableExists);
-        
-        // 2. Check database settings
-        console.log('\n2️⃣ Checking database settings...');
-        const dbSettings = await checkOneSignalSettings();
-        console.log('   Database settings:', dbSettings);
-        
-        // 3. Check localStorage
-        console.log('\n3️⃣ Checking localStorage...');
-        const localSettings = localStorage.getItem('oneSignalSettings');
-        console.log('   localStorage:', localSettings ? JSON.parse(localSettings) : null);
-        
-        // 4. Check service
-        console.log('\n4️⃣ Checking OneSignal service...');
-        console.log('   isConfigured:', oneSignalService.isConfigured());
-        console.log('   isEnabled:', oneSignalService.isEnabled());
-        
-        // 5. Check SDK
-        console.log('\n5️⃣ Checking OneSignal SDK...');
-        console.log('   SDK loaded:', !!window.OneSignal);
-        
-        if (window.OneSignal) {
-          try {
-            const userId = await window.OneSignal.User.PushSubscription.id;
-            console.log('   User ID:', userId);
-            const isSubscribed = window.OneSignal.User.PushSubscription.optedIn;
-            console.log('   Subscribed:', isSubscribed);
-          } catch (e) {
-            console.log('   SDK check failed:', e);
-          }
-        }
-        
-        console.log('\n✅ Check complete');
-      };
-      (window as any).debugSupabase = {
-        getAnonKey,
-        getServerUrl,
-        testConnection: async () => {
-          const url = getServerUrl('');
-          const key = getAnonKey();
-          console.log('🧪 Testing Edge Function...');
-          console.log('URL:', url);
-          console.log('API Key:', key.substring(0, 20) + '...');
-          
-          try {
-            const response = await fetch(url, {
-              headers: {
-                'Authorization': `Bearer ${key}`,
-                'apikey': key,
-              }
-            });
-            const data = await response.json();
-            console.log('✅ Status:', response.status);
-            console.log('✅ Response:', data);
-            return data;
-          } catch (error) {
-            console.error('❌ Error:', error);
-            throw error;
-          }
-        },
-        testDirect: async () => {
-          const url = 'https://boybkoyidxwrgsayifrd.supabase.co/functions/v1/make-server-a75b5353';
-          const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJveWJrb3lpZHh3cmdzYXlpZnJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE4NDI3ODEsImV4cCI6MjA3NzQxODc4MX0.1R7AMGegpzlJL45AaeT2BJHQi4-Oswe1tMcAYXK8e2Y';
-          
-          console.log('🧪 Direct Test (hardcoded URL)...');
-          console.log('URL:', url);
-          
-          try {
-            const response = await fetch(url, {
-              headers: {
-                'Authorization': `Bearer ${key}`,
-                'apikey': key,
-              }
-            });
-            
-            console.log('📡 Status:', response.status);
-            console.log('📡 Headers:', Object.fromEntries(response.headers.entries()));
-            
-            const text = await response.text();
-            console.log('📄 Raw response:', text);
-            
-            try {
-              const data = JSON.parse(text);
-              console.log('✅ Parsed JSON:', data);
-              return data;
-            } catch {
-              console.log('⚠️ Response is not JSON');
-              return { raw: text };
-            }
-          } catch (error) {
-            console.error('❌ Error:', error);
-            throw error;
-          }
-        }
-      };
-      console.log('💡 Debug tools available:');
-      console.log('  - window.oneSignalService');
-      console.log('  - window.testPushPrompt() - test push prompt display');
-      console.log('  - await window.checkOneSignalSetup() - comprehensive OneSignal check');
-      console.log('  - await window.oneSignalDebug.checkPlayer(playerId) - check player in OneSignal');
-      console.log('  - await window.oneSignalDebug.getAllPlayers(10) - get all players');
-      console.log('  - await window.oneSignalDebug.getAppInfo() - get app info and player count');
-      console.log('  - window.debugSupabase.getAnonKey()');
-      console.log('  - window.debugSupabase.getServerUrl(path)');
-      console.log('  - await window.debugSupabase.testConnection()');
+      (window as any).testPushPrompt = () => setShowPushPrompt(true);
+      console.log('💡 Debug: window.oneSignalService, window.testPushPrompt()');
     }
-    
-    try {
-      // Check environment variables
-      const envCheck = checkEnvironmentVariables();
-      logEnvCheck(envCheck);
-    } catch (error) {
-      console.warn('⚠️ Environment check skipped:', error);
-    }
-
-    // Check database health
-    performHealthCheck().then((results) => {
-      logHealthCheckResults(results);
-      
-      if (results.status === 'unhealthy') {
-        console.warn('⚠️ Supabase connection is unhealthy. The application will use demo data.');
-      } else if (results.status === 'degraded') {
-        console.warn('⚠️ Supabase connection is degraded. Some features may not work correctly.');
-      } else {
-        console.log('✅ Database connection is healthy!');
-      }
-    }).catch((error) => {
-      console.warn('⚠️ Health check failed:', error);
-    });
     
     // Cleanup function
     return () => {
