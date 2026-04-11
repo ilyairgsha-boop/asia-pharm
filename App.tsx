@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 
 // Context Providers
@@ -304,7 +304,7 @@ function AppContent() {
     });
     
     if (user && !loading) {
-      // Проверяем флаг с небольшой задержкой, чтобы дать время на установку флага
+      // Проверяем флаг с небольшой задержкой, чтобы дать время на установку флаг��
       const checkPromptFlag = () => {
         const shouldShowPrompt = localStorage.getItem('show_push_prompt');
         console.log('🔔 Checking push prompt flag:', shouldShowPrompt);

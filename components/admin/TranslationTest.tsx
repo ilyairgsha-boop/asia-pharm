@@ -1,16 +1,6 @@
-import { useState } from 'react';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { useAuth } from '../../contexts/AuthContext';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
-import { Alert, AlertDescription } from '../ui/alert';
 import { Loader2, CheckCircle, XCircle, Languages, Trash2, Eye, EyeOff } from 'lucide-react';
 import { supabase, getServerUrl } from '../../utils/supabase/client';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 
 export const TranslationTest = () => {
   const { language, t } = useLanguage();
