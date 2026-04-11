@@ -121,18 +121,36 @@ export class OneSignalService {
    * Get OneSignal SDK instance
    */
   private async getOneSignal(): Promise<any> {
-    // Wait for SDK to be available
+    // Wait for SDK to be available and fully loaded
     let attempts = 0;
-    while (!window.OneSignal && attempts < 50) {
+    const maxAttempts = 100; // 10 seconds total
+    
+    while (attempts < maxAttempts) {
+      // Check if OneSignal exists AND is fully initialized
+      if (window.OneSignal && 
+          typeof window.OneSignal === 'object' &&
+          window.OneSignal.Notifications &&
+          window.OneSignal.User) {
+        console.log('✅ OneSignal SDK is ready');
+        return window.OneSignal;
+      }
+      
       await new Promise(resolve => setTimeout(resolve, 100));
       attempts++;
+      
+      // Log progress every 2 seconds
+      if (attempts % 20 === 0) {
+        console.log(`⏳ Waiting for OneSignal SDK... (${attempts/10}s)`);
+        console.log('Current state:', {
+          exists: !!window.OneSignal,
+          type: typeof window.OneSignal,
+          hasNotifications: !!(window.OneSignal && window.OneSignal.Notifications),
+          hasUser: !!(window.OneSignal && window.OneSignal.User)
+        });
+      }
     }
     
-    if (!window.OneSignal) {
-      throw new Error('OneSignal SDK not loaded after 5 seconds');
-    }
-    
-    return window.OneSignal;
+    throw new Error('OneSignal SDK not ready after 10 seconds');
   }
   
   /**
