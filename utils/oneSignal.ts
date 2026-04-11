@@ -127,8 +127,8 @@ export class OneSignalService {
     
     while (attempts < maxAttempts) {
       // Check if OneSignal exists AND is fully initialized
+      // SDK can be either function or object in v16+
       if (window.OneSignal && 
-          typeof window.OneSignal === 'object' &&
           window.OneSignal.Notifications &&
           window.OneSignal.User) {
         console.log('✅ OneSignal SDK is ready');
@@ -1478,7 +1478,7 @@ if (typeof window !== 'undefined') {
   (window as any).oneSignalService = oneSignalService;
   console.log('🔧 oneSignalService exposed to window for debugging');
   console.log('💡 Try: window.oneSignalService.isConfigured()');
-  console.log('💡 Try: window.oneSignalService.isEnabled()');
+  console.log('�� Try: window.oneSignalService.isEnabled()');
   console.log('💡 Try: await window.oneSignalService.getUserId()');
 }
 
