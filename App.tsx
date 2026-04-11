@@ -1,3 +1,40 @@
+import { useState, useEffect } from 'react';
+import { toast } from 'sonner@2.0.3';
+import { Toaster } from './components/ui/sonner';
+
+// Context Providers
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider, useCart } from './contexts/CartContext';
+
+// Components
+import { Header } from './components/Header';
+import { CategoryMenu } from './components/CategoryMenu';
+import { DiseaseSidebar } from './components/DiseaseSidebar';
+import { HomePage } from './components/HomePage';
+import { CartMultiStore } from './components/CartMultiStore';
+import { CheckoutNew } from './components/CheckoutNew';
+import { PaymentInfo } from './components/PaymentInfo';
+import { ProfileNew } from './components/ProfileNew';
+import { AdminPanelNew } from './components/admin/AdminPanelNew';
+import { Auth } from './components/Auth';
+import { CreateAdminPage } from './components/CreateAdminPage';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
+import { LoyaltyProgram } from './components/LoyaltyProgram';
+import { Footer } from './components/Footer';
+import { ProductDetailsModal } from './components/ProductDetailsModal';
+import { LiveChat } from './components/LiveChat';
+import { CookieConsent } from './components/CookieConsent';
+import { PopUpModal } from './components/PopUpModal';
+import { ThemeDecorations } from './components/ThemeDecorations';
+import { DatabaseStatus } from './components/DatabaseStatus';
+
+// Types
+import { Product, StoreType } from './types/product';
+
+// Utils
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
@@ -88,7 +125,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.3.2-PUSH-DIAGNOSTIC');
+    console.log('🚀 Asia Pharm - Starting application... v2.3.6-ALL-EXPORTS-FIXED');
     
     if (MOCK_MODE) {
       console.log('');
@@ -340,7 +377,7 @@ function AppContent() {
         
         if (error) {
           console.error('❌ Error fetching shared product:', error);
-          toast.error(t('productNotFound') || 'Товар не найден');
+          toast.error(t('productNotFound') || 'Товар не найдн');
         } else if (product) {
           console.log('✅ Shared product loaded:', product.name);
           
@@ -647,7 +684,7 @@ function AppContent() {
                   } catch (error: any) {
                     console.error('⚠️ Push subscription failed:', error);
                     toast.error(
-                      currentLanguage === 'ru' ? '❌ ��е удалось подписаться: ' + (error.message || 'Неизвестная ошибка') :
+                      currentLanguage === 'ru' ? '❌ е удалось подписаться: ' + (error.message || 'Неизвестная ошибка') :
                       currentLanguage === 'en' ? '❌ Subscription failed: ' + (error.message || 'Unknown error') :
                       currentLanguage === 'zh' ? '❌ 订阅失败：' + (error.message || '未知错误') :
                       '❌ Đăng ký thất bại: ' + (error.message || 'Lỗi không xác định')
