@@ -116,7 +116,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.2.8-SETTINGS-SYNC');
+    console.log('🚀 Asia Pharm - Starting application... v2.2.9-STABLE');
     
     if (MOCK_MODE) {
       console.log('');
@@ -143,7 +143,7 @@ function AppContent() {
       const oldCache = sessionStorage.getItem('asia_pharm_products_cache');
       if (oldCache) {
         const parsed = JSON.parse(oldCache);
-        // Проверяем версию кэша - если стара��, удаляем
+        // Проверяем версию кэша - если стара, удаляем
         if (parsed.version !== '1.0') {
           sessionStorage.removeItem('asia_pharm_products_cache');
           console.log('🗑️ Cleared old product cache');
