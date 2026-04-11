@@ -1,7 +1,33 @@
+import { useState, useEffect } from 'react';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider, useCart, type StoreType, type Product } from './contexts/CartContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { Header } from './components/Header';
+import { CategoryMenu } from './components/CategoryMenu';
+import { DiseaseSidebar } from './components/DiseaseSidebar';
+import { HomePage } from './components/HomePage';
+import { CartMultiStore } from './components/CartMultiStore';
+import { CheckoutNew } from './components/CheckoutNew';
+import { ProfileNew } from './components/ProfileNew';
+import { AdminPanelNew } from './components/admin/AdminPanelNew';
+import { Auth } from './components/Auth';
+import { LiveChat } from './components/LiveChat';
+import { CookieConsent } from './components/CookieConsent';
+import { ProductDetailsModal } from './components/ProductDetailsModal';
+import { PaymentInfo } from './components/PaymentInfo';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
+import { LoyaltyProgram } from './components/LoyaltyProgram';
+import { DatabaseStatus } from './components/DatabaseStatus';
+import { PopUpModal } from './components/PopUpModal';
+import { ThemeDecorations } from './components/ThemeDecorations';
+import { Footer } from './components/Footer';
+import { CreateAdminPage } from './components/CreateAdminPage';
 import { createClient } from './utils/supabase/client';
 import { toast, Toaster } from 'sonner';
-import { clearOldCategories } from './utils/categoryMigration';
-import { checkEnvironmentVariables, logEnvCheck } from './utils/envCheck';
+import { clearOldCategories } from './utils/clearOldCategories';
+import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
 import { performHealthCheck, logHealthCheckResults } from './utils/supabase/healthCheck';
 import { oneSignalService } from './utils/oneSignal';
 import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/supabase/settingsInit';
@@ -120,7 +146,7 @@ function AppContent() {
     clearOldCategories();
     
     // ✅ ВАЖНО: Очищаем старый кэш товаров при загрузке
-    // Это исправляет проблему с неправильной структурой данных
+    // Эо исправляет проблему с неправильной структурой данных
     try {
       const oldCache = sessionStorage.getItem('asia_pharm_products_cache');
       if (oldCache) {
@@ -858,7 +884,7 @@ function AppContent() {
                         // Only show warning on desktop (push notifications don't work on mobile web)
                         if (window.innerWidth > 768) {
                           toast.warning(
-                            currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще ра��.' :
+                            currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще ра.' :
                             currentLanguage === 'en' ? '⚠️ Subscription failed. Please try again.' :
                             currentLanguage === 'zh' ? '⚠️ 订阅失败。请重试。' :
                             '⚠️ Đăng ký thất bại. Vui lòng thử lại.'
