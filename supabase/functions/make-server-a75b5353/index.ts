@@ -1905,10 +1905,6 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     }
 
     const result = await response.json();
-    
-    // 🔍 DEBUG: Log full OneSignal response to see what we're getting
-    console.log('🔍 FULL OneSignal Response:', JSON.stringify(result, null, 2));
-    
     console.log('✅ Push sent successfully:', {
       notificationId: result.id,
       recipients: result.recipients || 'N/A', // ✅ Changed - no longer using playerIds.length
@@ -1922,9 +1918,9 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     return c.json({ 
       success: true, 
       id: result.id,
-      recipients: result.recipients || 'N/A', // ✅ OneSignal will return actual recipient count
-      externalUserId: userId, // ✅ Using External User ID for targeting
+      recipients: result.recipients || playerIds.length,
       type,
+      userId,
       orderNumber,
       message
     });

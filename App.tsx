@@ -1,14 +1,41 @@
-import { createClient } from './utils/supabase/client';
-import { toast, Toaster } from 'sonner';
-import { clearOldCategories } from './utils/clearOldCategories';
-import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
+import { useState, useEffect } from 'react';
+import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider, useCart, type StoreType, type Product } from './contexts/CartContext';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { Header } from './components/Header';
+import { CategoryMenu } from './components/CategoryMenu';
+import { DiseaseSidebar } from './components/DiseaseSidebar';
+import { HomePage } from './components/HomePage';
+import { CartMultiStore } from './components/CartMultiStore';
+import { CheckoutNew } from './components/CheckoutNew';
+import { PaymentInfo } from './components/PaymentInfo';
+import { Auth } from './components/Auth';
+import { ProfileNew } from './components/ProfileNew';
+import { AdminPanelNew } from './components/admin/AdminPanelNew';
+import { PrivacyPolicy } from './components/PrivacyPolicy';
+import { TermsOfService } from './components/TermsOfService';
+import { LoyaltyProgram } from './components/LoyaltyProgram';
+import { LiveChat } from './components/LiveChat';
+import { CookieConsent } from './components/CookieConsent';
+import { ProductDetailsModal } from './components/ProductDetailsModal';
+import { CreateAdminPage } from './components/CreateAdminPage';
+import { PopUpModal } from './components/PopUpModal';
+import { ThemeDecorations } from './components/ThemeDecorations';
+import { Footer } from './components/Footer';
+import { Toaster } from './components/ui/sonner';
+import { toast } from 'sonner';
+import { ShoppingCart } from 'lucide-react';
+import { DatabaseStatus } from './components/DatabaseStatus';
 import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
-import { oneSignalService } from './utils/oneSignal';
-import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
-import { getServerUrl, getAnonKey } from './utils/supabase/client';
+import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
+import { clearOldCategories } from './utils/clearOldCategories';
 import { MOCK_MODE } from './utils/mockMode';
-
-console.log('🚀 APP.TSX LOADED - VERSION 2024-04-10-FINAL 🚀');
+import { oneSignalService } from './utils/oneSignal'; // RESTORED: Static import needed for multiple uses
+import { createClient, getAnonKey, getServerUrl, supabase } from './utils/supabase/client';
+import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
+import './utils/clearOldCategories'; // Import to make functions available in console
+import './utils/oneSignalDebug'; // Import debug tools
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -120,7 +147,7 @@ function AppContent() {
     clearOldCategories();
     
     // ✅ ВАЖНО: Очищаем старый кэш товаров при загрузке
-    // Эо исправляет проблему с неправильной структурой данных
+    // Это исправляет проблему с неправильной структурой данных
     try {
       const oldCache = sessionStorage.getItem('asia_pharm_products_cache');
       if (oldCache) {
@@ -211,7 +238,7 @@ function AppContent() {
         // Step 3: Initialize SDK if enabled
         console.log('📥 [INIT] Step 3: Checking if enabled...');
         const isEnabled = oneSignalService.isEnabled();
-        console.log('��� [INIT] isEnabled:', isEnabled);
+        console.log('📊 [INIT] isEnabled:', isEnabled);
         
         if (isEnabled) {
           console.log('🔔 [INIT] Initializing OneSignal SDK...');
@@ -858,7 +885,7 @@ function AppContent() {
                         // Only show warning on desktop (push notifications don't work on mobile web)
                         if (window.innerWidth > 768) {
                           toast.warning(
-                            currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще ра.' :
+                            currentLanguage === 'ru' ? '⚠️ Не удалось подписаться. Попробуйте еще раз.' :
                             currentLanguage === 'en' ? '⚠️ Subscription failed. Please try again.' :
                             currentLanguage === 'zh' ? '⚠️ 订阅失败。请重试。' :
                             '⚠️ Đăng ký thất bại. Vui lòng thử lại.'

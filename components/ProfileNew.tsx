@@ -244,124 +244,84 @@ export const ProfileNew = ({ onNavigate, onProductClick, initialOrderId, initial
       
       console.log('🔔 Toggle push subscription:', { currentValue: isSubscribed, newValue });
       
-      // Если отключаем - просто отписываемся
-      if (!newValue) {
-        console.log('🔕 Disabling push notifications...');
+      const { error } = await supabase
+        .from('profiles')
+        .update({ push_notifications_enabled: newValue })
+        .eq('id', user.id);
+
+      if (!error) {
+        setIsSubscribed(newValue);
         
-        // Отписываемся от OneSignal
-        try {
-          const { oneSignalService } = await import('../utils/oneSignal');
-          const OneSignal = await oneSignalService.getOneSignalPublic();
-          if (OneSignal?.User?.PushSubscription) {
-            await OneSignal.User.PushSubscription.optOut();
-            await OneSignal.logout();
-            console.log('✅ Opted out from OneSignal');
+        // Если отключаем - деактивируем все устройства пользователя
+        if (!newValue) {
+          console.log('🔕 Disabling push notifications...');
+          await supabase
+            .from('user_push_subscriptions')
+            .update({ is_active: false })
+            .eq('user_id', user.id);
+          console.log('🔕 All push subscriptions deactivated');
+          
+          // Отписываемся от OneSignal
+          try {
+            const { oneSignalService } = await import('../utils/oneSignal');
+            const OneSignal = await oneSignalService.getOneSignalPublic();
+            if (OneSignal?.User?.PushSubscription) {
+              await OneSignal.User.PushSubscription.optOut();
+              console.log('✅ Opted out from OneSignal');
+            }
+          } catch (pushError) {
+            console.error('❌ Could not opt out from OneSignal:', pushError);
           }
-        } catch (pushError) {
-          console.error('❌ Could not opt out from OneSignal:', pushError);
-        }
-        
-        // Деактивируем в базе данных
-        await supabase
-          .from('user_push_subscriptions')
-          .update({ is_active: false })
-          .eq('user_id', user.id);
-        
-        // Обновляем профиль
-        const { error } = await supabase
-          .from('profiles')
-          .update({ push_notifications_enabled: false })
-          .eq('id', user.id);
-        
-        if (!error) {
-          setIsSubscribed(false);
+          
           toast.success(t('pushDisabled') || 'Push notifications disabled');
+        } else {
+          console.log('✅ Enabling push notifications...');
+          // Если включаем - активируем все устройства и подписываемся на текущем
+          await supabase
+            .from('user_push_subscriptions')
+            .update({ is_active: true })
+            .eq('user_id', user.id);
+          console.log('✅ All push subscriptions activated');
+          
+          // Пытаемся подписаться на текущем устройстве
+          try {
+            const { oneSignalService } = await import('../utils/oneSignal');
+            console.log('🔍 OneSignal service loaded');
+            console.log('🔍 OneSignal enabled:', oneSignalService.isEnabled());
+            console.log('🔍 OneSignal configured:', oneSignalService.isConfigured());
+            
+            if (!oneSignalService.isConfigured()) {
+              console.error('❌ OneSignal not configured! Check settings in Admin panel.');
+              toast.error('OneSignal не настроен. Обратитесь к администратору.');
+              return;
+            }
+            
+            if (oneSignalService.isEnabled()) {
+              console.log('🔔 Initializing OneSignal SDK...');
+              await oneSignalService.initializeSDK();
+              
+              console.log('🔔 Calling subscribe() from profile...');
+              const playerId = await oneSignalService.subscribe();
+              
+              if (playerId) {
+                console.log('✅ Subscribed to push notifications with Player ID:', playerId);
+                toast.success(t('pushEnabled') || 'Push notifications enabled');
+              } else {
+                console.warn('⚠️ Subscribe returned no Player ID');
+                toast.warning('Не удалось подписаться на уведомления. Проверьте разрешения браузера.');
+              }
+            } else {
+              console.warn('⚠️ OneSignal not enabled in settings');
+              toast.error('Push-уведомления отключены. Включите в настройках админ-панели.');
+            }
+          } catch (pushError) {
+            console.error('❌ Could not subscribe to push:', pushError);
+            toast.error('Ошибка подписки: ' + (pushError instanceof Error ? pushError.message : String(pushError)));
+          }
         }
       } else {
-        // Если включаем - подписываемся
-        console.log('✅ Enabling push notifications...');
-        
-        try {
-          const { oneSignalService } = await import('../utils/oneSignal');
-          console.log('🔍 OneSignal service loaded');
-          console.log('🔍 OneSignal enabled:', oneSignalService.isEnabled());
-          console.log('🔍 OneSignal configured:', oneSignalService.isConfigured());
-          
-          if (!oneSignalService.isConfigured()) {
-            console.error('❌ OneSignal not configured! Check settings in Admin panel.');
-            toast.error('OneSignal не настроен. Обратитесь к администратору.');
-            return;
-          }
-          
-          if (!oneSignalService.isEnabled()) {
-            console.warn('⚠️ OneSignal not enabled in settings');
-            toast.error('Push-уведомления отключены. Включите в настройках админ-панели.');
-            return;
-          }
-          
-          // STEP 1: Initialize OneSignal SDK
-          console.log('🔔 Step 1: Initializing OneSignal SDK...');
-          await oneSignalService.initializeSDK();
-          console.log('✅ OneSignal SDK initialized');
-          
-          // Wait a bit for SDK to be fully ready
-          await new Promise(r => setTimeout(r, 500));
-          
-          // STEP 2: Get OneSignal instance and verify it's ready
-          console.log('🔔 Step 2: Getting OneSignal instance...');
-          const OneSignal = await oneSignalService.getOneSignalPublic();
-          
-          // Verify OneSignal is ready
-          if (!OneSignal || !OneSignal.Notifications) {
-            console.error('❌ OneSignal not ready - Notifications API missing');
-            toast.error('OneSignal не готов. Попробуйте перезагрузить страницу.');
-            return;
-          }
-          
-          console.log('✅ OneSignal instance ready');
-          
-          // STEP 3: Set External User ID (link subscription to user account)
-          console.log('🔔 Step 3: Setting External User ID:', user.id);
-          try {
-            await OneSignal.login(user.id);
-            console.log('✅ External User ID set successfully');
-          } catch (loginError) {
-            console.error('❌ Failed to set External User ID:', loginError);
-            toast.error('Не удалось привязать подписку к аккаунту');
-            return;
-          }
-          
-          // Wait for OneSignal to process login
-          await new Promise(r => setTimeout(r, 1000));
-          
-          // STEP 4: Subscribe to push notifications
-          console.log('🔔 Step 4: Calling subscribe()...');
-          const playerId = await oneSignalService.subscribe();
-          
-          if (playerId) {
-            console.log('✅ Subscribed successfully with Player ID:', playerId);
-            
-            // Update profile in database
-            const { error } = await supabase
-              .from('profiles')
-              .update({ push_notifications_enabled: true })
-              .eq('id', user.id);
-            
-            if (!error) {
-              setIsSubscribed(true);
-              toast.success(t('pushEnabled') || 'Push notifications enabled');
-            } else {
-              console.error('❌ Failed to update profile:', error);
-              toast.warning('Подписка создана, но не удалось обновить профиль');
-            }
-          } else {
-            console.warn('⚠️ Subscribe returned no Player ID');
-            toast.warning('Не удалось подписаться. Проверьте разрешения браузера.');
-          }
-        } catch (pushError) {
-          console.error('❌ Could not subscribe to push:', pushError);
-          toast.error('Ошибка подписки: ' + (pushError instanceof Error ? pushError.message : String(pushError)));
-        }
+        console.error('❌ Error updating profile:', error);
+        toast.error(t('subscriptionError') || 'Failed to update subscription');
       }
     } catch (error) {
       console.error('Error toggling push subscription:', error);
