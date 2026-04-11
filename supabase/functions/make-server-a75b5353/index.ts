@@ -1,6 +1,6 @@
 // Asia-Pharm Server - Edge Function Entry Point
-// Version: 2.6.0-CUSTOMER-EMAIL-PUSH-FIX - Fixed email/push for customers, added welcome email
-// Build: 2025-01-13 12:00:00 UTC
+// Version: 2.6.1-PATHS-FIXED - Fixed component paths in App.tsx
+// Build: 2025-04-11 08:30:00 UTC
 // All routes prefixed with /make-server-a75b5353
 
 import { Hono } from 'npm:hono';
@@ -9,7 +9,7 @@ import { cors } from 'npm:hono/cors';
 import { createClient } from 'npm:@supabase/supabase-js';
 import * as kv from './kv_store.tsx';
 
-console.log('🚀 Starting Asia-Pharm Edge Function v2.6.0-CUSTOMER-EMAIL-PUSH-FIX...');
+console.log('🚀 Starting Asia-Pharm Edge Function v2.6.1-PATHS-FIXED...');
 console.log('📦 Supabase URL:', Deno.env.get('SUPABASE_URL'));
 console.log('🔑 Keys configured:', {
   anon: !!Deno.env.get('SUPABASE_ANON_KEY'),
@@ -1579,7 +1579,7 @@ app.post('/make-server-a75b5353/api/translate/batch', requireAdmin, async (c) =>
             
             translatedChunks.push(data.responseData.translatedText);
             
-            // Небольшая задержка между частями
+            // Не��ольшая задержка между частями
             await new Promise(resolve => setTimeout(resolve, 200));
           }
           
