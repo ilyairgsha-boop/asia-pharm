@@ -244,7 +244,7 @@ export class OneSignalService {
       const OneSignal = await this.getOneSignal();
       
       console.log('🔧 OneSignal SDK loaded, type:', typeof OneSignal);
-      console.log('🔧 OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
+      console.log('���� OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
       
       // Check if OneSignal is already initialized globally
       // @ts-ignore - accessing internal state
@@ -610,7 +610,7 @@ export class OneSignalService {
       } else {
         console.warn('⚠️ Subscription initiated but no ID yet.');
         console.warn('📋 Debug info:', {
-          permission: newPermission,
+          permission: currentPermissionStatus,
           isPushSupported: OneSignal.Notifications.isPushSupported(),
           hasUser: !!OneSignal.User,
           hasPushSubscription: !!OneSignal.User?.PushSubscription
@@ -1119,7 +1119,7 @@ export class OneSignalService {
 
       // Send to specific External User ID (Supabase User ID)
       return await this.sendNotification(data, {
-        externalUserIds: [externalUserId]
+        userIds: [externalUserId]
       });
     } catch (error) {
       console.error('❌ Error sending test notification:', error);
