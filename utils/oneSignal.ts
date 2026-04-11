@@ -173,55 +173,46 @@ export class OneSignalService {
       return;
     }
 
-    // ⚠️ IMPORTANT: OneSignal is now initialized in index.html <head>
-    // We just need to wait for it to be ready and set up our listeners
-    console.log('⏳ Waiting for OneSignal SDK to be ready (initialized in index.html)...');
+    // ✅ ПРЯМАЯ ИНИЦИАЛИЗАЦИЯ - загружаем SDK и инициализируем
+    console.log('🔔 Loading OneSignal SDK v16...');
     
     try {
+      // Загружаем SDK динамически
+      if (!window.OneSignal) {
+        console.log('📦 OneSignal SDK not loaded, loading now...');
+        await this.loadOneSignalSDK();
+      }
+      
       const OneSignal = await this.getOneSignal();
+      console.log('✅ OneSignal SDK loaded');
       
-      // Check if OneSignal is already initialized globally (should be true from index.html)
-      // @ts-ignore - accessing internal state
-      if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
-        console.log('✅ OneSignal already initialized globally (from index.html)');
-        this.isInitialized = true;
-        
-        // Set up our event listeners if not already done
-        if (!((window as any).__oneSignalEventListenerSetup)) {
-          this.setupEventListeners(OneSignal);
-          (window as any).__oneSignalEventListenerSetup = true;
-        }
-        
-        // Check current subscription status
-        await this.checkInitialSubscription(OneSignal);
-        return;
-      }
+      // Инициализируем напрямую
+      await this.initializeOneSignal();
       
-      // If not initialized yet, wait a bit more for index.html init to complete
-      console.log('⏳ OneSignal not yet initialized, waiting 2 seconds...');
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Check again
-      // @ts-ignore
-      if (OneSignal.__isInitialized || (typeof window !== 'undefined' && (window as any).__oneSignalInitialized)) {
-        console.log('✅ OneSignal now initialized (from index.html after wait)');
-        this.isInitialized = true;
-        
-        if (!((window as any).__oneSignalEventListenerSetup)) {
-          this.setupEventListeners(OneSignal);
-          (window as any).__oneSignalEventListenerSetup = true;
-        }
-        
-        await this.checkInitialSubscription(OneSignal);
-        return;
-      }
-      
-      console.warn('⚠️ OneSignal not initialized from index.html, this is unexpected');
-      console.warn('⚠️ Check that OneSignal script is in <head> of index.html');
     } catch (error) {
-      console.error('❌ Error waiting for OneSignal initialization:', error);
+      console.error('❌ Error initializing OneSignal:', error);
       throw error;
     }
+  }
+  
+  /**
+   * Динамическая загрузка OneSignal SDK
+   */
+  private async loadOneSignalSDK(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('✅ OneSignal SDK script loaded');
+        resolve();
+      };
+      script.onerror = () => {
+        console.error('❌ Failed to load OneSignal SDK script');
+        reject(new Error('Failed to load OneSignal SDK'));
+      };
+      document.head.appendChild(script);
+    });
   }
 
   /**
@@ -244,7 +235,7 @@ export class OneSignalService {
       const OneSignal = await this.getOneSignal();
       
       console.log('🔧 OneSignal SDK loaded, type:', typeof OneSignal);
-      console.log('���� OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
+      console.log(' OneSignal methods:', Object.keys(OneSignal || {}).join(', '));
       
       // Check if OneSignal is already initialized globally
       // @ts-ignore - accessing internal state

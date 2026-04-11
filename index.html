@@ -31,22 +31,6 @@
     <!-- Theme Color -->
     <meta name="theme-color" content="#DC2626" />
     
-    <!-- OneSignal Web Push SDK v16 -->
-    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
-    <script>
-      window.OneSignalDeferred = window.OneSignalDeferred || [];
-      OneSignalDeferred.push(async function(OneSignal) {
-        await OneSignal.init({
-          appId: "f499a6fe-1338-4f21-863d-d77311d4ea9c",
-          serviceWorkerParam: { scope: '/' },
-          serviceWorkerPath: 'OneSignalSDKWorker.js',
-          allowLocalhostAsSecureOrigin: false,
-          safari_web_id: "web.onesignal.auto.f499a6fe-1338-4f21-863d-d77311d4ea9c",
-        });
-        console.log('✅ OneSignal SDK initialized');
-      });
-    </script>
-    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
