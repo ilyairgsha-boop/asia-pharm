@@ -1,35 +1,7 @@
-import { useState, useEffect } from 'react';
-import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { CartProvider, useCart, type StoreType, type Product } from './contexts/CartContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { Header } from './components/Header';
-import { CategoryMenu } from './components/CategoryMenu';
-import { DiseaseSidebar } from './components/DiseaseSidebar';
-import { HomePage } from './components/HomePage';
-import { CartMultiStore } from './components/CartMultiStore';
-import { CheckoutNew } from './components/CheckoutNew';
-import { PaymentInfo } from './components/PaymentInfo';
-import { Auth } from './components/Auth';
-import { ProfileNew } from './components/ProfileNew';
-import { AdminPanelNew } from './components/admin/AdminPanelNew';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { TermsOfService } from './components/TermsOfService';
-import { LoyaltyProgram } from './components/LoyaltyProgram';
-import { LiveChat } from './components/LiveChat';
-import { CookieConsent } from './components/CookieConsent';
-import { ProductDetailsModal } from './components/ProductDetailsModal';
-import { CreateAdminPage } from './components/CreateAdminPage';
-import { PopUpModal } from './components/PopUpModal';
-import { ThemeDecorations } from './components/ThemeDecorations';
-import { Footer } from './components/Footer';
-import { Toaster } from './components/ui/sonner';
-import { toast } from 'sonner';
-import { ShoppingCart } from 'lucide-react';
-import { DatabaseStatus } from './components/DatabaseStatus';
 import { MOCK_MODE } from './utils/mockMode';
 import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
+import './utils/pushDiagnostic'; // Load diagnostic tool
 
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
@@ -116,7 +88,7 @@ function AppContent() {
 
   // Perform environment and health checks on mount
   useEffect(() => {
-    console.log('🚀 Asia Pharm - Starting application... v2.3.1-DIRECT-SDK-INIT');
+    console.log('🚀 Asia Pharm - Starting application... v2.3.2-PUSH-DIAGNOSTIC');
     
     if (MOCK_MODE) {
       console.log('');
@@ -675,7 +647,7 @@ function AppContent() {
                   } catch (error: any) {
                     console.error('⚠️ Push subscription failed:', error);
                     toast.error(
-                      currentLanguage === 'ru' ? '❌ Не удалось подписаться: ' + (error.message || 'Неизвестная ошибка') :
+                      currentLanguage === 'ru' ? '❌ ��е удалось подписаться: ' + (error.message || 'Неизвестная ошибка') :
                       currentLanguage === 'en' ? '❌ Subscription failed: ' + (error.message || 'Unknown error') :
                       currentLanguage === 'zh' ? '❌ 订阅失败：' + (error.message || '未知错误') :
                       '❌ Đăng ký thất bại: ' + (error.message || 'Lỗi không xác định')

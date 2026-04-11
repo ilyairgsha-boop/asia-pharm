@@ -205,7 +205,12 @@ export class OneSignalService {
       script.async = true;
       script.onload = () => {
         console.log('✅ OneSignal SDK script loaded');
-        resolve();
+        // ⚠️ ВАЖНО: После загрузки скрипта нужно подождать пока SDK полностью инициализируется
+        // window.OneSignal становится доступен асинхронно
+        setTimeout(() => {
+          console.log('⏳ Waiting 500ms for SDK to be ready...');
+          resolve();
+        }, 500);
       };
       script.onerror = () => {
         console.error('❌ Failed to load OneSignal SDK script');
