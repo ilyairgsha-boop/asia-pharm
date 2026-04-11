@@ -1,36 +1,10 @@
-import { useState, useEffect } from 'react';
-import { LanguageProvider, useLanguage } from './contexts/LanguageContext';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { CartProvider, useCart, type StoreType, type Product } from './contexts/CartContext';
-import { ThemeProvider } from './contexts/ThemeContext';
-import { Header } from './components/Header';
-import { CategoryMenu } from './components/CategoryMenu';
-import { DiseaseSidebar } from './components/DiseaseSidebar';
-import { HomePage } from './components/HomePage';
-import { CartMultiStore } from './components/CartMultiStore';
-import { CheckoutNew } from './components/CheckoutNew';
-import { ProfileNew } from './components/ProfileNew';
-import { AdminPanelNew } from './components/admin/AdminPanelNew';
-import { Auth } from './components/Auth';
-import { LiveChat } from './components/LiveChat';
-import { CookieConsent } from './components/CookieConsent';
-import { ProductDetailsModal } from './components/ProductDetailsModal';
-import { PaymentInfo } from './components/PaymentInfo';
-import { PrivacyPolicy } from './components/PrivacyPolicy';
-import { TermsOfService } from './components/TermsOfService';
-import { LoyaltyProgram } from './components/LoyaltyProgram';
-import { DatabaseStatus } from './components/DatabaseStatus';
-import { PopUpModal } from './components/PopUpModal';
-import { ThemeDecorations } from './components/ThemeDecorations';
-import { Footer } from './components/Footer';
-import { CreateAdminPage } from './components/CreateAdminPage';
 import { createClient } from './utils/supabase/client';
 import { toast, Toaster } from 'sonner';
 import { clearOldCategories } from './utils/clearOldCategories';
 import { checkEnvironmentVariables, logEnvCheck } from './utils/supabase/env-check';
-import { performHealthCheck, logHealthCheckResults } from './utils/supabase/healthCheck';
+import { performHealthCheck, logHealthCheckResults } from './utils/supabase/health-check';
 import { oneSignalService } from './utils/oneSignal';
-import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/supabase/settingsInit';
+import { checkAndCreateSettingsTable, checkOneSignalSettings } from './utils/checkSettingsTable';
 import { getServerUrl, getAnonKey } from './utils/supabase/client';
 import { MOCK_MODE } from './utils/mockMode';
 
@@ -237,7 +211,7 @@ function AppContent() {
         // Step 3: Initialize SDK if enabled
         console.log('📥 [INIT] Step 3: Checking if enabled...');
         const isEnabled = oneSignalService.isEnabled();
-        console.log('📊 [INIT] isEnabled:', isEnabled);
+        console.log('��� [INIT] isEnabled:', isEnabled);
         
         if (isEnabled) {
           console.log('🔔 [INIT] Initializing OneSignal SDK...');
