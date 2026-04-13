@@ -40,14 +40,6 @@ import { oneSignalService } from './utils/oneSignal';
 import { createClient, getAnonKey, getServerUrl } from './utils/supabase/client';
 import './utils/pushDiagnostic'; // Load diagnostic tool
 
-// Types
-declare global {
-  interface Window {
-    ym: any;
-    dataLayer: any[];
-  }
-}
-
 function AppContent() {
   const [currentPage, setCurrentPage] = useState<string>('home');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -62,42 +54,6 @@ function AppContent() {
   
   // ✅ Флаг для предотвращения двойной инициализации OneSignal в React Strict Mode
   const oneSignalInitialized = useRef(false);
-
-    // --- Yandex Metrika Start ---
-  useEffect(() => {
-    // 1. Загрузка скрипта Метрики (один раз)
-    if (!document.getElementById('yandex-metrika')) {
-      const script = document.createElement('script');
-      script.id = 'yandex-metrika';
-      script.type = 'text/javascript';
-      script.async = true;
-      script.src = 'https://mc.yandex.ru/metrika/tag.js';
-      
-      window.ym = window.ym || function() {
-        (window.ym.a = window.ym.a || []).push(arguments);
-      };
-      window.ym.l = new Date().getTime();
-
-      document.head.appendChild(script);
-
-      // 2. Инициализация счетчика
-      window.ym(108516828, "init", {
-        clickmap: true,
-        trackLinks: true,
-        accurateTrackBounce: true,
-        webvisor: true,
-        ecommerce: "dataLayer"
-      });
-    }
-  }, []);
-
-  // 3. Отслеживание виртуальных страниц при смене currentPage
-  useEffect(() => {
-    if (typeof window.ym !== 'undefined') {
-      window.ym(108516828, 'hit', `/${currentPage}`);
-    }
-  }, [currentPage]);
-  // --- Yandex Metrika End ---
   
   // Read URL parameters synchronously on mount (Safari compatibility)
   const [sharedProductId] = useState<string | null>(() => {
