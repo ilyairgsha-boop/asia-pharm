@@ -690,19 +690,76 @@ export class OneSignalService {
       
       if (!currentExternalId || currentExternalId !== session.user.id) {
         console.log('🔗 Setting External User ID to link subscription:', session.user.id);
+        
+        // ✅ Добавлена задержка 200мс перед вызовом login()
+        console.log('⏳ Waiting 200ms for OneSignal to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
         try {
           await OneSignal.login(session.user.id);
           console.log('✅ External User ID linked successfully');
         } catch (loginError) {
           console.error('❌ Failed to link External User ID:', loginError);
-          throw loginError;
+          // ✅ Не пробрасываем ошибку дальше, чтобы не сломать весь процесс
+          console.warn('⚠️ Continuing without External ID link');
         }
       } else {
         console.log('✅ External User ID already set:', currentExternalId);
       }
     } catch (error) {
       console.error('❌ Error linking External User ID:', error);
-      throw error;
+      // ✅ Не пробрасываем ошибку дальше
+      console.warn('⚠️ Continuing without External ID link');
+    }
+  }
+
+  /**
+   * Link OneSignal subscription to user after login
+   * This is for when user logs in AFTER creating an anonymous subscription
+   */
+  async linkUserAfterLogin(userId: string): Promise<void> {
+    try {
+      console.log('🔗 Linking OneSignal subscription to user after login:', userId);
+      
+      const OneSignal = await this.getOneSignal();
+      const currentExternalId = OneSignal.User?.externalId;
+      
+      // ✅ Проверка: если External ID уже совпадает, не вызываем login()
+      if (currentExternalId === userId) {
+        console.log('✅ External User ID already matches, skipping login():', currentExternalId);
+        return;
+      }
+      
+      // Only call login if External ID is not set or is different
+      if (!currentExternalId || currentExternalId !== userId) {
+        console.log('🔗 Calling OneSignal.login to link subscription:', userId);
+        
+        // ✅ Добавлена задержка 200мс перед вызовом login()
+        console.log('⏳ Waiting 200ms for OneSignal to be ready...');
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // ✅ Обернуто в try-catch для предотвращения падения приложения
+        try {
+          await OneSignal.login(userId);
+          console.log('✅ Subscription linked to user after login');
+          
+          // Get subscription ID and sync to database
+          const subscriptionId = OneSignal.User?.PushSubscription?.id;
+          if (subscriptionId) {
+            await this.syncSubscriptionToDatabase(subscriptionId);
+          }
+        } catch (loginError) {
+          console.error('❌ Failed to login OneSignal user:', loginError);
+          console.warn('⚠️ Continuing without External ID link');
+          // Не пробрасываем ошибку - продолжаем работу
+        }
+      } else {
+        console.log('✅ External User ID already set:', currentExternalId);
+      }
+    } catch (error) {
+      console.error('❌ Error linking user after login:', error);
+      // ✅ Не пробрасываем ошибку - не ломаем приложение
+      console.warn('⚠️ Continuing without External ID link');
     }
   }
 
@@ -872,37 +929,6 @@ export class OneSignalService {
       console.log('✅ Last active timestamp updated');
     } catch (error) {
       console.error('❌ Error updating last active:', error);
-    }
-  }
-
-  /**
-   * Link OneSignal subscription to user after login
-   * This is for when user logs in AFTER creating an anonymous subscription
-   */
-  async linkUserAfterLogin(userId: string): Promise<void> {
-    try {
-      console.log('🔗 Linking OneSignal subscription to user after login:', userId);
-      
-      const OneSignal = await this.getOneSignal();
-      const currentExternalId = OneSignal.User?.externalId;
-      
-      // Only call login if External ID is not already set or is different
-      if (!currentExternalId || currentExternalId !== userId) {
-        console.log('🔗 Calling OneSignal.login to link subscription:', userId);
-        await OneSignal.login(userId);
-        console.log('✅ Subscription linked to user after login');
-        
-        // Get subscription ID and sync to database
-        const subscriptionId = OneSignal.User?.PushSubscription?.id;
-        if (subscriptionId) {
-          await this.syncSubscriptionToDatabase(subscriptionId);
-        }
-      } else {
-        console.log('✅ External User ID already set:', currentExternalId);
-      }
-    } catch (error) {
-      console.error('❌ Error linking user after login:', error);
-      throw error;
     }
   }
 
@@ -1478,7 +1504,7 @@ if (typeof window !== 'undefined') {
   (window as any).oneSignalService = oneSignalService;
   console.log('🔧 oneSignalService exposed to window for debugging');
   console.log('💡 Try: window.oneSignalService.isConfigured()');
-  console.log('�� Try: window.oneSignalService.isEnabled()');
+  console.log(' Try: window.oneSignalService.isEnabled()');
   console.log('💡 Try: await window.oneSignalService.getUserId()');
 }
 

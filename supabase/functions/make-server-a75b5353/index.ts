@@ -1737,6 +1737,18 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
       return c.json({ error: 'Unknown notification type' }, 400);
     }
     
+    // ⚠️ ВАЖНО: Проверка на дефолтный номер заказа с префиксом AF
+    // Если номер заказа содержит префикс AF - это дефолтное значение, не отправляем push
+    if (orderNumber && orderNumber.startsWith('AF')) {
+      console.warn('⚠️ Skipping push for default order number (AF prefix):', orderNumber);
+      return c.json({ 
+        success: false, 
+        message: 'Skipped: default order number with AF prefix',
+        orderNumber,
+        type
+      }, 200);
+    }
+    
     // Validate orderNumber for order-related notifications
     if (type.startsWith('order_') && !orderNumber) {
       console.warn('⚠️ Order notification without orderNumber:', { type, orderId });

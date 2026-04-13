@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 
@@ -51,6 +51,9 @@ function AppContent() {
   const { user, loading } = useAuth();
   const { t, currentLanguage } = useLanguage();
   const { totalItemsCount } = useCart();
+  
+  // ✅ Флаг для предотвращения двойной инициализации OneSignal в React Strict Mode
+  const oneSignalInitialized = useRef(false);
   
   // Read URL parameters synchronously on mount (Safari compatibility)
   const [sharedProductId] = useState<string | null>(() => {
@@ -179,7 +182,11 @@ function AppContent() {
       }
     };
     
-    initOneSignal();
+    // ✅ Проверяем, был ли OneSignal уже инициализирован
+    if (!oneSignalInitialized.current) {
+      initOneSignal();
+      oneSignalInitialized.current = true;
+    }
     
     // Listen for OneSignal settings changes
     const handleStorageChange = (e: StorageEvent) => {
@@ -304,7 +311,7 @@ function AppContent() {
     });
     
     if (user && !loading) {
-      // Проверяем флаг с небольшой задержкой, чтобы дать время на установку флаг��
+      // Проверяем флаг с небольшой задержкой, чтобы дать время на установку флаг
       const checkPromptFlag = () => {
         const shouldShowPrompt = localStorage.getItem('show_push_prompt');
         console.log('🔔 Checking push prompt flag:', shouldShowPrompt);
