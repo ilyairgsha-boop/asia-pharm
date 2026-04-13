@@ -167,25 +167,11 @@ function AppContent() {
       console.log('🗑️ Cleared corrupted product cache');
     }
     
-    // Initialize OneSignal from localStorage
-    const initOneSignal = async () => {
-      try {
-        if (oneSignalService.isEnabled()) {
-          console.log('🔔 Initializing OneSignal SDK...');
-          await oneSignalService.initializeSDK();
-          console.log('✅ OneSignal SDK initialized');
-        } else {
-          console.log('ℹ️ OneSignal not enabled');
-        }
-      } catch (error) {
-        console.error('❌ OneSignal init failed:', error);
-      }
-    };
-    
-    // ✅ Проверяем, был ли OneSignal уже инициализирован
-    if (!oneSignalInitialized.current) {
-      initOneSignal();
-      oneSignalInitialized.current = true;
+    // Debug tools
+    if (typeof window !== 'undefined') {
+      (window as any).oneSignalService = oneSignalService;
+      (window as any).testPushPrompt = () => setShowPushPrompt(true);
+      console.log('💡 Debug: window.oneSignalService, window.testPushPrompt()');
     }
     
     // Listen for OneSignal settings changes
@@ -205,19 +191,43 @@ function AppContent() {
     
     window.addEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     
-    // Debug tools
-    if (typeof window !== 'undefined') {
-      (window as any).oneSignalService = oneSignalService;
-      (window as any).testPushPrompt = () => setShowPushPrompt(true);
-      console.log('💡 Debug: window.oneSignalService, window.testPushPrompt()');
-    }
-    
     // Cleanup function
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('oneSignalSettingsUpdated', handleSettingsUpdate);
     };
   }, []);
+
+  // ✅ ВАЖНО: Инициализация OneSignal после загрузки пользователя
+  useEffect(() => {
+    // Не инициализируем, пока идет загрузка пользователя
+    if (loading) {
+      console.log('⏳ Waiting for user to load before initializing OneSignal...');
+      return;
+    }
+
+    // Initialize OneSignal from localStorage
+    const initOneSignal = async () => {
+      try {
+        if (oneSignalService.isEnabled()) {
+          console.log('🔔 Initializing OneSignal SDK...');
+          console.log('👤 User loaded:', user ? 'authenticated' : 'anonymous');
+          await oneSignalService.initializeSDK();
+          console.log('✅ OneSignal SDK initialized');
+        } else {
+          console.log('ℹ️ OneSignal not enabled');
+        }
+      } catch (error) {
+        console.error('❌ OneSignal init failed:', error);
+      }
+    };
+    
+    // ✅ Проверяем, был ли OneSignal уже инициализирован
+    if (!oneSignalInitialized.current) {
+      initOneSignal();
+      oneSignalInitialized.current = true;
+    }
+  }, [loading, user]);
 
   // Log when showPushPrompt changes
   useEffect(() => {
