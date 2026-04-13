@@ -1259,7 +1259,7 @@ const mapLanguageCode = (language: string): string => {
   const mapping: Record<string, string> = {
     'ru': 'ru',
     'en': 'en',
-    'zh': 'zh-CN',  // Используем упрощенный китайский
+    'zh': 'zh-CN',  // Используем у��рощенный китайский
     'vi': 'vi',
     'auto': 'auto'
   };
@@ -1629,7 +1629,7 @@ const PUSH_TEMPLATES: any = {
     vi: { title: '💳 Đã nhận thanh toán đơn hàng', message: (data: any) => `Đã nhận thanh toán cho đơn hàng №${data.orderNumber}. Đang xử lý đơn hàng.` },
   },
   order_shipped: {
-    ru: { title: '🚚 Заказ отправлен', message: (data: any) => `Заказ №${data.orderNumber} отправлен. Нажмите для отслеживания.` },
+    ru: { title: '🚚 Заказ отправлен', message: (data: any) => `Заказ №${data.orderNumber} отправлен. Нажмите ��ля отслеживания.` },
     zh: { title: '🚚 订单已发货', message: (data: any) => `订单 №${data.orderNumber} 已发货。点击跟踪。` },
     en: { title: '🚚 Order Shipped', message: (data: any) => `Order №${data.orderNumber} has been shipped. Click to track.` },
     vi: { title: '🚚 Đơn hàng đã gửi', message: (data: any) => `Đơn hàng №${data.orderNumber} đã được gửi. Nhấp để theo dõi.` },
@@ -1918,7 +1918,7 @@ app.post('/make-server-a75b5353/api/push/auto-notify', async (c) => {
     return c.json({ 
       success: true, 
       id: result.id,
-      recipients: result.recipients || playerIds.length,
+      recipients: result.recipients || 'N/A',
       type,
       userId,
       orderNumber,
